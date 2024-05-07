@@ -26,11 +26,19 @@ exports.getInTimeById = async (filter) => {
       throw new Error("LogUser not found");
     }
 
-    // Adjust the property name based on your LogUser schema
     const inTime = logUser.inTime;
-
     return { inTime };
   } catch (error) {
     throw new Error(`Error in getInTimeById: ${error.message}`);
   }
+};
+
+
+exports.getLogUser = async (query) => {
+  return await LogUser.find(query);
+};
+
+
+exports.getAllLogUser = async () => {
+  return await LogUser.find();
 };

@@ -7,7 +7,8 @@ const userSchema = mongoose.Schema({
     MobileNumber: {type: Number},
     Designation: {type: String},
     Password: {type: String},
-    TotalHours: {type: String}
+    TotalHours: {type: String},
+    approved: {type: Boolean, default: false}
 });
 
 userSchema.plugin(timestamps);
