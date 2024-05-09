@@ -25,7 +25,7 @@ userController.post("/register", async (req, res) => {
       });
     } else {
       // If no existing user found, proceed with user creation
-      const userCreated = await userServices.create(req.body);
+      const userCreated = await userServices.create(req.body);  
       sendResponse(res, 200, "Success", {
         success: true,
         message: "Registered successfully!",
@@ -55,7 +55,8 @@ userController.post("/login", async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: message,
-      userData: { loggedUser, token },
+      token ,
+      loggedUser, 
     });
   } catch (error) {
     console.log(error);
@@ -184,7 +185,6 @@ userController.put("/outTime", async (req, res) => {
 
 
 
-
 userController.get("/getLogUserbyid", async (req, res) => {
   try {
     const { userId, startDate, endDate } = req.query;
@@ -292,7 +292,6 @@ userController.delete("/deleteLog/:logId", async (req, res) => {
     });
   }
 });
-
 
 
 
