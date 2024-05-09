@@ -40,5 +40,5 @@ exports.getLogUser = async (query) => {
 
 
 exports.getAllLogUser = async () => {
-  return await LogUser.find();
+  return await LogUser.find().populate('userId', 'UserName');
 };
