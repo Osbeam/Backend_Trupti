@@ -11,7 +11,37 @@ const jwt = require('jsonwebtoken');
 
 
 
-userController.post("/register", async (req, res) => {
+
+// Define lastEmployeeID variable
+let lastEmployeeID = 0;
+
+// Function to generate a random employee ID consisting of only numbers
+function generateEmployeeID() {
+  const prefix = '12345'; // You can customize the prefix as needed
+
+  // Increment the last three digits
+  lastEmployeeID++;
+  const seriesPart = padLeft(lastEmployeeID, 3); // Ensure it's three digits long with leading zeros
+
+  return prefix + seriesPart;
+}
+
+// Function to pad a number with leading zeros to ensure it's a certain length
+function padLeft(number, length) {
+  return String(number).padStart(length, '0');
+}
+
+// Usage example:
+console.log(generateEmployeeID()); 
+console.log(generateEmployeeID()); 
+
+
+
+
+
+
+
+userController.post('/register', async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
     const existingUser = await User.findOne({
@@ -24,8 +54,13 @@ userController.post("/register", async (req, res) => {
         message: "Email or mobile number already exists"
       });
     } else {
+      // Generate employee ID
+      const employeeID = generateEmployeeID();
+
       // If no existing user found, proceed with user creation
-      const userCreated = await userServices.create(req.body);  
+      const userData = { ...req.body, EmployeeID: employeeID }; // Add employee ID to user data
+      const userCreated = await userServices.create(userData);
+      
       sendResponse(res, 200, "Success", {
         success: true,
         message: "Registered successfully!",
@@ -39,7 +74,6 @@ userController.post("/register", async (req, res) => {
     });
   }
 });
-
 
 
 userController.post("/login", async (req, res) => {
@@ -67,6 +101,44 @@ userController.post("/login", async (req, res) => {
 });
 
 
+userController.get("/getUsers", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    const data = await userServices.getAllUsers(page, pageSize);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All Users list retrieved successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+userController.get("/getUserbyId/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const data = await userServices.getUser({ _id: userId });
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "User retrieved successfully!",
+      data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 userController.post("/inTime", imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
@@ -88,7 +160,8 @@ userController.post("/inTime", imgUpload.array("inTimeImage", 10), async (req, r
     sendResponse(res, 200, "Success", {
       success: true,
       message: "User checkin successfully",
-      user: logCreated
+      user: logCreated,
+      data: userData
     });
   } catch (error) {
     console.error(error);
@@ -100,10 +173,10 @@ userController.post("/inTime", imgUpload.array("inTimeImage", 10), async (req, r
 });
 
 
-
 userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
     const logId = req.params.logId;
+    const { inTime, outTime } = req.body;
 
     // Find the log entry in the database based on logId
     const existingLog = await LogUser.findById(logId);
@@ -119,7 +192,8 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
 
     // Update log data with new inTimeImage and inTime
     existingLog.inTimeImage = photoArray[0];
-    existingLog.inTime = new Date();
+    existingLog.inTime = new Date(inTime);
+    existingLog.outTime = new Date(outTime);
 
     await existingLog.save();
 
@@ -129,7 +203,7 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
     sendResponse(res, 200, "Success", {
       success: true,
       message: "In-time document updated successfully",
-      user: userData, // Sending user data for reference
+      // user: userData, // Sending user data for reference
       log: existingLog // Sending updated log entry
     });
   } catch (error) {
@@ -142,7 +216,6 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
 });
 
 
-
 userController.put("/outTime", async (req, res) => {
   try {
     // Retrieve inTime from the database
@@ -153,21 +226,6 @@ userController.put("/outTime", async (req, res) => {
       outTime: new Date(),
       totalHours: req.body.totalHours
     };
-
-    // Parse the times into Moment objects
-    // const checkInMoment = moment(inTime);
-    // const checkOutMoment = moment(userLogData.outTime);
-
-    // Calculate the difference in time
-    // const totalHours = moment.duration(checkOutMoment.diff(checkInMoment));
-
-    // Add totalHours to userLogData
-    // userLogData.totalHours = totalHours.asHours();
-    // const hours = Math.floor(totalHours.asHours());
-    // const minutes = Math.floor(totalHours.asMinutes()) % 60;
-    // const formattedTotalHours = `${hours}hr ${minutes}min`;
-    // userLogData.formattedTotalHours = formattedTotalHours;
-
 
     // Update user log data in the database
     const outTimeCreated = await userServices.logUserUpdate(req.body.logId, userLogData);
@@ -182,7 +240,6 @@ userController.put("/outTime", async (req, res) => {
     ({ error: "Failed", message: error.message || "Internal server error" });
   }
 });
-
 
 
 userController.get("/getLogUserbyid", async (req, res) => {
@@ -217,19 +274,19 @@ userController.get("/getLogUserbyid", async (req, res) => {
 
 userController.get("/getApprovedLogUsers", async (req, res) => {
   try {
-    const { approved, startDate,  endDate} = req.query;
+    const { approved, startDate, endDate } = req.query;
     const query = { approved };
-  
+
     if (startDate) {
       query.inTime = { $gte: new Date(startDate) };
     }
     if (endDate) {
       const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999); 
+      endOfDay.setHours(23, 59, 59, 999);
       query.inTime = { ...query.inTime, $lte: endOfDay };
     }
 
-    const data = await userServices.getLogUser(query);
+    const data = await userServices.getApprovedLogUsers(query);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Users Approved Log list retrieved successfully!",
@@ -246,7 +303,10 @@ userController.get("/getApprovedLogUsers", async (req, res) => {
 
 userController.get("/getLogUsers", async (req, res) => {
   try {
-    const data = await userServices.getAllLogUser();
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    const data = await userServices.getAllLogUser(page, pageSize);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Users Log list retrieved successfully!",
@@ -259,7 +319,6 @@ userController.get("/getLogUsers", async (req, res) => {
     });
   }
 });
-
 
 
 userController.delete("/deleteLog/:logId", async (req, res) => {
@@ -292,7 +351,6 @@ userController.delete("/deleteLog/:logId", async (req, res) => {
     });
   }
 });
-
 
 
 userController.put("/editLogUser/:logId", async (req, res) => {

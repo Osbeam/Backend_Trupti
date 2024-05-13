@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const timestamps = require("mongoose-timestamp");
 
 const userSchema = mongoose.Schema({
+    EmployeeID: {type: String},
     UserName: {type: String},
     Email: {type: String},
     MobileNumber: {type: Number},

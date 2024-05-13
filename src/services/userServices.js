@@ -13,6 +13,22 @@ exports.login = async (body) => {
 };
 
 
+
+exports.getAllUsers = async (page, pageSize) => {
+  const skip = (page - 1) * pageSize;
+  const users = await User.find().skip(skip).limit(pageSize);
+  return users;
+};
+
+
+
+exports.getUser = async (query) => {
+  return await User.find(query);
+};
+
+
+
+
 exports.logUserUpdate = async (id, update) => {
   return await LogUser.findByIdAndUpdate(id, update, { new: true });
 };
@@ -39,6 +55,43 @@ exports.getLogUser = async (query) => {
 };
 
 
-exports.getAllLogUser = async () => {
-  return await LogUser.find().populate('userId', 'UserName');
+exports.getAllLogUser = async (page, pageSize) => {
+  const skip = (page - 1) * pageSize;
+  const logUsers = await LogUser.find().populate('userId', 'UserName').skip(skip).limit(pageSize);
+  return logUsers;
+};
+
+
+
+
+exports.getApprovedLogUsers = async (query) => {
+  // Retrieve all users with their logs
+  const users = await LogUser.find(query).populate('userId');
+
+  // Initialize an object to store user IDs and their corresponding counts of approved logs
+  const approvedCounts = {};
+
+  // Iterate through the users to count the number of approved logs for each user
+  users.forEach(user => {
+    if (user.userId && user.userId._id) { // Check if userId and _id exist
+      const userId = user.userId._id.toString(); // Convert userId to string for consistency
+      if (user.approved) {
+        if (!approvedCounts[userId]) {
+          approvedCounts[userId] = 1;
+        } else {
+          approvedCounts[userId]++;
+        }
+      }
+    }
+  });
+
+  // Combine the count of approved logs with the user data
+  const userDataWithCount = users.map(user => ({
+    userId: user.userId ? user.userId._id : null, // Check if userId exists before accessing _id
+    username: user.userId ? user.userId.username : null, // Check if userId exists before accessing username
+    count: approvedCounts[user.userId ? user.userId._id.toString() : null] || 0,
+    logs: user
+  }));
+
+  return userDataWithCount;
 };
