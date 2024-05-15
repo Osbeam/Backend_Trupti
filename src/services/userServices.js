@@ -57,7 +57,7 @@ exports.getLogUser = async (query) => {
 
 exports.getAllLogUser = async (page, pageSize) => {
   const skip = (page - 1) * pageSize;
-  const logUsers = await LogUser.find().populate('userId', 'UserName').skip(skip).limit(pageSize);
+  const logUsers = await LogUser.find().populate('userId', 'UserName EmployeeID').skip(skip).limit(pageSize);
   return logUsers;
 };
 
@@ -69,7 +69,7 @@ exports.getApprovedLogUsers = async (query) => {
   const users = await LogUser.find(query).populate('userId');
 
   // Initialize an object to store user IDs and their corresponding counts of approved logs
-  const approvedCounts = {};
+  const approvedCounts = {}; 
 
   // Iterate through the users to count the number of approved logs for each user
   users.forEach(user => {
@@ -95,3 +95,4 @@ exports.getApprovedLogUsers = async (query) => {
 
   return userDataWithCount;
 };
+

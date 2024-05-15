@@ -3,6 +3,7 @@ const userController = express.Router();
 const userServices = require("../services/userServices");
 const LogUser = require("../model/loguserSchema");
 const User = require("../model/userSchema");
+const moment = require("moment");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/multer")
@@ -377,6 +378,57 @@ userController.put("/editLogUser/:logId", async (req, res) => {
   }
 });
 
+
+userController.post('/eligibilityForm', async (req, res) => {
+  try {
+    // Check if the email or mobile number already exists in the database
+    const existingUser = await User.findOne({
+      $or: [{ Email: req.body.Email }, { MobileNumber: req.body.MobileNumber }]
+    }); 
+
+    // if (existingUser) {
+    //   // If user already exists with the same email or mobile number, send a response indicating the conflict
+    //   sendResponse(res, 409, "Failed", {
+    //     message: "mobile number already exists"
+    //   });
+    // }else{
+             // If no existing user found, proceed with user creation
+      const userData = { ...req.body }; // Add employee ID to user data
+      const formCreated = await userServices.createForm(userData);
+      
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: "Eligibility form create successfully!",
+        userData: formCreated
+      });
+    
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+userController.get("/getEligibilityForms", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    const data = await userServices.getEligibilityForm(page, pageSize);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All EligibilityForm list retrieved successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 

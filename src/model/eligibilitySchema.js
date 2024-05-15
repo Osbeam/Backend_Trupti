@@ -2,10 +2,16 @@ const mongoose = require("mongoose");
 const timestamps = require("mongoose-timestamp");
 
 const eligibilitySchema = mongoose.Schema({
-    EmployeeID: {type: String},
-    Department: {type: String},
-    SubDepartment: {type: String},
-    Designation: {type: Number},
+    Name: {type: String},
+    MobileNo: {type: String},
+    LoanType: {type: String},
+    LoanAmount: {type: String},
+    CurrentLocation: {type: String},
+    LocationIfOGL: {type: String},
+    DOB: {type: String},
+    PropertyType: {type: String},
+    PropertySubType: {type: String},
+    PropertyLocation: {type: String}
 });
 
 eligibilitySchema.plugin(timestamps);
