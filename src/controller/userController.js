@@ -10,24 +10,32 @@ const jwt = require('jsonwebtoken');
 
 
 
-// Define lastEmployeeID variable
 let lastEmployeeID = 0;
+let usedEmployeeIDs = new Set(); // Set to store used employee IDs
 
 // Function to generate a random employee ID consisting of only numbers
 function generateEmployeeID() {
   const prefix = '12345'; // You can customize the prefix as needed
 
-  // Increment the last three digits
-  lastEmployeeID++;
-  const seriesPart = padLeft(lastEmployeeID, 3); // Ensure it's three digits long with leading zeros
+  let newEmployeeID;
+  do {
+    // Increment the last three digits
+    lastEmployeeID++;
+    const seriesPart = padLeft(lastEmployeeID, 3); // Ensure it's three digits long with leading zeros
 
-  return prefix + seriesPart;
+    newEmployeeID = prefix + seriesPart;
+  } while (usedEmployeeIDs.has(newEmployeeID)); // Check if the new ID is already used
+
+  usedEmployeeIDs.add(newEmployeeID); // Add the new ID to the set of used IDs
+
+  return newEmployeeID;
 }
 
 // Function to pad a number with leading zeros to ensure it's a certain length
-function padLeft(number, length) {``
+function padLeft(number, length) {
   return String(number).padStart(length, '0');
 }
+
 
 
 
@@ -94,14 +102,15 @@ userController.post("/login", async (req, res) => {
 
 userController.get("/getUsers", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
-
-    const data = await userServices.getAllUsers(page, pageSize);
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const data = await userServices.getAllUsers(currentPage, pageSize);
+    const userCount = await User.countDocuments();
+    const totalPage = Math.ceil(userCount/10);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Users list retrieved successfully!",
-      data: data
+      data: data, userCount, totalPage, currentPage
     });
   } catch (error) {
     console.log(error);
@@ -263,9 +272,10 @@ userController.get("/getLogUserbyid", async (req, res) => {
 
 userController.get("/getApprovedLogUsers", async (req, res) => {
   try {
-    const { approved, startDate, endDate } = req.query;
+    const { approved, startDate, endDate, currentPage, pageSize } = req.query;
     const query = { approved };
 
+    // Apply date filters if provided
     if (startDate) {
       query.inTime = { $gte: new Date(startDate) };
     }
@@ -275,11 +285,30 @@ userController.get("/getApprovedLogUsers", async (req, res) => {
       query.inTime = { ...query.inTime, $lte: endOfDay };
     }
 
-    const data = await userServices.getApprovedLogUsers(query);
+    // Convert query strings to numbers
+    const page = parseInt(currentPage) || 1;
+    const size = parseInt(pageSize) || 10;
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * size;
+
+    // Retrieve paginated data from the service
+    const data = await userServices.getApprovedLogUsers(query, skip, size);
+
+    // Get total count of documents for pagination
+    const totalCount = await LogUser.countDocuments(query);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCount / size);
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Users Approved Log list retrieved successfully!",
-      data: data
+      data: data,
+      currentPage: page,
+      pageSize: size,
+      totalPages: totalPages,
+      totalDocuments: totalCount
     });
   } catch (error) {
     console.log(error);
@@ -292,14 +321,15 @@ userController.get("/getApprovedLogUsers", async (req, res) => {
 
 userController.get("/getLogUsers", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
-
-    const data = await userServices.getAllLogUser(page, pageSize);
+    const currentPage = parseInt(req.query.currentPage) || 1; 
+    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const data = await userServices.getAllLogUser(currentPage, pageSize);
+    const userCount = await LogUser.countDocuments();
+    const totalPage = Math.ceil(userCount/10);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Users Log list retrieved successfully!",
-      data: data
+      data : data, userCount, totalPage, currentPage
     });
   } catch (error) {
     console.log(error);

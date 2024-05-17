@@ -14,8 +14,8 @@ exports.login = async (body) => {
 
 
 
-exports.getAllUsers = async (page, pageSize) => {
-  const skip = (page - 1) * pageSize;
+exports.getAllUsers = async (currentPage, pageSize) => {
+  const skip = (currentPage - 1) * pageSize;
   const users = await User.find().skip(skip).limit(pageSize);
   return users;
 };
@@ -55,8 +55,8 @@ exports.getLogUser = async (query) => {
 };
 
 
-exports.getAllLogUser = async (page, pageSize) => {
-  const skip = (page - 1) * pageSize;
+exports.getAllLogUser = async (currentPage, pageSize) => {
+  const skip = (currentPage - 1) * pageSize;
   const logUsers = await LogUser.find().populate('userId', 'UserName EmployeeID').skip(skip).limit(pageSize);
   return logUsers;
 };
@@ -64,9 +64,11 @@ exports.getAllLogUser = async (page, pageSize) => {
 
 
 
-exports.getApprovedLogUsers = async (query) => {
+exports.getApprovedLogUsers = async (query, skip, limit) => {
   // Retrieve all users with their logs
-  const users = await LogUser.find(query).populate('userId');
+  const users = await LogUser.find(query).populate('userId')
+  .skip(skip)
+  .limit(limit);
 
   // Initialize an object to store user IDs and their corresponding counts of approved logs
   const approvedCounts = {}; 
