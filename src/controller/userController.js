@@ -324,7 +324,7 @@ userController.get("/getLogUsers", async (req, res) => {
     const currentPage = parseInt(req.query.currentPage) || 1; 
     const pageSize = parseInt(req.query.pageSize) || 10; 
     const data = await userServices.getAllLogUser(currentPage, pageSize);
-    const userCount = await LogUser.countDocuments();
+    const userCount = await LogUser.countDocuments({ approved: false });
     const totalPage = Math.ceil(userCount/10);
     sendResponse(res, 200, "Success", {
       success: true,
