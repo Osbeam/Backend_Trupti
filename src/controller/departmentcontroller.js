@@ -2,6 +2,8 @@ const express = require("express");
 const departmentController = express.Router();
 const departmentServices = require("../services/departmentServices");
 const { sendResponse } = require("../utils/common");
+const SubDepartment = require("../model/subDepartmentSchema");
+const Department = require("../model/departmentSchema");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 
 
@@ -29,10 +31,8 @@ departmentController.post('/createDepartments', async (req, res) => {
 
 departmentController.get("/getDepartments", async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-        const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
 
-        const data = await departmentServices.getAllDepartments(page, pageSize);
+        const data = await departmentServices.getAllDepartments();
         sendResponse(res, 200, "Success", {
             success: true,
             message: "All Department list retrieved successfully!",
@@ -52,7 +52,8 @@ departmentController.post('/createSubDepartments', async (req, res) => {
     try {
         const subDepData = { ...req.body };
         const SubdepCreated = await departmentServices.createSubDepartments(subDepData);
-
+        const query = {$push:{SubDepartment:SubdepCreated._id}}
+        await Department.findOneAndUpdate({_id:req.body.department}, query, {new:true} )
         sendResponse(res, 200, "Success", {
             success: true,
             message: "SubDepartments create successfully!",
@@ -69,15 +70,13 @@ departmentController.post('/createSubDepartments', async (req, res) => {
 
 
 
-departmentController.get("/getSubDepartments", async (req, res) => {
+departmentController.get("/getSubDepartments/:id", async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-        const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
 
-        const data = await departmentServices.getAllSubDepartments(page, pageSize);
+        const data = await departmentServices.getAllSubDepartments(req.params.id);
         sendResponse(res, 200, "Success", {
             success: true,
-            message: "All Department list retrieved successfully!",
+            message: "All SubDepartment list retrieved successfully!",
             data: data
         });
     } catch (error) {
@@ -87,6 +86,29 @@ departmentController.get("/getSubDepartments", async (req, res) => {
         });
     }
 });
+
+
+
+departmentController.post('/createDesignation', async (req, res) => {
+    try {
+       
+        const DesignationCreated = await departmentServices.createDesignation(req.body);
+        const query = {$push:{designation:DesignationCreated._id}}
+        await SubDepartment.findOneAndUpdate({_id:req.body.subDepartment}, query, {new:true} )
+        sendResponse(res, 200, "Success", {
+            success: true,
+            message: "Designation create successfully!",
+            designationData: DesignationCreated
+        });
+
+    } catch (error) {
+        console.log(error);
+        sendResponse(res, 500, "Failed", {
+            message: error.message || "Internal server error",
+        });
+    }
+});
+
 
 
 module.exports = departmentController;

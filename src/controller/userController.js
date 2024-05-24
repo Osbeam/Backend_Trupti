@@ -2,6 +2,9 @@ const express = require("express");
 const userController = express.Router();
 const userServices = require("../services/userServices");
 const LogUser = require("../model/loguserSchema");
+const Department = require("../model/departmentSchema");
+const SubDepartment = require("../model/subDepartmentSchema");
+const Designation = require("../model/designationSchema");
 const User = require("../model/userSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -10,33 +13,29 @@ const jwt = require('jsonwebtoken');
 
 
 
-let lastEmployeeID = 0;
-let usedEmployeeIDs = new Set(); // Set to store used employee IDs
+
+const setemployeeID = (number) => {
+  let code = number.toString(); // Convert the number to a string
+  while (code.length < 3) {
+    code = '0' + code; // Prepend '0' until the string is at least 3 characters long
+  }
+  // console.log(number)
+  return code;
+};
+
 
 // Function to generate a random employee ID consisting of only numbers
-function generateEmployeeID() {
-  const prefix = '12345'; // You can customize the prefix as needed
+async function generateEmployeeID(departmentId, subDepartmentId, designationId)  {
+  let employeeID = ''
+  let employeeNumber = await User.countDocuments();
+  let departmentCode = await Department.findOne({_id:departmentId})
+  let subdepartmentCode = await SubDepartment.findOne({_id:subDepartmentId})
+  let designationCode = await Designation.findOne({_id:designationId})
+   employeeID = departmentCode.code+subdepartmentCode.code+designationCode.code+setemployeeID(++employeeNumber)
 
-  let newEmployeeID;
-  do {
-    // Increment the last three digits
-    lastEmployeeID++;
-    const seriesPart = padLeft(lastEmployeeID, 3); // Ensure it's three digits long with leading zeros
-
-    newEmployeeID = prefix + seriesPart;
-  } while (usedEmployeeIDs.has(newEmployeeID)); // Check if the new ID is already used
-
-  usedEmployeeIDs.add(newEmployeeID); // Add the new ID to the set of used IDs
-
-  return newEmployeeID;
+  return  employeeID;
 }
-
-// Function to pad a number with leading zeros to ensure it's a certain length
-function padLeft(number, length) {
-  return String(number).padStart(length, '0');
-}
-
-
+ 
 
 
 
@@ -54,7 +53,7 @@ userController.post('/register', async (req, res) => {
       });
     } else {
       // Generate employee ID
-      const employeeID = generateEmployeeID();
+      const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
 
       // If no existing user found, proceed with user creation
       const userData = { ...req.body, EmployeeID: employeeID }; // Add employee ID to user data
@@ -406,7 +405,6 @@ userController.put("/editLogUser/:logId", async (req, res) => {
     });
   }
 });
-
 
 
 

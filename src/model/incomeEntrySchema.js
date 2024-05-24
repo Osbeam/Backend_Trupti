@@ -1,17 +1,38 @@
 const mongoose = require("mongoose");
 const timestamps = require("mongoose-timestamp");
 
+
 const incomeEntrySchema = mongoose.Schema({
-    IncomeType: {type: String},
-    OtherIncome: {type: String},
-    CoApplicantIncome: {type: String},
-    CoApplicantIncomeType: {type: String},
-    CoApplicantOtherIncome: {type: String},
-    SalaryIncome: {type: String},
-    PerMonth: {type: String},
-    PerYear: {type: String},
-    Businessincome: {type: String},
-    ProfessionalIncome: {type: String}
+    incomeType: {
+        type: [String],
+        enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome'] 
+    },
+    incomePeriod: {
+        type: [String],
+        enum: ['PerYear', 'PerMonth'] 
+    },
+    NetSalary: { type: Number },
+    OtherIncome: {
+        type: [String],
+        enum: ['SalaryIncome', 'RentalIncome', 'AgricultureIncome', 'CommissionIncome', 'OtherIncome']
+    },
+    CoApplicantIncome: {
+        type: [String],
+        enum: ['Yes', 'No']
+    },
+    CoApplicantIncomeType: {
+        type: [String],
+        enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome'] 
+    },
+    CoApplicantIncomePeriod: {
+        type: [String],
+        enum: ['PerYear', 'PerMonth'] 
+    },
+    CoApplicantNetSalary: { type: Number },
+    CoApplicantOtherIncome: {
+        type: [String],
+        enum: ['SalaryIncome', 'RentalIncome', 'AgricultureIncome', 'CommissionIncome', 'OtherIncome']
+    }
 });
 
 incomeEntrySchema.plugin(timestamps);

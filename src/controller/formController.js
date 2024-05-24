@@ -54,30 +54,47 @@ formController.get("/getEligibilityForms", async (req, res) => {
 
 formController.post('/incomeEntryForm', async (req, res) => {
     try {
-        const { SalaryIncome } = req.body;
+        const { NetSalary, CoApplicantNetSalary } = req.body;
 
-        // Check if SalaryIncome is not provided or is not a number
-        if (!SalaryIncome || isNaN(parseFloat(SalaryIncome))) {
+        // Check if NetSalary is not provided or is not a number
+        if (!NetSalary || isNaN(parseFloat(NetSalary))) {
             return sendResponse(res, 400, "Failed", {
                 success: false,
-                message: "SalaryIncome must be provided and must be a number"
+                message: "NetSalary must be provided and must be a number"
             });
         }
 
-        if (parseFloat(SalaryIncome) < 100000) {
+        // Check if CoApplicantNetSalary is not provided or is not a number
+        if (!CoApplicantNetSalary || isNaN(parseFloat(CoApplicantNetSalary))) {
             return sendResponse(res, 400, "Failed", {
                 success: false,
-                message: "Salary must be above 1 lakh to create the form"
+                message: "CoApplicantNetSalary must be provided and must be a number"
             });
         }
 
-        const userData = { ...req.body }; 
+        // Check if NetSalary is above 1 lakh
+        if (parseFloat(NetSalary) < 100000) {
+            return sendResponse(res, 400, "Failed", {
+                success: false,
+                message: "NetSalary must be above 1 lakh to create the form"
+            });
+        }
+
+        // Check if CoApplicantNetSalary is above 1 lakh
+        if (parseFloat(CoApplicantNetSalary) < 100000) {
+            return sendResponse(res, 400, "Failed", {
+                success: false,
+                message: "CoApplicantNetSalary must be above 1 lakh to create the form"
+            });
+        }
+
+        const userData = { ...req.body };
         const formCreated = await formServices.createIncomeForm(userData);
 
         sendResponse(res, 200, "Success", {
             success: true,
             message: "Eligibility form created successfully!",
-            userData: formCreated
+            userData: formCreated,
         });
 
     } catch (error) {
@@ -87,7 +104,6 @@ formController.post('/incomeEntryForm', async (req, res) => {
         });
     }
 });
-
 
 
 formController.get("/getIncomeEntryForms", async (req, res) => {
