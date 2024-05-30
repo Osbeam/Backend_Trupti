@@ -6,6 +6,7 @@ const Department = require("../model/departmentSchema");
 const SubDepartment = require("../model/subDepartmentSchema");
 const Designation = require("../model/designationSchema");
 const User = require("../model/userSchema");
+const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/multer")
@@ -36,6 +37,73 @@ async function generateEmployeeID(departmentId, subDepartmentId, designationId) 
   return  employeeID;
 }
  
+
+
+
+
+const upload = imgUpload.fields([
+  { name: 'PanCard', maxCount: 1 },
+  { name: 'AadharCard', maxCount: 1 },
+  { name: 'Photo', maxCount: 1 },
+  { name: 'AddressProof', maxCount: 1 },
+  { name: 'HighestQuaCertificate', maxCount: 1 },
+  { name: 'LastComRellievingLetter', maxCount: 1 },
+  { name: 'BankDetails', maxCount: 1 }
+]);
+
+userController.post('/employeeInfo', upload, async (req, res) => {
+  try {
+    // Check if the email or mobile number already exists in the database
+    const existingEmployee = await EmployeeInfo.findOne({
+      $or: [{ EmailId: req.body.EmailId }, { MobileNumber: req.body.MobileNumber }]
+    });
+
+    if (existingEmployee) {
+      // If employee already exists with the same email or mobile number, send a response indicating the conflict
+      return res.status(409).send({
+        success: false,
+        message: "Email or mobile number already exists"
+      });
+    }
+
+    // Prepare employee data
+    const employeeData = { ...req.body };
+
+    // Add the document paths to the employee data if files were uploaded
+    if (req.files) {
+      if (req.files.PanCard) employeeData.PanCard = req.files.PanCard[0].path;
+      if (req.files.AadharCard) employeeData.AadharCard = req.files.AadharCard[0].path;
+      if (req.files.Photo) employeeData.Photo = req.files.Photo[0].path;
+      if (req.files.AddressProof) employeeData.AddressProof = req.files.AddressProof[0].path;
+      if (req.files.HighestQuaCertificate) employeeData.HighestQuaCertificate = req.files.HighestQuaCertificate[0].path;
+      if (req.files.LastComRellievingLetter) employeeData.LastComRellievingLetter = req.files.LastComRellievingLetter[0].path;
+      if (req.files.BankDetails) employeeData.BankDetails = req.files.BankDetails[0].path;
+    }
+
+    // Create a new employee record
+    const employeeCreated = new EmployeeInfo(employeeData);
+    await employeeCreated.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Employee Registered successfully!",
+      employeeData: employeeCreated
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
+
+
+
+
 
 
 
