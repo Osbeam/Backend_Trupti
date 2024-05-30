@@ -99,14 +99,6 @@ userController.post('/employeeInfo', upload, async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
 userController.post('/register', async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
@@ -340,7 +332,7 @@ userController.get("/getLogUserbyid", async (req, res) => {
 userController.get("/getApprovedLogUsers", async (req, res) => {
   try {
     const { approved, startDate, endDate, currentPage, pageSize } = req.query;
-    const query = { approved };
+    const query = { approved: approved === 'true' }; // Convert approved to boolean
 
     // Apply date filters if provided
     if (startDate) {
@@ -359,11 +351,22 @@ userController.get("/getApprovedLogUsers", async (req, res) => {
     // Calculate skip value for pagination
     const skip = (page - 1) * size;
 
-    // Retrieve paginated data from the service
+    // Retrieve aggregated data from the service
     const data = await userServices.getApprovedLogUsers(query, skip, size);
 
-    // Get total count of documents for pagination
-    const totalCount = await LogUser.countDocuments(query);
+    // Get total count of unique users for pagination
+    const totalCountPipeline = [
+      { $match: query },
+      {
+        $group: {
+          _id: "$userId"
+        }
+      },
+      { $count: "totalUsers" }
+    ];
+
+    const totalCountResult = await LogUser.aggregate(totalCountPipeline).exec();
+    const totalCount = totalCountResult[0] ? totalCountResult[0].totalUsers : 0;
 
     // Calculate total pages
     const totalPages = Math.ceil(totalCount / size);

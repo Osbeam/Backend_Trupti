@@ -10,7 +10,7 @@ const employeeSchema = mongoose.Schema({
     EmailId: { type: String },
     BloodGroup: {
         type: [String],
-        enum: ['A Positive', 'A Negative', 'B Positive', 'B Negative', 'AB Positive', 'AB Negative', 'O Positive', 'O Negative']
+        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
     },
     CurrentAddress: { type: String },
     City: { type: String },

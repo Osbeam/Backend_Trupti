@@ -65,36 +65,43 @@ exports.getAllLogUser = async (currentPage, pageSize) => {
 
 
 exports.getApprovedLogUsers = async (query, skip, limit) => {
-  // Retrieve all users with their logs
-  const users = await LogUser.find(query).populate('userId')
-  .skip(skip)
-  .limit(limit);
-
-  // Initialize an object to store user IDs and their corresponding counts of approved logs
-  const approvedCounts = {}; 
-
-  // Iterate through the users to count the number of approved logs for each user
-  users.forEach(user => {
-    if (user.userId && user.userId._id) { // Check if userId and _id exist
-      const userId = user.userId._id.toString(); // Convert userId to string for consistency
-      if (user.approved) {
-        if (!approvedCounts[userId]) {
-          approvedCounts[userId] = 1;
-        } else {
-          approvedCounts[userId]++;
-        }
+  const aggregatePipeline = [
+    { $match: query },
+    {
+      $group: {
+        _id: "$userId",
+        count: { $sum: 1 },
+        userId: { $first: "$userId" } // This retains the userId for later population
       }
-    }
+    },
+    { $sort: { count: -1 } }, // Optional: sort by count of logs in descending order
+    { $skip: skip },
+    { $limit: limit }
+  ];
+
+  // Run the aggregation pipeline
+  const logUserCounts = await LogUser.aggregate(aggregatePipeline).exec();
+
+  // Populate the userId with user details
+  const populatedResults = await LogUser.populate(logUserCounts, {
+    path: 'userId',
+    select: 'EmployeeID UserName Designation' // Select additional fields as necessary
   });
 
-  // Combine the count of approved logs with the user data
-  const userDataWithCount = users.map(user => ({
-    userId: user.userId ? user.userId._id : null, // Check if userId exists before accessing _id
-    username: user.userId ? user.userId.username : null, // Check if userId exists before accessing username
-    count: approvedCounts[user.userId ? user.userId._id.toString() : null] || 0,
-    logs: user
+  // Map the results to include user details and the count
+  const userDataWithCount = populatedResults.map(log => ({
+    userId: log.userId._id,
+    EmployeeID: log.userId.EmployeeID,
+    UserName: log.userId.UserName,
+    Designation: log.userId.Designation,
+    count: log.count
   }));
 
   return userDataWithCount;
 };
+
+
+
+
+
 
