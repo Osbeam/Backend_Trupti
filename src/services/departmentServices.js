@@ -25,7 +25,7 @@ exports.createSubDepartments = async (body) => {
 exports.getAllSubDepartments = async (id) => {
     const Subdepartment = await SubDepartment.findOne({_id:id}).populate({path: 'designation'});
     return Subdepartment;
-};
+}; 
 
 
 
