@@ -54,9 +54,6 @@ adminController.post('/upload', upload.single('file'), async (req, res) => {
   
 
 
-
-
-
   adminController.get("/getexcelfiles", async (req, res) => {
     try {
       const data = await adminServices.getAllFiles();
@@ -75,6 +72,28 @@ adminController.post('/upload', upload.single('file'), async (req, res) => {
   
 
   
+
+  adminController.post('/manualDataUpload', async (req, res) => {
+    try {
+
+        const userData = { ...req.body }; // Add employee ID to user data
+        const dataCreated = await adminServices.createData(userData);
+
+        sendResponse(res, 200, "Success", {
+            success: true,
+            message: "Manually Data Uploaded Successfully!",
+            userData: dataCreated
+        });
+
+    } catch (error) {
+        console.log(error);
+        sendResponse(res, 500, "Failed", {
+            message: error.message || "Internal server error",
+        });
+    }
+});
+
+
 
 
 module.exports = adminController;

@@ -37,15 +37,18 @@ async function getAllFiles() {
 
 
 
+async function createData(body){
+  const createfunction = await Admin.create(body);
+  return createfunction;
+}
+
+
 
 
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
-  getAllFiles
+  getAllFiles,
+  createData
 };
-
-
-
-
 

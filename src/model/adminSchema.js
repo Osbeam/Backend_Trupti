@@ -22,7 +22,11 @@ const adminSchema = mongoose.Schema({
     CibilScore:{type:String},
     ExistingLoanAmt:{type:String},
     ExistingROI:{type:String},
-    ExistingEMI:{type:String}
+    ExistingEMI:{type:String},
+    Status: {
+        type: [String],
+        enum: ['CallNotReceived', 'NotInterested', 'SwitchOff', 'Invalid', 'NotExists']
+    }
 });
 
 adminSchema.plugin(timestamps);
