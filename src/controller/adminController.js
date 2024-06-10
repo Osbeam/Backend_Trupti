@@ -5,7 +5,7 @@ const Admin = require("../model/adminSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/multer")
-const excelUpload = require('../utils/multer'); // Ensure this path points to your excelUpload middleware
+const {excelUpload} = require('../utils/excel'); // Ensure this path points to your excelUpload middleware
 const { saveExcelDataToDB } = require('../services/adminServices'); // Adjust the path as necessary
 const { processExcelFile } = require('../services/adminServices');
 const fs = require('fs');
@@ -42,57 +42,57 @@ adminController.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 
-  const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname);
-    },
-  });
-  
-  
-
-
-  adminController.get("/getexcelfiles", async (req, res) => {
-    try {
-      const data = await adminServices.getAllFiles();
-      sendResponse(res, 200, "Success", {
-        success: true,
-        message: "All Excel list retrieved successfully!",
-        data: data
-      });
-    } catch (error) {
-      console.log(error);
-      sendResponse(res, 500, "Failed", {
-        message: error.message || "Internal server error",
-      });
-    }
-  });
-  
-
-  
-
-  adminController.post('/manualDataUpload', async (req, res) => {
-    try {
-
-        const userData = { ...req.body }; // Add employee ID to user data
-        const dataCreated = await adminServices.createData(userData);
-
-        sendResponse(res, 200, "Success", {
-            success: true,
-            message: "Manually Data Uploaded Successfully!",
-            userData: dataCreated
-        });
-
-    } catch (error) {
-        console.log(error);
-        sendResponse(res, 500, "Failed", {
-            message: error.message || "Internal server error",
-        });
-    }
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
 });
 
+
+
+adminController.get("/getexcelfiles", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const data = await adminServices.getAllFiles(currentPage, pageSize);
+    const userCount = await Admin.countDocuments();
+    const totalPage = Math.ceil(userCount / 10);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All Excel list retrieved successfully!",
+      data: data, userCount, totalPage, currentPage
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.post('/manualDataUpload', async (req, res) => {
+  try {
+
+    const userData = { ...req.body }; // Add employee ID to user data
+    const dataCreated = await adminServices.createData(userData);
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Manually Data Uploaded Successfully!",
+      userData: dataCreated
+    });
+
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 adminController.put("/updatedata", async (req, res) => {

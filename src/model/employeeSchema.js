@@ -61,6 +61,7 @@ const employeeSchema = mongoose.Schema({
         enum: ['Yes', 'No']
     },
     OfficialMobileNumber: { type: String },
+    OfficialEmailId: { type: String },
     MobileIMEINumber: { type: String },
     PanCard: { type: String },
     AadharCard: { type: String },
@@ -73,7 +74,10 @@ const employeeSchema = mongoose.Schema({
     AccountHolderName: { type: String },
     AccountNumber: { type: String },
     IFSCCode: { type: String },
-
+    Role: {
+        type: [String],
+        enum: ['Admin', 'HR']
+    },
 });
 
 employeeSchema.plugin(timestamps);

@@ -41,7 +41,7 @@ async function generateEmployeeID(departmentId, subDepartmentId, designationId) 
 
 
 
-const upload = imgUpload.fields([
+const uploadimg = imgUpload.fields([
   { name: 'PanCard', maxCount: 1 },
   { name: 'AadharCard', maxCount: 1 },
   { name: 'Photo', maxCount: 1 },
@@ -51,7 +51,7 @@ const upload = imgUpload.fields([
   { name: 'BankDetails', maxCount: 1 }
 ]);
 
-userController.post('/employeeInfo', upload, async (req, res) => {
+userController.post('/employeeInfo', uploadimg, async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
     const existingEmployee = await EmployeeInfo.findOne({
@@ -99,6 +99,43 @@ userController.post('/employeeInfo', upload, async (req, res) => {
 });
 
 
+userController.post("/EmployeeInfoLogin", async (req, res) => {
+  try {
+    const { EmailId, Password, Role } = req.body;
+    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password, Role });
+    
+    if (!loggedUser) {
+      return sendResponse(res, 401, "Unauthorized", {
+        success: false,
+        message: "Invalid Userdetails",
+      });
+    }
+
+    // Check if the user has the role "Admin" or "HR"
+    const validRoles = ["Admin", "HR"];
+    if (!validRoles.includes(loggedUser.Role)) {
+      return sendResponse(res, 403, "Forbidden", {
+        success: false,
+        message: "Access denied. Only Admin and HR can login.",
+      });
+    }
+
+    const token = await jwt.sign({ loggedUser }, process.env.JWT_KEY);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Logged in successfully",
+      token,
+      loggedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 userController.put("/updateEmployeeData", async (req, res) => {
   try {
     const data = await userServices.updateData({ _id: req.body._id }, req.body);
@@ -118,11 +155,15 @@ userController.put("/updateEmployeeData", async (req, res) => {
 
 userController.get("/getEmployee", async (req, res) => {
   try {
-    const data = await userServices.getEmployee();
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const data = await userServices.getEmployee(currentPage, pageSize);
+    const userCount = await EmployeeInfo.countDocuments();
+    const totalPage = Math.ceil(userCount/10);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Employee list retrieved successfully!",
-      data: data
+      data: data, userCount, totalPage, currentPage
     });
   } catch (error) {
     console.log(error);
@@ -131,7 +172,6 @@ userController.get("/getEmployee", async (req, res) => {
     });
   }
 });
-
 
 
 userController.post('/register', async (req, res) => {

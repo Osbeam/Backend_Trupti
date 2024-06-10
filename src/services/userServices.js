@@ -110,7 +110,18 @@ exports.updateData = async (filter, update)=> {
 
 
 
-exports.getEmployee = async()=> {
-  const getEmployee = await Employee.find();
+exports.getEmployee = async(currentPage, pageSize)=> {
+  const skip = (currentPage - 1) * pageSize;
+  const getEmployee = await Employee.find().skip(skip).limit(pageSize);
   return getEmployee;
 }
+
+
+
+exports.EmployeeLogin = async ({ EmailId, Password }) => {
+  const user = await Employee.findOne({ EmailId });
+  if (user && user.Password === Password) {
+    return user;
+  }
+  return null;
+};

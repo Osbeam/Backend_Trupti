@@ -30,8 +30,9 @@ async function saveExcelDataToDB(excelData) {
 
 
 
-async function getAllFiles() {
-  const getFile = await Admin.find();
+async function getAllFiles(currentPage, pageSize) {
+  const skip = (currentPage - 1) * pageSize;
+  const getFile = await Admin.find().skip(skip).limit(pageSize);
   return getFile;
 }
 
@@ -48,7 +49,6 @@ async function createData(body){
   const createfunction = await Admin.create(body);
   return createfunction;
 }
-
 
 
 
