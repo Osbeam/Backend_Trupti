@@ -37,6 +37,13 @@ async function getAllFiles() {
 
 
 
+async function updateData(filter, update) {
+  return await Admin.updateOne(filter, update, { new: true });
+};
+
+
+
+
 async function createData(body){
   const createfunction = await Admin.create(body);
   return createfunction;
@@ -49,6 +56,7 @@ module.exports = {
   processExcelFile,
   saveExcelDataToDB,
   getAllFiles,
-  createData
+  createData,
+  updateData
 };
 

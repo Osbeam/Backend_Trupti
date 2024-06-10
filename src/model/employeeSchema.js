@@ -7,6 +7,7 @@ const employeeSchema = mongoose.Schema({
     MiddleName: { type: String },
     LastName: { type: String, required: true },
     MobileNumber: { type: Number },
+    Password: { type: String },
     EmailId: { type: String },
     BloodGroup: {
         type: [String],

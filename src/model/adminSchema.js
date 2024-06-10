@@ -23,10 +23,14 @@ const adminSchema = mongoose.Schema({
     ExistingLoanAmt:{type:String},
     ExistingROI:{type:String},
     ExistingEMI:{type:String},
-    Status: {
+    IsCalled:{type:Boolean, default:false},
+    CallStatus: {
         type: [String],
-        enum: ['CallNotReceived', 'NotInterested', 'SwitchOff', 'Invalid', 'NotExists']
-    }
+        enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp']
+    }, 
+    FollowUpDate:{type:String},
+    FollowUpTime:{type:String}, 
+    CalledBy:{type:String, ref: "User"}
 });
 
 adminSchema.plugin(timestamps);

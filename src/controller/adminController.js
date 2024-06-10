@@ -95,5 +95,23 @@ adminController.post('/upload', upload.single('file'), async (req, res) => {
 
 
 
+adminController.put("/updatedata", async (req, res) => {
+  try {
+    const data = await adminServices.updateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 
 module.exports = adminController;

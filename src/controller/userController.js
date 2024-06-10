@@ -99,6 +99,41 @@ userController.post('/employeeInfo', upload, async (req, res) => {
 });
 
 
+userController.put("/updateEmployeeData", async (req, res) => {
+  try {
+    const data = await userServices.updateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "User Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+userController.get("/getEmployee", async (req, res) => {
+  try {
+    const data = await userServices.getEmployee();
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All Employee list retrieved successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 userController.post('/register', async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database

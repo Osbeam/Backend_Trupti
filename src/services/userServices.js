@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../model/userSchema");
 const LogUser = require("../model/loguserSchema");
+const Employee = require("../model/employeeSchema");
 const { body } = require("express-validator");
 
 exports.create = async (body) => {
@@ -103,5 +104,13 @@ exports.getApprovedLogUsers = async (query, skip, limit) => {
 
 
 
+exports.updateData = async (filter, update)=> {
+  return await Employee.updateOne(filter, update, { new: true });
+};
 
 
+
+exports.getEmployee = async()=> {
+  const getEmployee = await Employee.find();
+  return getEmployee;
+}
