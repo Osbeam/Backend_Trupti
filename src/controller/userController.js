@@ -101,9 +101,9 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
 
 userController.post("/EmployeeInfoLogin", async (req, res) => {
   try {
-    const { EmailId, Password, Role } = req.body;
-    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password, Role });
-    
+    const { EmailId, Password } = req.body;
+    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password });
+
     if (!loggedUser) {
       return sendResponse(res, 401, "Unauthorized", {
         success: false,
@@ -111,9 +111,12 @@ userController.post("/EmployeeInfoLogin", async (req, res) => {
       });
     }
 
+    // Debug log to check the retrieved user data
+    console.log("Logged User:", loggedUser);
+
     // Check if the user has the role "Admin" or "HR"
     const validRoles = ["Admin", "HR"];
-    if (!validRoles.includes(loggedUser.Role)) {
+    if (!loggedUser.Role.some(role => validRoles.includes(role))) {
       return sendResponse(res, 403, "Forbidden", {
         success: false,
         message: "Access denied. Only Admin and HR can login.",

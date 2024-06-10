@@ -5,7 +5,7 @@ const Admin = require("../model/adminSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/multer")
-const {excelUpload} = require('../utils/excel'); // Ensure this path points to your excelUpload middleware
+// const {excelUpload} = require('../utils/excel'); // Ensure this path points to your excelUpload middleware
 const { saveExcelDataToDB } = require('../services/adminServices'); // Adjust the path as necessary
 const { processExcelFile } = require('../services/adminServices');
 const fs = require('fs');

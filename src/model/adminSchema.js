@@ -31,6 +31,7 @@ const adminSchema = mongoose.Schema({
     SubStatus: {type:String},
     FollowUpDate:{type:String},
     FollowUpTime:{type:String}, 
+    Notes:{type:String}, 
     CalledBy:{type:String, ref: "User"}
 });
 

@@ -76,7 +76,7 @@ const employeeSchema = mongoose.Schema({
     IFSCCode: { type: String },
     Role: {
         type: [String],
-        enum: ['Admin', 'HR']
+        enum: ['Admin', 'HR', 'Other']
     },
 });
 
