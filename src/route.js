@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const imgUpload = require("./utils/multer")
+const imgUpload = require("./utils/imageUpload")
 
 const userController = require("./controller/userController");
 const departmentcontroller = require("./controller/departmentcontroller");

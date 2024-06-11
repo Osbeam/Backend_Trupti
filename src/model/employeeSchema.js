@@ -13,11 +13,20 @@ const employeeSchema = mongoose.Schema({
         type: [String],
         enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
     },
-    CurrentAddress: { type: String },
-    City: { type: String },
-    State: { type: String },
-    Pincode: { type: String },
-    PermanentAddress: { type: String },
+    CurrentAddress: {
+        Caddress1: { type: String},
+        Caddress2: { type: String},
+        City1: { type: String },
+        State1: { type: String},
+        Pincode1: { type: String}
+    },
+    PermanentAddress: {
+        Paddress1: { type: String },
+        Paddress2: { type: String },
+        City2: { type: String},
+        State2: { type: String },
+        Pincode2: { type: String}
+    },
     HighestQualification: { type: String },
     Year: { type: String },
     TotalExperience: { type: String },

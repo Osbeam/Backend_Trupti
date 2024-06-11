@@ -9,7 +9,7 @@ const User = require("../model/userSchema");
 const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
-const imgUpload = require("../utils/multer")
+const imgUpload = require("../utils/imageUpload")
 const jwt = require('jsonwebtoken');
 
 
