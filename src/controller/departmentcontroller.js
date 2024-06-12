@@ -110,5 +110,22 @@ departmentController.post('/createDesignation', async (req, res) => {
 });
 
 
+departmentController.get("/getDesignation", async (req, res) => {
+    try {
+
+        const data = await departmentServices.getAllDesignation();
+        sendResponse(res, 200, "Success", {
+            success: true,
+            message: "All Designation list retrieved successfully!",
+            data: data
+        });
+    } catch (error) {
+        console.log(error);
+        sendResponse(res, 500, "Failed", {
+            message: error.message || "Internal server error",
+        });
+    }
+});
+
 
 module.exports = departmentController;

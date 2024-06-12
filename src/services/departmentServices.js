@@ -33,3 +33,9 @@ exports.getAllSubDepartments = async (id) => {
 exports.createDesignation = async (body) => {
     return await Designation.create(body);
 };
+
+
+exports.getAllDesignation = async () => {
+    const designation = await Designation.find();
+    return designation;
+};

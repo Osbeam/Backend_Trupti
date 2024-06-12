@@ -56,6 +56,15 @@ async function getEmployeeCallStatus(id){
   return await Admin.find({CalledBy:id});
 }
 
+
+
+async function getAllEmployeeCallStatus(){
+  return await Admin.find();
+}
+
+
+
+
 // const getEmployeeCallStatus = async (CalledBy) => {
 //   try {
 //     const callStatusCounts = await Admin.aggregate([
@@ -88,6 +97,7 @@ module.exports = {
   getAllFiles,
   createData,
   updateData,
-  getEmployeeCallStatus
+  getEmployeeCallStatus,
+  getAllEmployeeCallStatus
 };
 

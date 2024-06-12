@@ -158,5 +158,55 @@ adminController.get("/callstatus/:id", async (req, res) => {
 });
 
 
+adminController.get("/Allcallstatus", async (req, res) => {
+  try {
+    const callStatusData = await adminServices.getAllEmployeeCallStatus();
+    const users = await User.find(); // Retrieve all users
+    
+    let userData = [];
+
+    // Loop through each user
+    for (const user of users) {
+      let obj = {
+        user: user,
+        statusCounts: {
+          CallNotReceived: 0,
+          NotInterested: 0,
+          Interested: 0,
+          SwitchOff: 0,
+          Invalid: 0,
+          NotExists: 0,
+          FollowUp: 0
+        }
+      };
+    
+      // Loop through call status data to count status for each user
+      for (const data of callStatusData) {
+        // Check if data and user are defined and have the necessary properties
+        if (data && data.CalledBy && user && user._id && data.CalledBy.toString() === user._id.toString()) {
+          const status = data.CallStatus.length > 0 ? data.CallStatus[0] : null; // Check if CallStatus array is not empty
+          if (status && obj.statusCounts.hasOwnProperty(status)) {
+            obj.statusCounts[status]++;
+          }
+        }
+      }
+    
+      userData.push(obj);
+    }
+    
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Call status retrieved successfully",
+      data: userData
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 module.exports = adminController;
