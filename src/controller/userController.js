@@ -27,15 +27,16 @@ const setemployeeID = (number) => {
 
 // Function to generate a random employee ID consisting of only numbers
 async function generateEmployeeID(departmentId, subDepartmentId, designationId)  {
+  console.log("hello", departmentId)
   let employeeID = ''
-  let employeeNumber = await User.countDocuments();
+  let employeeNumber = await EmployeeInfo.countDocuments();
   let departmentCode = await Department.findOne({_id:departmentId})
   let subdepartmentCode = await SubDepartment.findOne({_id:subDepartmentId})
   let designationCode = await Designation.findOne({_id:designationId})
    employeeID = departmentCode.code+subdepartmentCode.code+designationCode.code+setemployeeID(++employeeNumber)
-
-  return  employeeID;
+   return  employeeID;
 }
+
  
 
 
@@ -50,6 +51,9 @@ const uploadimg = imgUpload.fields([
   { name: 'LastComRellievingLetter', maxCount: 1 },
   { name: 'BankDetails', maxCount: 1 }
 ]);
+
+
+
 
 userController.post('/employeeInfo', uploadimg, async (req, res) => {
   try {
@@ -69,6 +73,12 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     // Prepare employee data
     const employeeData = { ...req.body };
 
+    // Generate Employee ID
+    const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
+    employeeData.EmployeeID = employeeID;
+    console.log("hello", Department)
+    
+
     // Add the document paths to the employee data if files were uploaded
     if (req.files) {
       if (req.files.PanCard) employeeData.PanCard = req.files.PanCard[0].path;
@@ -84,7 +94,7 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     const employeeCreated = new EmployeeInfo(employeeData);
     await employeeCreated.save();
 
-    res.status(200).send({
+    sendResponse(res, 200, "Success", {
       success: true,
       message: "Employee Registered successfully!",
       employeeData: employeeCreated

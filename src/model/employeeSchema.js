@@ -9,6 +9,10 @@ const employeeSchema = mongoose.Schema({
     MobileNumber: { type: Number },
     Password: { type: String },
     EmailId: { type: String },
+    EmployeeID: {type: String},
+    Department: {type: String, ref: "Department"},
+    SubDepartment: {type: String, ref: "SubDepartment"},
+    Designation: {type: String, ref: "Designation"},
     BloodGroup: {
         type: [String],
         enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']

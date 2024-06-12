@@ -2,6 +2,7 @@ const express = require("express");
 const adminController = express.Router();
 const adminServices = require("../services/adminServices");
 const Admin = require("../model/adminSchema");
+const User = require("../model/userSchema")
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
@@ -112,6 +113,49 @@ adminController.put("/updatedata", async (req, res) => {
   }
 });
 
+adminController.get("/callstatus/:id", async (req, res) => {
+  try {
+    const data = await adminServices.getEmployeeCallStatus(req.params.id);
+    const user = await User.findOne({_id:req.params.id})
+    let obj = {
+      CallNotReceived: 0,
+      NotInterested: 0,
+      Interested: 0,
+      SwitchOff: 0,
+      Invalid: 0,
+      NotExists: 0,
+      FollowUp: 0
+    };
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].CallStatus[0] === "CallNotReceived") {
+        obj.CallNotReceived += 1;
+      } else if (data[i].CallStatus[0] === "NotInterested") {
+        obj.NotInterested += 1;
+      } else if (data[i].CallStatus[0] === "Interested") {
+        obj.Interested += 1;
+      } else if (data[i].CallStatus[0] === "SwitchOff") {
+        obj.SwitchOff += 1;
+      } else if (data[i].CallStatus[0] === "Invalid") {
+        obj.Invalid += 1;
+      } else if (data[i].CallStatus[0] === "NotExists") {
+        obj.NotExists += 1;
+      } else if (data[i].CallStatus[0] === "FollowUp") {
+        obj.FollowUp += 1;
+      }
+    }
+    obj.user= user
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Call Status retrieved successfully",
+      data: obj
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 

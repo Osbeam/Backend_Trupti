@@ -52,11 +52,42 @@ async function createData(body){
 
 
 
+async function getEmployeeCallStatus(id){
+  return await Admin.find({CalledBy:id});
+}
+
+// const getEmployeeCallStatus = async (CalledBy) => {
+//   try {
+//     const callStatusCounts = await Admin.aggregate([
+//       { $match: { CalledBy: new mongoose.Types.ObjectId(CalledBy) } },
+//       { $unwind: '$CallStatus' },
+//       { $group: {
+//           _id: '$CallStatus',
+//           count: { $sum: 1 }
+//       }}
+//     ]);
+
+//     // Convert the aggregation result to an object
+//     const callStatusSummary = callStatusCounts.reduce((acc, status) => {
+//       acc[status._id] = status.count;
+//       return acc;
+//     }, {});
+
+//     return callStatusSummary;
+//   } catch (error) {
+//     throw new Error(error.message);
+//   }
+// };
+
+
+
+
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
   getAllFiles,
   createData,
-  updateData
+  updateData,
+  getEmployeeCallStatus
 };
 
