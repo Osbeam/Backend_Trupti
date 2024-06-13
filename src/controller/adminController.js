@@ -177,7 +177,8 @@ adminController.get("/Allcallstatus", async (req, res) => {
           Invalid: 0,
           NotExists: 0,
           FollowUp: 0
-        }
+        },
+        totalCalls: 0 // Initialize total calls count
       };
     
       // Loop through call status data to count status for each user
@@ -187,6 +188,7 @@ adminController.get("/Allcallstatus", async (req, res) => {
           const status = data.CallStatus.length > 0 ? data.CallStatus[0] : null; // Check if CallStatus array is not empty
           if (status && obj.statusCounts.hasOwnProperty(status)) {
             obj.statusCounts[status]++;
+            obj.totalCalls++; // Increment total calls count
           }
         }
       }
@@ -199,6 +201,24 @@ adminController.get("/Allcallstatus", async (req, res) => {
       success: true,
       message: "Call status retrieved successfully",
       data: userData
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.get("/InterestedCallStatus", async (req, res) => {
+  try {
+    const { interestedCallsCount, interestedCallStatusData } = await adminServices.getInterestedCallStatus();
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Interested call status retrieved successfully",
+      data: { interestedCallsCount, interestedCallStatusData }
     });
   } catch (error) {
     console.log(error);

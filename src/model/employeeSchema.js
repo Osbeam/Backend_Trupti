@@ -3,6 +3,7 @@ const timestamps = require("mongoose-timestamp");
 const { type } = require("os");
 
 const employeeSchema = mongoose.Schema({
+    MrMissMrs: { type: String },
     FirstName: { type: String, required: true },
     MiddleName: { type: String },
     LastName: { type: String, required: true },

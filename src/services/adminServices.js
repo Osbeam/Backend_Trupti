@@ -63,30 +63,21 @@ async function getAllEmployeeCallStatus(){
 }
 
 
+async function getInterestedCallStatus() {
+  try {
+    // Example: Retrieve interested call status data from a database
+    const interestedCallStatusData = await Admin.find({ CallStatus: 'Interested' });
 
+    const interestedCallsCount = interestedCallStatusData.length;
 
-// const getEmployeeCallStatus = async (CalledBy) => {
-//   try {
-//     const callStatusCounts = await Admin.aggregate([
-//       { $match: { CalledBy: new mongoose.Types.ObjectId(CalledBy) } },
-//       { $unwind: '$CallStatus' },
-//       { $group: {
-//           _id: '$CallStatus',
-//           count: { $sum: 1 }
-//       }}
-//     ]);
-
-//     // Convert the aggregation result to an object
-//     const callStatusSummary = callStatusCounts.reduce((acc, status) => {
-//       acc[status._id] = status.count;
-//       return acc;
-//     }, {});
-
-//     return callStatusSummary;
-//   } catch (error) {
-//     throw new Error(error.message);
-//   }
-// };
+    return {
+      interestedCallsCount,
+      interestedCallStatusData
+    };
+  } catch (error) {
+    throw new Error("Error retrieving interested call status data: " + error.message);
+  }
+}
 
 
 
@@ -98,6 +89,7 @@ module.exports = {
   createData,
   updateData,
   getEmployeeCallStatus,
-  getAllEmployeeCallStatus
+  getAllEmployeeCallStatus,
+  getInterestedCallStatus
 };
 
