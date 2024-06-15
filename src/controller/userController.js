@@ -112,7 +112,7 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
 userController.post("/EmployeeInfoLogin", async (req, res) => {
   try {
     const { EmailId, Password } = req.body;
-    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password });
+    const loggedUser = await userServices.EmployeeHrLogin({ EmailId, Password });
 
     if (!loggedUser) {
       return sendResponse(res, 401, "Unauthorized", {

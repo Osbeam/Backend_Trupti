@@ -125,3 +125,13 @@ exports.EmployeeLogin = async ({ EmployeeID, Password }) => {
   }
   return null;
 };
+
+
+
+exports.EmployeeHrLogin = async ({ EmailId, Password }) => {
+  const user = await Employee.findOne({ EmailId });
+  if (user && user.Password === Password) {
+    return user;
+  }
+  return null;
+};
