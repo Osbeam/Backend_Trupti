@@ -35,6 +35,7 @@ exports.createDesignation = async (body) => {
 };
 
 
+
 exports.getAllDesignation = async () => {
     const designation = await Designation.find();
     return designation;

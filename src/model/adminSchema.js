@@ -23,6 +23,7 @@ const adminSchema = mongoose.Schema({
     ExistingLoanAmt:{type:String},
     ExistingROI:{type:String},
     ExistingEMI:{type:String},
+    AssignedTo:{type:String, ref: "EmployeeInfo"},
     IsCalled:{type:Boolean, default:false},
     CallStatus: {
         type: [String],
@@ -32,7 +33,10 @@ const adminSchema = mongoose.Schema({
     FollowUpDate:{type:String},
     FollowUpTime:{type:String}, 
     Notes:{type:String}, 
-    CalledBy:{type:String, ref: "User"}
+    CalledBy:{type:String, ref: "EmployeeInfo"},
+    LoanType:{type:String},
+    LoanAmount:{type:String},
+    City:{type:String},
 });
 
 adminSchema.plugin(timestamps);

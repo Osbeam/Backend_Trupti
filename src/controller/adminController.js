@@ -2,6 +2,7 @@ const express = require("express");
 const adminController = express.Router();
 const adminServices = require("../services/adminServices");
 const Admin = require("../model/adminSchema");
+const Employee = require("../model/employeeSchema");
 const User = require("../model/userSchema")
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -76,6 +77,120 @@ adminController.get("/getexcelfiles", async (req, res) => {
 });
 
 
+
+// adminController.get("/distributeDataToEmployees", async (req, res) => {
+//   try {
+//     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
+//     const totalEmployees = employees.length;
+//     const totalData = await Admin.countDocuments({ IsCalled: false }); // Count only data with IsCalled status false
+
+//     const dataPerEmployee = Math.floor(totalData / totalEmployees);
+//     let remainingData = totalData % totalEmployees; // Calculate the remaining data after distributing equally
+
+//     const distributedData = [];
+
+//     let startIndex = 0;
+//     let dataIndex = 0;
+
+//     for (const employee of employees) {
+//       let dataCount = dataPerEmployee;
+//       if (remainingData > 0) {
+//         dataCount++; // Distribute the remaining data to the first few employees
+//         remainingData--;
+//       }
+
+//       console.log(`Employee ${employee._id}: dataCount=${dataCount}, startIndex=${startIndex}, dataIndex=${dataIndex}`);
+
+//       const employeeData = await Admin.find({ IsCalled: false }).skip(startIndex).limit(dataCount); // Query only data with IsCalled status false
+//       console.log(`Employee ${employee._id}: employeeData=${JSON.stringify(employeeData)}`);
+
+//       distributedData.push({ _id: employee._id, data: employeeData }); // Change key to _id
+
+//       dataIndex += dataCount;
+//       startIndex = dataIndex; // Move startIndex to the next position
+//     }
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Data distributed to employees successfully!",
+//       data: distributedData
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+adminController.get("/distributeDataToEmployees", async (req, res) => {
+  try {
+    const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
+    const data = await Admin.find({ IsCalled: false, AssignedTo: null }); // Find data with IsCalled status false and unassigned to any employee
+
+    const totalEmployees = employees.length;
+    const totalData = data.length;
+    const dataPerEmployee = Math.floor(totalData / totalEmployees);
+    let remainingData = totalData % totalEmployees;
+
+    let dataIndex = 0;
+
+    for (const employee of employees) {
+      let dataCount = dataPerEmployee;
+      if (remainingData > 0) {
+        dataCount++; // Distribute the remaining data to the first few employees
+        remainingData--;
+      }
+
+      const employeeId = employee._id;
+
+      // Update the documents with the employee ID
+      const distributedData = await Admin.updateMany({ _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } }, { AssignedTo: employeeId });
+
+      dataIndex += dataCount;
+    }
+
+    let distributedData = await Admin.find({ IsCalled: false });
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data distributed to employees successfully!",
+      data: distributedData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
+adminController.get("/employeeData/:employeeId", async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId;
+
+    // Retrieve the distributed data for the employee with the provided ID
+    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false });
+   console.log(employeeData.length)
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: `Distributed data for employee ${employeeId} retrieved successfully!`,
+      data: employeeData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 adminController.post('/manualDataUpload', async (req, res) => {
   try {
 
@@ -112,6 +227,7 @@ adminController.put("/updatedata", async (req, res) => {
     });
   }
 });
+
 
 adminController.get("/callstatus/:id", async (req, res) => {
   try {
@@ -160,6 +276,9 @@ adminController.get("/callstatus/:id", async (req, res) => {
 
 adminController.get("/Allcallstatus", async (req, res) => {
   try {
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    
     const callStatusData = await adminServices.getAllEmployeeCallStatus();
     const users = await User.find(); // Retrieve all users
     
@@ -192,15 +311,26 @@ adminController.get("/Allcallstatus", async (req, res) => {
           }
         }
       }
-    
       userData.push(obj);
     }
-    
+
+    // Calculate total pages
+    const totalUsers = userData.length;
+    const totalPage = Math.ceil(totalUsers / pageSize);
+
+    // Implement pagination
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = currentPage * pageSize;
+    const paginatedData = userData.slice(startIndex, endIndex);
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Call status retrieved successfully",
-      data: userData
+      data: paginatedData,
+      currentPage: currentPage,
+      pageSize: pageSize,
+      totalUsers: totalUsers,
+      totalPage: totalPage  // Include totalPage in the response
     });
   } catch (error) {
     console.log(error);
@@ -214,7 +344,6 @@ adminController.get("/Allcallstatus", async (req, res) => {
 adminController.get("/InterestedCallStatus", async (req, res) => {
   try {
     const { interestedCallsCount, interestedCallStatusData } = await adminServices.getInterestedCallStatus();
-
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Interested call status retrieved successfully",
@@ -227,6 +356,44 @@ adminController.get("/InterestedCallStatus", async (req, res) => {
     });
   }
 });
+
+
+adminController.get("/InterestedCustomer/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+
+    // Retrieve interested call status data for the specified customer ID
+    const interestedCallStatusData = await adminServices.getInterestedCustomer(_id);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Interested call status retrieved successfully",
+      data: interestedCallStatusData
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.put("/editInterestedCustomer", async (req, res) => {
+  try {
+    const data = await adminServices.updateCustomer({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Customer Data Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 
 module.exports = adminController;

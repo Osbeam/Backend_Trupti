@@ -149,6 +149,35 @@ userController.post("/EmployeeInfoLogin", async (req, res) => {
 });
 
 
+userController.post("/AllEmployeeLogin", async (req, res) => {
+  try {
+    const { EmailId, Password } = req.body;
+    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password });
+
+    if (!loggedUser) {
+      return sendResponse(res, 401, "Unauthorized", {
+        success: false,
+        message: "Invalid Userdetails",
+      });
+    }
+    console.log("Logged User:", loggedUser);
+
+    const token = await jwt.sign({ loggedUser }, process.env.JWT_KEY);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Logged in successfully",
+      token,
+      loggedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 userController.put("/updateEmployeeData", async (req, res) => {
   try {
     const data = await userServices.updateData({ _id: req.body._id }, req.body);

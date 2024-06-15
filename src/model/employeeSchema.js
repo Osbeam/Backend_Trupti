@@ -46,10 +46,6 @@ const employeeSchema = mongoose.Schema({
     Relation2: { type: String },
     ContanctNumber2: { type: String },
     Address2: { type: String },
-    EmployeeID: { type: String },
-    Department: { type: String, ref: "Department" },
-    SubDepartment: { type: String, ref: "SubDepartment" },
-    Designation: { type: String, ref: "Designation" },
     ReportingTo: { type: [String] },
     ManagerName: { type: [String] },
     DateOfJoining: { type: String },
@@ -90,7 +86,7 @@ const employeeSchema = mongoose.Schema({
     IFSCCode: { type: String },
     Role: {
         type: [String],
-        enum: ['Admin', 'HR', 'Other']
+        enum: ['Admin', 'HR', 'Other', 'TeleCalling']
     },
 });
 
