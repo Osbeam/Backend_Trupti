@@ -151,8 +151,8 @@ userController.post("/EmployeeInfoLogin", async (req, res) => {
 
 userController.post("/AllEmployeeLogin", async (req, res) => {
   try {
-    const { EmailId, Password } = req.body;
-    const loggedUser = await userServices.EmployeeLogin({ EmailId, Password });
+    const { EmployeeID, Password } = req.body;
+    const loggedUser = await userServices.EmployeeLogin({ EmployeeID, Password });
 
     if (!loggedUser) {
       return sendResponse(res, 401, "Unauthorized", {

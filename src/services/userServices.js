@@ -118,8 +118,8 @@ exports.getEmployee = async(currentPage, pageSize)=> {
 
 
 
-exports.EmployeeLogin = async ({ EmailId, Password }) => {
-  const user = await Employee.findOne({ EmailId });
+exports.EmployeeLogin = async ({ EmployeeID, Password }) => {
+  const user = await Employee.findOne({ EmployeeID });
   if (user && user.Password === Password) {
     return user;
   }

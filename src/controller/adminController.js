@@ -232,7 +232,7 @@ adminController.put("/updatedata", async (req, res) => {
 adminController.get("/callstatus/:id", async (req, res) => {
   try {
     const data = await adminServices.getEmployeeCallStatus(req.params.id);
-    const user = await User.findOne({_id:req.params.id})
+    const user = await Employee.findOne({_id:req.params.id})
     let obj = {
       CallNotReceived: 0,
       NotInterested: 0,
@@ -280,7 +280,7 @@ adminController.get("/Allcallstatus", async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 10;
     
     const callStatusData = await adminServices.getAllEmployeeCallStatus();
-    const users = await User.find(); // Retrieve all users
+    const users = await Employee.find(); // Retrieve all users
     
     let userData = [];
 
