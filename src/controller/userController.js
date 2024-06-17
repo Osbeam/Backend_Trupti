@@ -297,7 +297,7 @@ userController.get("/getUsers", async (req, res) => {
 });
 
 
-userController.get("/getUserbyId/:userId", async (req, res) => {
+userController.get("/getEmployeebyId/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 

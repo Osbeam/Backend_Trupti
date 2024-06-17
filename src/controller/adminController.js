@@ -396,4 +396,25 @@ adminController.put("/editInterestedCustomer", async (req, res) => {
 
 
 
+adminController.get("/LeadFromData", async (req, res) => {
+  try {
+    const leadFromData = await adminServices.getLeadFromData();
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Lead From data retrieved successfully!",
+      data: leadFromData
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
+
+
+
 module.exports = adminController;

@@ -103,6 +103,25 @@ async function updateCustomer(filter, update) {
 };
 
 
+
+
+
+async function getLeadFromData() {
+  try {
+    // Fetch distinct LeadFrom values from your database model
+    const leadFromData = await YourDatabaseModel.distinct('LeadFrom', { LeadFrom: { $exists: true, $ne: null } });
+
+    return leadFromData;
+  } catch (error) {
+    throw new Error(`Error fetching LeadFrom data: ${error.message}`);
+  }
+}
+
+
+
+
+
+
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
@@ -113,6 +132,7 @@ module.exports = {
   getAllEmployeeCallStatus,
   getInterestedCallStatus,
   getInterestedCustomer,
-  updateCustomer
+  updateCustomer,
+  getLeadFromData
 };
 

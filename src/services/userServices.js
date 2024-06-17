@@ -24,7 +24,7 @@ exports.getAllUsers = async (currentPage, pageSize) => {
 
 
 exports.getUser = async (query) => {
-  return await User.find(query);
+  return await Employee.find(query);
 };
 
 

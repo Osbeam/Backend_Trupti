@@ -25,6 +25,8 @@ const adminSchema = mongoose.Schema({
     ExistingEMI:{type:String},
     AssignedTo:{type:String, ref: "EmployeeInfo"},
     IsCalled:{type:Boolean, default:false},
+    LeadFrom:{type:String},
+    IsLead:{type:Boolean, default:false},
     CallStatus: {
         type: [String],
         enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp']
