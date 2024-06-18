@@ -17,7 +17,7 @@ exports.login = async (body) => {
 
 exports.getAllUsers = async (currentPage, pageSize) => {
   const skip = (currentPage - 1) * pageSize;
-  const users = await User.find().skip(skip).limit(pageSize);
+  const users = await Employee.find().skip(skip).limit(pageSize);
   return users;
 };
 

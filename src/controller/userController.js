@@ -39,9 +39,6 @@ async function generateEmployeeID(departmentId, subDepartmentId, designationId) 
 
  
 
-
-
-
 const uploadimg = imgUpload.fields([
   { name: 'PanCard', maxCount: 1 },
   { name: 'AadharCard', maxCount: 1 },
@@ -51,8 +48,6 @@ const uploadimg = imgUpload.fields([
   { name: 'LastComRellievingLetter', maxCount: 1 },
   { name: 'BankDetails', maxCount: 1 }
 ]);
-
-
 
 
 userController.post('/employeeInfo', uploadimg, async (req, res) => {
@@ -216,6 +211,25 @@ userController.get("/getEmployee", async (req, res) => {
 });
 
 
+userController.get("/getEmployeebyId/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const data = await userServices.getUser({ _id: userId });
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "User retrieved successfully!",
+      data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 userController.post('/register', async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
@@ -266,46 +280,6 @@ userController.post("/login", async (req, res) => {
       message: message,
       token ,
       loggedUser, 
-    });
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-userController.get("/getUsers", async (req, res) => {
-  try {
-    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 10; 
-    const data = await userServices.getAllUsers(currentPage, pageSize);
-    const userCount = await User.countDocuments();
-    const totalPage = Math.ceil(userCount/10);
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "All Users list retrieved successfully!",
-      data: data, userCount, totalPage, currentPage
-    });
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-userController.get("/getEmployeebyId/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    const data = await userServices.getUser({ _id: userId });
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "User retrieved successfully!",
-      data
     });
   } catch (error) {
     console.log(error);

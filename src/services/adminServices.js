@@ -108,17 +108,25 @@ async function updateCustomer(filter, update) {
 
 async function getLeadFromData() {
   try {
-    // Fetch distinct LeadFrom values from your database model
-    const leadFromData = await YourDatabaseModel.distinct('LeadFrom', { LeadFrom: { $exists: true, $ne: null } });
+    // Fetch all documents where LeadFrom field exists in your Admin collection
+    const leadFromData = await Admin.find({ LeadFrom: { $exists: true }, IsLead: false });
 
-    return leadFromData;
+    const leadFromCount = leadFromData.length;
+
+    return {
+      LeadFromData: leadFromData,
+      LeadFromCount: leadFromCount
+    };
   } catch (error) {
-    throw new Error(`Error fetching LeadFrom data: ${error.message}`);
+    throw new Error("Error retrieving LeadFrom data: " + error.message);
   }
 }
 
 
 
+async function LeadupdateData(filter, update) {
+  return await Admin.updateOne(filter, update, { new: true });
+};
 
 
 
@@ -133,6 +141,7 @@ module.exports = {
   getInterestedCallStatus,
   getInterestedCustomer,
   updateCustomer,
-  getLeadFromData
+  getLeadFromData,
+  LeadupdateData
 };
 

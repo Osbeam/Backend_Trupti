@@ -190,7 +190,6 @@ adminController.get("/employeeData/:employeeId", async (req, res) => {
 });
 
 
-
 adminController.post('/manualDataUpload', async (req, res) => {
   try {
 
@@ -395,14 +394,13 @@ adminController.put("/editInterestedCustomer", async (req, res) => {
 });
 
 
-
 adminController.get("/LeadFromData", async (req, res) => {
   try {
-    const leadFromData = await adminServices.getLeadFromData();
+    const { LeadFromData, LeadFromCount } = await adminServices.getLeadFromData();
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Lead From data retrieved successfully!",
-      data: leadFromData
+      data: { LeadFromData, LeadFromCount }
     });
   } catch (error) {
     console.log(error);
@@ -412,6 +410,60 @@ adminController.get("/LeadFromData", async (req, res) => {
   }
 });
 
+
+adminController.put("/LeadAdminDataUpdate", async (req, res) => {
+  try {
+    const data = await adminServices.LeadupdateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.get("/leadData/:employeeId", async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId;
+
+    // Retrieve the distributed data for the employee with the provided ID
+    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false, IsLead:true });
+   console.log(employeeData.length)
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: `Distributed data for employee ${employeeId} retrieved successfully!`,
+      data: employeeData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.put("/LeadMobileDataUpdate", async (req, res) => {
+  try {
+    const data = await adminServices.LeadupdateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 
