@@ -108,8 +108,12 @@ async function updateCustomer(filter, update) {
 
 async function getLeadFromData() {
   try {
-    // Fetch all documents where LeadFrom field exists in your Admin collection
-    const leadFromData = await Admin.find({ LeadFrom: { $exists: true }, IsLead: false });
+    // Fetch all documents where LeadFrom field exists, IsLead is false, and AssignedTo is null or not present
+    const leadFromData = await Admin.find({ 
+      LeadFrom: { $exists: true }, 
+      IsLead: false,
+      AssignedTo: { $in: [null, undefined] }
+    });
 
     const leadFromCount = leadFromData.length;
 

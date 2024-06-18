@@ -169,6 +169,63 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 
 
 
+adminController.get("/leadDistributeToEmployees", async (req, res) => {
+  try {
+    const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
+    const data = await Admin.find({ IsCalled: false, AssignedTo: null, LeadFrom: { $exists: true } }); // Find data with IsCalled status false, unassigned to any employee, and LeadFrom exists
+
+    const totalEmployees = employees.length;
+    const totalData = data.length;
+
+    if (totalData === 0) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "No data to distribute.",
+        data: []
+      });
+    }
+
+    const dataPerEmployee = Math.floor(totalData / totalEmployees);
+    let remainingData = totalData % totalEmployees;
+
+    let dataIndex = 0;
+
+    for (const employee of employees) {
+      let dataCount = dataPerEmployee;
+      if (remainingData > 0) {
+        dataCount++; // Distribute the remaining data to the first few employees
+        remainingData--;
+      }
+
+      const employeeId = employee._id;
+
+      // Update the documents with the employee ID
+      const distributedData = await Admin.updateMany({ 
+        _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } 
+      }, { 
+        AssignedTo: employeeId 
+      });
+
+      dataIndex += dataCount;
+    }
+
+    // Retrieve the distributed data that meets the LeadFrom condition
+    let distributedData = await Admin.find({ IsCalled: false, LeadFrom: { $exists: true } });
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data distributed to employees successfully!",
+      data: distributedData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 adminController.get("/employeeData/:employeeId", async (req, res) => {
   try {
     const employeeId = req.params.employeeId;
