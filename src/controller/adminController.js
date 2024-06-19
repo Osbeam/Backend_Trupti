@@ -490,7 +490,7 @@ adminController.get("/leadData/:employeeId", async (req, res) => {
     const employeeId = req.params.employeeId;
 
     // Retrieve the distributed data for the employee with the provided ID
-    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false, IsLead:true });
+    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false, LeadFrom: { $exists: true }, });
    console.log(employeeData.length)
     sendResponse(res, 200, "Success", {
       success: true,
