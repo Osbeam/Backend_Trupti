@@ -304,7 +304,7 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
     const logCreated = await LogUser.create(userLogData);
 
     // Fetch user data dynamically based on userId
-    const userData = await User.findById(req.params.userId); // Use the userId from URL parameter
+    const userData = await EmployeeInfo.findById(req.params.userId); // Use the userId from URL parameter
 
     sendResponse(res, 200, "Success", {
       success: true,
@@ -346,7 +346,7 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
     await existingLog.save();
 
     // Fetch user data dynamically based on userId
-    const userData = await User.findById(existingLog.userId);
+    const userData = await EmployeeInfo.findById(existingLog.userId);
 
     sendResponse(res, 200, "Success", {
       success: true,

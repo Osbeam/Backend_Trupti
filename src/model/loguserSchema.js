@@ -3,7 +3,7 @@ const timestamps = require("mongoose-timestamp");
 const { type } = require("os");
 
 const logUserSchema = mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' },
     inTimeImage: { type: String },
     inTime: { type: Date },
     outTime: { type: Date },
