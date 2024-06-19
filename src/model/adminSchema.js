@@ -23,10 +23,10 @@ const adminSchema = mongoose.Schema({
     ExistingLoanAmt:{type:String},
     ExistingROI:{type:String},
     ExistingEMI:{type:String},
-    AssignedTo:{type:String, ref: "EmployeeInfo"},
-    IsCalled:{type:Boolean, default:false},
     LeadFrom:{type:String},
     IsLead:{type:Boolean, default:false},
+    AssignedTo:{type:String, ref: "EmployeeInfo"},
+    IsCalled:{type:Boolean, default:false},
     LeadCallStatus: {
         type: [String],
         enum: ['Accept', 'Pending']
@@ -35,11 +35,11 @@ const adminSchema = mongoose.Schema({
         type: [String],
         enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp']
     }, 
+    CalledBy:{type:String, ref: "EmployeeInfo"},
     SubStatus: {type:String},
     FollowUpDate:{type:String},
     FollowUpTime:{type:String}, 
     Notes:{type:String}, 
-    CalledBy:{type:String, ref: "EmployeeInfo"},
     LoanType:{type:String},
     LoanAmount:{type:String},
     City:{type:String},
@@ -47,4 +47,3 @@ const adminSchema = mongoose.Schema({
 
 adminSchema.plugin(timestamps);
 module.exports = mongoose.model("Admin", adminSchema);
-

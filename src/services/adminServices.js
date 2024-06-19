@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Admin = require("../model/adminSchema");
+const Employee = require("../model/employeeSchema");
 const { body } = require("express-validator");
 const xlsx = require('xlsx');
 
@@ -134,6 +135,25 @@ async function LeadupdateData(filter, update) {
 
 
 
+async function getInterestedCustomersByEmployee(employeeId) {
+  try {
+    // Retrieve interested customers for the specified employee ID
+    const interestedCustomers = await Admin.find({
+      AssignedTo: employeeId,
+      CallStatus: 'Interested'
+    });
+
+    return interestedCustomers;
+  } catch (error) {
+    throw new Error("Error retrieving interested customers by employee ID: " + error.message);
+  }
+}
+
+
+
+
+
+
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
@@ -146,6 +166,7 @@ module.exports = {
   getInterestedCustomer,
   updateCustomer,
   getLeadFromData,
-  LeadupdateData
+  LeadupdateData,
+  getInterestedCustomersByEmployee
 };
 

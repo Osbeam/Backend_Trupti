@@ -132,6 +132,15 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 
     const totalEmployees = employees.length;
     const totalData = data.length;
+
+    if (totalData === 0) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "No data to distribute.",
+        data: []
+      });
+    } 
+
     const dataPerEmployee = Math.floor(totalData / totalEmployees);
     let remainingData = totalData % totalEmployees;
 
@@ -147,7 +156,11 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
       const employeeId = employee._id;
 
       // Update the documents with the employee ID
-      const distributedData = await Admin.updateMany({ _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } }, { AssignedTo: employeeId });
+      const distributedData = await Admin.updateMany({ 
+        _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } 
+      }, { 
+        AssignedTo: employeeId 
+      });
 
       dataIndex += dataCount;
     }
@@ -166,6 +179,7 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -490,11 +504,18 @@ adminController.get("/leadData/:employeeId", async (req, res) => {
     const employeeId = req.params.employeeId;
 
     // Retrieve the distributed data for the employee with the provided ID
-    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false, LeadFrom: { $exists: true }, });
-   console.log(employeeData.length)
+    const employeeData = await Admin.find({ 
+      AssignedTo: employeeId, 
+      IsCalled: false, 
+      LeadFrom: { $exists: true }
+    });
+
+    const employeeCount = employeeData.length;
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: `Distributed data for employee ${employeeId} retrieved successfully!`,
+      count: employeeCount,
       data: employeeData,
     });
   } catch (error) {
@@ -504,6 +525,7 @@ adminController.get("/leadData/:employeeId", async (req, res) => {
     });
   }
 });
+
 
 
 adminController.put("/LeadMobileDataUpdate", async (req, res) => {
@@ -523,6 +545,55 @@ adminController.put("/LeadMobileDataUpdate", async (req, res) => {
 });
 
 
+adminController.get("/followUpData/:employeeId", async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId;
+
+    // Retrieve the follow-up data for the employee with the provided ID
+    const followUpData = await Admin.find({ 
+      AssignedTo: employeeId, 
+      CallStatus: 'FollowUp',
+      SubStatus: { $exists: true, $ne: null },
+      FollowUpDate: { $exists: true, $ne: null },
+      FollowUpTime: { $exists: true, $ne: null }
+    });
+
+    const followUpCount = followUpData.length;
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: `Follow-up data for employee ${employeeId} retrieved successfully!`,
+      count: followUpCount,
+      data: followUpData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+adminController.get("/InterestedCustomerByEmp/:id", async (req, res) => {
+  try {
+    const employeeId = req.params.id;
+
+    // Retrieve interested customers for the specified employee ID
+    const interestedCustomers = await adminServices.getInterestedCustomersByEmployee(employeeId);
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Interested customers retrieved successfully",
+      data: interestedCustomers
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 
