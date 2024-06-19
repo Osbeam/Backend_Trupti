@@ -596,5 +596,24 @@ adminController.get("/InterestedCustomerByEmp/:id", async (req, res) => {
 });
 
 
+adminController.get("/pendingLeads", async (req, res) => {
+  try {
+    const pendingLeads = await adminServices.getPendingLeads();
+    
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Pending leads retrieved successfully!",
+      data: pendingLeads
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 
 module.exports = adminController;

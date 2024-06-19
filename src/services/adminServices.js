@@ -152,6 +152,21 @@ async function getInterestedCustomersByEmployee(employeeId) {
 
 
 
+async function getPendingLeads() {
+  try {
+    // Retrieve documents where LeadCallStatus is 'Pending'
+    const pendingLeads = await Admin.find({ 
+      LeadCallStatus: 'Pending' 
+    });
+
+    return pendingLeads;
+  } catch (error) {
+    throw new Error("Error retrieving pending leads: " + error.message);
+  }
+}
+
+
+
 
 
 module.exports = {
@@ -167,6 +182,7 @@ module.exports = {
   updateCustomer,
   getLeadFromData,
   LeadupdateData,
-  getInterestedCustomersByEmployee
+  getInterestedCustomersByEmployee,
+  getPendingLeads
 };
 
