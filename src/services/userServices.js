@@ -86,20 +86,36 @@ exports.getApprovedLogUsers = async (query, skip, limit) => {
   // Populate the userId with user details
   const populatedResults = await LogUser.populate(logUserCounts, {
     path: 'userId',
-    select: 'EmployeeID UserName Designation' // Select additional fields as necessary
+    select: 'EmployeeID FirstName Designation' // Ensure fields match your schema
   });
 
-  // Map the results to include user details and the count
-  const userDataWithCount = populatedResults.map(log => ({
-    userId: log.userId._id,
-    EmployeeID: log.userId.EmployeeID,
-    UserName: log.userId.UserName,
-    Designation: log.userId.Designation,
-    count: log.count
-  }));
+  const userDataWithCount = populatedResults.map(log => {
+    if (!log.userId || !log.userId._id) {
+      // Handle cases where userId or _id is null or undefined
+      return {
+        userId: null,
+        EmployeeID: null,
+        FirstName: null,
+        Designation: null,
+        count: log.count,
+      };
+    }
+    return {
+      userId: log.userId._id,
+      EmployeeID: log.userId.EmployeeID,
+      FirstName: log.userId.FirstName,
+      Designation: log.userId.Designation,
+      count: log.count
+    };
+  });
 
+  // Return userDataWithCount
   return userDataWithCount;
 };
+
+  
+
+
 
 
 

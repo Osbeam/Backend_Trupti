@@ -182,7 +182,6 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 
 
 
-
 adminController.get("/leadDistributeToEmployees", async (req, res) => {
   try {
     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
@@ -525,7 +524,6 @@ adminController.get("/leadData/:employeeId", async (req, res) => {
     });
   }
 });
-
 
 
 adminController.put("/LeadMobileDataUpdate", async (req, res) => {
