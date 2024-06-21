@@ -635,6 +635,33 @@ adminController.get("/pendingLeads", async (req, res) => {
 
 
 
+adminController.get("/AllMobileLeadFromData", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    // Fetch lead from data with pagination
+    const { LeadFromData, LeadFromCount } = await adminServices.getAllLeadFromData(currentPage, pageSize);
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Lead From data retrieved successfully!",
+      data: {
+        LeadFromData,
+        LeadFromCount,
+        currentPage,
+        pageSize,
+        totalPage: Math.ceil(LeadFromCount / pageSize)
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 
 module.exports = adminController;
