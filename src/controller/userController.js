@@ -29,7 +29,7 @@ const setemployeeID = (number) => {
 async function generateEmployeeID(departmentId, subDepartmentId, designationId)  {
   console.log("hello", departmentId)
   let employeeID = ''
-  let employeeNumber = await EmployeeInfo.countDocuments();
+  let employeeNumber = await EmployeeInfo.countDocuments({Department:departmentId, SubDepartment:subDepartmentId, Designation:designationId});
   let departmentCode = await Department.findOne({_id:departmentId})
   let subdepartmentCode = await SubDepartment.findOne({_id:subDepartmentId})
   let designationCode = await Designation.findOne({_id:designationId})
@@ -37,7 +37,8 @@ async function generateEmployeeID(departmentId, subDepartmentId, designationId) 
    return  employeeID;
 }
 
- 
+
+
 
 const uploadimg = imgUpload.fields([
   { name: 'PanCard', maxCount: 1 },
@@ -71,7 +72,7 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     // Generate Employee ID
     const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
     employeeData.EmployeeID = employeeID;
-    console.log("hello", Department)
+    console.log(`Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`);
     
 
     // Add the document paths to the employee data if files were uploaded
