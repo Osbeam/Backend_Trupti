@@ -59,9 +59,12 @@ async function getEmployeeCallStatus(id){
 
 
 
-async function getAllEmployeeCallStatus(){
-  return await Admin.find();
+async function getAllEmployeeCallStatus() {
+  return await Admin.find(); 
 }
+
+
+
 
 
 async function getInterestedCallStatus() {
@@ -105,27 +108,35 @@ async function updateCustomer(filter, update) {
 
 
 
-
-
-async function getLeadFromData() {
+async function getLeadFromData(page, size) {
   try {
+    const skip = (page - 1) * size;
+
     // Fetch all documents where LeadFrom field exists, IsLead is false, and AssignedTo is null or not present
     const leadFromData = await Admin.find({ 
       LeadFrom: { $exists: true }, 
       IsLead: false,
       AssignedTo: { $in: [null, undefined] }
-    });
+    })
+    .skip(skip)
+    .limit(size);
 
-    const leadFromCount = leadFromData.length;
+    const leadFromCount = await Admin.countDocuments({ 
+      LeadFrom: { $exists: true }, 
+      IsLead: false,
+      AssignedTo: { $in: [null, undefined] }
+    });
 
     return {
       LeadFromData: leadFromData,
       LeadFromCount: leadFromCount
     };
   } catch (error) {
-    throw new Error("Error retrieving LeadFrom data: " + error.message);
+    throw new Error("Error retrieving LeadFrom data with pagination: " + error.message);
   }
 }
+
+
 
 
 
@@ -152,14 +163,22 @@ async function getInterestedCustomersByEmployee(employeeId) {
 
 
 
-async function getPendingLeads() {
+async function getPendingLeads(page, limit) {
   try {
-    // Retrieve documents where LeadCallStatus is 'Pending'
-    const pendingLeads = await Admin.find({ 
-      LeadCallStatus: 'Pending' 
-    });
+    const skip = (page - 1) * limit;
 
-    return pendingLeads;
+    // Retrieve documents where LeadCallStatus is 'Pending' with pagination
+    const pendingLeads = await Admin.find({ LeadCallStatus: 'Pending' })
+      .skip(skip)
+      .limit(limit);
+
+    // Count total documents where LeadCallStatus is 'Pending'
+    const totalLeads = await Admin.countDocuments({ LeadCallStatus: 'Pending' });
+
+    return {
+      pendingLeads,
+      totalLeads
+    };
   } catch (error) {
     throw new Error("Error retrieving pending leads: " + error.message);
   }
@@ -177,6 +196,7 @@ module.exports = {
   updateData,
   getEmployeeCallStatus,
   getAllEmployeeCallStatus,
+  // getEmployeeCallStatusByUserIds,
   getInterestedCallStatus,
   getInterestedCustomer,
   updateCustomer,

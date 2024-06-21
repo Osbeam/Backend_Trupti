@@ -466,14 +466,25 @@ adminController.put("/editInterestedCustomer", async (req, res) => {
 
 adminController.get("/LeadFromData", async (req, res) => {
   try {
-    const { LeadFromData, LeadFromCount } = await adminServices.getLeadFromData();
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    // Fetch lead from data with pagination
+    const { LeadFromData, LeadFromCount } = await adminServices.getLeadFromData(currentPage, pageSize);
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Lead From data retrieved successfully!",
-      data: { LeadFromData, LeadFromCount }
+      data: {
+        LeadFromData,
+        LeadFromCount,
+        currentPage,
+        pageSize,
+        totalPage: Math.ceil(LeadFromCount / pageSize)
+      }
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     sendResponse(res, 500, "Failed", {
       message: error.message || "Internal server error",
     });
@@ -596,12 +607,23 @@ adminController.get("/InterestedCustomerByEmp/:id", async (req, res) => {
 
 adminController.get("/pendingLeads", async (req, res) => {
   try {
-    const pendingLeads = await adminServices.getPendingLeads();
-    
+    const { page = 1, limit = 10 } = req.query;
+
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+
+    const { pendingLeads, totalLeads } = await adminServices.getPendingLeads(pageNumber, limitNumber);
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Pending leads retrieved successfully!",
-      data: pendingLeads
+      data: {
+        pendingLeads,
+        totalLeads,
+        totalPages: Math.ceil(totalLeads / limitNumber),
+        currentPage: pageNumber
+      }
     });
   } catch (error) {
     console.log(error);
@@ -610,6 +632,7 @@ adminController.get("/pendingLeads", async (req, res) => {
     });
   }
 });
+
 
 
 
