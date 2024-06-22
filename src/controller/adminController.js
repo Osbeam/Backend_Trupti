@@ -77,7 +77,6 @@ adminController.get("/getexcelfiles", async (req, res) => {
 });
 
 
-
 // adminController.get("/distributeDataToEmployees", async (req, res) => {
 //   try {
 //     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
@@ -181,7 +180,6 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 });
 
 
-
 adminController.get("/leadDistributeToEmployees", async (req, res) => {
   try {
     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
@@ -242,14 +240,34 @@ adminController.get("/leadDistributeToEmployees", async (req, res) => {
 adminController.get("/employeeData/:employeeId", async (req, res) => {
   try {
     const employeeId = req.params.employeeId;
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 records per page if not specified
 
-    // Retrieve the distributed data for the employee with the provided ID
-    const employeeData = await Admin.find({ AssignedTo: employeeId, IsCalled:false });
-   console.log(employeeData.length)
+    // Calculate skip count
+    const skip = (page - 1) * limit;
+
+    // Query to retrieve distributed data for the employee with pagination
+    const query = { AssignedTo: employeeId, IsCalled: false };
+
+    // Retrieve total count of records matching the query (for pagination info)
+    const totalCount = await Admin.countDocuments(query);
+
+    // Fetch data with pagination
+    const employeeData = await Admin.find(query)
+      .skip(skip)
+      .limit(limit);
+
+    // Respond with paginated data
     sendResponse(res, 200, "Success", {
       success: true,
       message: `Distributed data for employee ${employeeId} retrieved successfully!`,
-      data: employeeData,
+      data: {
+        totalCount,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        pageSize: limit,
+        records: employeeData
+      },
     });
   } catch (error) {
     console.log(error);
@@ -632,7 +650,6 @@ adminController.get("/pendingLeads", async (req, res) => {
     });
   }
 });
-
 
 
 adminController.get("/AllMobileLeadFromData", async (req, res) => {

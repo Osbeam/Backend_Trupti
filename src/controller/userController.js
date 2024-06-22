@@ -38,8 +38,6 @@ async function generateEmployeeID(departmentId, subDepartmentId, designationId) 
 }
 
 
-
-
 const uploadimg = imgUpload.fields([
   { name: 'PanCard', maxCount: 1 },
   { name: 'AadharCard', maxCount: 1 },

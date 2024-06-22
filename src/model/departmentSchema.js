@@ -4,7 +4,7 @@ const timestamps = require("mongoose-timestamp");
 const departmentSchema = mongoose.Schema({
     code: {type: String},
     name: {type: String},
-    SubDepartment: [{type: String,  ref: "SubDepartment"}],
+    SubDepartment: [{type: mongoose.Schema.Types.ObjectId,  ref: "SubDepartment"}],
 });
 
 departmentSchema.plugin(timestamps);

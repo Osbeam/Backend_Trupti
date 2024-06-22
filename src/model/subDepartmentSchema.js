@@ -6,7 +6,7 @@ const subDepartmentSchema = mongoose.Schema({
     code: {type: String},
     name: {type: String},
     department:{type:String, ref:"Department"},
-    designation: [{type:String, ref:"Designation"}],
+    designation: [{type: mongoose.Schema.Types.ObjectId, ref:"Designation"}],
 });
 
 subDepartmentSchema.plugin(timestamps);

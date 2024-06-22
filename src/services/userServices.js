@@ -23,9 +23,88 @@ exports.getAllUsers = async (currentPage, pageSize) => {
 
 
 
+// exports.getUser = async (query) => {
+//   return await Employee.find(query);
+// };
+
+
+
+
 exports.getUser = async (query) => {
-  return await Employee.find(query);
+  try {
+    const employees = await Employee.find(query)
+      .populate('Department', 'name') // Populate department and select 'name' field
+      .populate('SubDepartment', 'name') // Populate subdepartment and select 'name' field
+      .populate('Designation', 'name'); // Populate designation and select 'name' field
+
+    // Map over each employee to structure the response as needed
+    const formattedEmployees = employees.map(employee => ({
+      _id: employee._id,
+      MrMissMrs: employee.MrMissMrs,
+      FirstName: employee.FirstName,
+      MiddleName: employee.MiddleName,
+      LastName: employee.LastName,
+      MobileNumber: employee.MobileNumber,
+      Password: employee.Password,
+      EmailId: employee.EmailId,
+      EmployeeID: employee.EmployeeID,
+      Department: employee.Department ? employee.Department.name : null, // Access 'name' if populated
+      SubDepartment: employee.SubDepartment ? employee.SubDepartment.name : null, // Access 'name' if populated
+      Designation: employee.Designation ? employee.Designation.name : null, // Access 'name' if populated
+      BloodGroup: employee.BloodGroup,
+      CurrentAddress: employee.CurrentAddress,
+      PermanentAddress: employee.PermanentAddress,
+      HighestQualification: employee.HighestQualification,
+      Year: employee.Year,
+      TotalExperience: employee.TotalExperience,
+      LastCompanyName: employee.LastCompanyName,
+      JoiningDate: employee.JoiningDate,
+      Reference1: employee.Reference1,
+      Relation1: employee.Relation1,
+      Address1: employee.Address1,
+      ReferenceName2: employee.ReferenceName2,
+      Relation2: employee.Relation2,
+      Address2: employee.Address2,
+      ReportingTo: employee.ReportingTo,
+      ManagerName: employee.ManagerName,
+      DateOfJoining: employee.DateOfJoining,
+      CompanyName: employee.CompanyName,
+      BasicSalary: employee.BasicSalary,
+      FixedAllowance: employee.FixedAllowance,
+      SpecialAllowance: employee.SpecialAllowance,
+      VeriableAllowance: employee.VeriableAllowance,
+      Deductions: employee.Deductions,
+      NoteBook: employee.NoteBook,
+      Stationery: employee.Stationery,
+      JoiningKit: employee.JoiningKit,
+      OfficialMobileNumber: employee.OfficialMobileNumber,
+      MobileIMEINumber: employee.MobileIMEINumber,
+      PanCard: employee.PanCard,
+      AadharCard: employee.AadharCard,
+      Photo: employee.Photo,
+      AddressProof: employee.AddressProof,
+      HighestQuaCertificate: employee.HighestQuaCertificate,
+      LastComRellievingLetter: employee.LastComRellievingLetter,
+      BankDetails: employee.BankDetails,
+      BankName: employee.BankName,
+      AccountHolderName: employee.AccountHolderName,
+      AccountNumber: employee.AccountNumber,
+      IFSCCode: employee.IFSCCode,
+      Role: employee.Role,
+      updatedAt: employee.updatedAt,
+      createdAt: employee.createdAt,
+      __v: employee.__v
+    }));
+
+    return formattedEmployees;
+  } catch (error) {
+    throw error; // Throw the error to be handled elsewhere
+  }
 };
+
+
+
+
 
 
 
