@@ -23,7 +23,6 @@ const adminSchema = mongoose.Schema({
     ExistingLoanAmt:{type:String},
     ExistingROI:{type:String},
     ExistingEMI:{type:String},
-    LeadFrom:{type:String},
     IsLead:{type:Boolean, default:false},
     AssignedTo:{type:String, ref: "EmployeeInfo"},
     IsCalled:{type:Boolean, default:false},

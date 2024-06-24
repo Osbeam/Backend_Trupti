@@ -106,53 +106,6 @@ adminController.get("/getexcelfiles", async (req, res) => {
 });
 
 
-// adminController.get("/distributeDataToEmployees", async (req, res) => {
-//   try {
-//     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
-//     const totalEmployees = employees.length;
-//     const totalData = await Admin.countDocuments({ IsCalled: false }); // Count only data with IsCalled status false
-
-//     const dataPerEmployee = Math.floor(totalData / totalEmployees);
-//     let remainingData = totalData % totalEmployees; // Calculate the remaining data after distributing equally
-
-//     const distributedData = [];
-
-//     let startIndex = 0;
-//     let dataIndex = 0;
-
-//     for (const employee of employees) {
-//       let dataCount = dataPerEmployee;
-//       if (remainingData > 0) {
-//         dataCount++; // Distribute the remaining data to the first few employees
-//         remainingData--;
-//       }
-
-//       console.log(`Employee ${employee._id}: dataCount=${dataCount}, startIndex=${startIndex}, dataIndex=${dataIndex}`);
-
-//       const employeeData = await Admin.find({ IsCalled: false }).skip(startIndex).limit(dataCount); // Query only data with IsCalled status false
-//       console.log(`Employee ${employee._id}: employeeData=${JSON.stringify(employeeData)}`);
-
-//       distributedData.push({ _id: employee._id, data: employeeData }); // Change key to _id
-
-//       dataIndex += dataCount;
-//       startIndex = dataIndex; // Move startIndex to the next position
-//     }
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Data distributed to employees successfully!",
-//       data: distributedData
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
 adminController.get("/distributeDataToEmployees", async (req, res) => {
   try {
     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
