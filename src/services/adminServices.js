@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Admin = require("../model/adminSchema");
+const Lead = require("../model/leadSchema");
 const Employee = require("../model/employeeSchema");
 const { body } = require("express-validator");
 const xlsx = require('xlsx');
@@ -48,6 +49,12 @@ async function updateData(filter, update) {
 
 async function createData(body){
   const createfunction = await Admin.create(body);
+  return createfunction;
+}
+
+
+async function createLeadData(body){
+  const createfunction = await Lead.create(body);
   return createfunction;
 }
 
@@ -113,7 +120,7 @@ async function getLeadFromData(page, size) {
     const skip = (page - 1) * size;
 
     // Fetch all documents where LeadFrom field exists, IsLead is false, and AssignedTo is null or not present
-    const leadFromData = await Admin.find({ 
+    const leadFromData = await Lead.find({ 
       LeadFrom: { $exists: true }, 
       IsLead: false,
       AssignedTo: { $in: [null, undefined] }
@@ -121,7 +128,7 @@ async function getLeadFromData(page, size) {
     .skip(skip)
     .limit(size);
 
-    const leadFromCount = await Admin.countDocuments({ 
+    const leadFromCount = await Lead.countDocuments({ 
       LeadFrom: { $exists: true }, 
       IsLead: false,
       AssignedTo: { $in: [null, undefined] }
@@ -141,7 +148,7 @@ async function getLeadFromData(page, size) {
 
 
 async function LeadupdateData(filter, update) {
-  return await Admin.updateOne(filter, update, { new: true });
+  return await Lead.updateOne(filter, update, { new: true });
 };
 
 
@@ -168,12 +175,12 @@ async function getPendingLeads(page, limit) {
     const skip = (page - 1) * limit;
 
     // Retrieve documents where LeadCallStatus is 'Pending' with pagination
-    const pendingLeads = await Admin.find({ LeadCallStatus: 'Pending' })
+    const pendingLeads = await Lead.find({ LeadCallStatus: 'Pending' })
       .skip(skip)
       .limit(limit);
 
     // Count total documents where LeadCallStatus is 'Pending'
-    const totalLeads = await Admin.countDocuments({ LeadCallStatus: 'Pending' });
+    const totalLeads = await Lead.countDocuments({ LeadCallStatus: 'Pending' });
 
     return {
       pendingLeads,
@@ -198,12 +205,12 @@ async function getAllLeadFromData(page, size) {
     };
 
     // Fetch documents where LeadFrom field exists and CallStatus array is empty
-    const leadFromData = await Admin.find(query)
+    const leadFromData = await Lead.find(query)
       .skip(skip)
       .limit(size);
 
     // Count total documents matching the query
-    const leadFromCount = await Admin.countDocuments(query);
+    const leadFromCount = await Lead.countDocuments(query);
 
     return {
       LeadFromData: leadFromData,
@@ -235,6 +242,7 @@ module.exports = {
   LeadupdateData,
   getInterestedCustomersByEmployee,
   getPendingLeads,
-  getAllLeadFromData
+  getAllLeadFromData,
+  createLeadData
 };
 
