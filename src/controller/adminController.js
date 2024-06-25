@@ -162,6 +162,37 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 });
 
 
+adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
+  try {
+    let user = await Employee.findOne({_id:req.params.id})
+    if(user.Department!='666e6eca32b92ee0216a56c5'){
+      return  sendResponse(res, 200, "Success", {
+          success: true,
+          message: "Data Is Only For Sales Department!"
+        });
+      }
+    const data = await Admin.find({AssignedTo:null})
+    if(data.length==0){
+    return  sendResponse(res, 200, "Success", {
+        success: true,
+        message: "No Data Left!"
+      });
+    }
+    await Admin.updateOne({_id:data[0]._id},{AssignedTo:req.params.id},  { new: true })
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data distributed to employees successfully!",
+      data: data[0],
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 adminController.get("/leadDistributeToEmployees", async (req, res) => { 
   try {
     const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field

@@ -29,7 +29,7 @@ const adminSchema = mongoose.Schema({
     LeadCallStatus: {
         type: [String],
         enum: ['Accept', 'Pending']
-    }, 
+    },    
     CallStatus: {
         type: [String],
         enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp']
