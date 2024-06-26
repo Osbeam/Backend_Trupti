@@ -409,10 +409,18 @@ adminController.get("/Allcallstatus", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10;
-    
+
     const callStatusData = await adminServices.getAllEmployeeCallStatus();
-    const users = await Employee.find(); // Retrieve all users
     
+    // Retrieve only users whose department is Sales or has the specific department ID
+    const salesDepartmentId = '666e6eca32b92ee0216a56c5';
+    const users = await Employee.find({
+      $or: [
+        { Department: salesDepartmentId },
+        { Department: 'Sales' }
+      ]
+    });
+
     let userData = [];
 
     // Loop through each user
@@ -430,7 +438,7 @@ adminController.get("/Allcallstatus", async (req, res) => {
         },
         totalCalls: 0 // Initialize total calls count
       };
-    
+
       // Loop through call status data to count status for each user
       for (const data of callStatusData) {
         // Check if data and user are defined and have the necessary properties
