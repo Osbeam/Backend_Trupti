@@ -171,6 +171,15 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
           message: "Data Is Only For Sales Department!"
         });
       }
+      const userHandledData = await Admin.find({ AssignedTo: req.params.id, CallStatus: { $in: [null, []] }  });
+      console.log(userHandledData)
+      if(userHandledData.length>0){
+        return  sendResponse(res, 200, "Success", {
+            success: true,
+            message: "Some of the user data call status is not updated",
+            data:userHandledData
+          });
+        }
     const data = await Admin.find({AssignedTo:null})
     if(data.length==0){
     return  sendResponse(res, 200, "Success", {
