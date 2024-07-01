@@ -145,8 +145,6 @@ async function getLeadFromData(page, size) {
 
 
 
-
-
 async function LeadupdateData(filter, update) {
   return await Lead.updateOne(filter, update, { new: true });
 };
@@ -194,17 +192,55 @@ async function getPendingLeads(page, limit) {
 
 
 
+// async function getAllLeadFromData(page, size) {
+//   try {
+//     const skip = (page - 1) * size;
+
+//     // Construct query based on CallStatus array
+//     const query = {
+//       LeadFrom: { $exists: true },
+//       CallStatus: { $size: 0 } // Ensures CallStatus array is empty
+//     };
+
+//     // Fetch documents where LeadFrom field exists and CallStatus array is empty
+//     const leadFromData = await Lead.find(query)
+//       .skip(skip)
+//       .limit(size);
+
+//     // Count total documents matching the query
+//     const leadFromCount = await Lead.countDocuments(query);
+
+//     return {
+//       LeadFromData: leadFromData,
+//       LeadFromCount: leadFromCount
+//     };
+//   } catch (error) {
+//     throw new Error("Error retrieving LeadFrom data with pagination: " + error.message);
+//   }
+// }
+
+
+
 async function getAllLeadFromData(page, size) {
   try {
     const skip = (page - 1) * size;
 
-    // Construct query based on CallStatus array
+    // Construct query based on CallStatus array and empty LeadCallStatus/AssignedTo
     const query = {
       LeadFrom: { $exists: true },
-      CallStatus: { $size: 0 } // Ensures CallStatus array is empty
+      CallStatus: { $size: 0 }, // Ensures CallStatus array is empty
+      $or: [
+        { LeadCallStatus: { $exists: false } },
+        { LeadCallStatus: { $eq: "" } },
+      ],
+      $or: [
+        { AssignedTo: { $exists: false } },
+        { AssignedTo: { $eq: "" } },
+      ]
     };
 
-    // Fetch documents where LeadFrom field exists and CallStatus array is empty
+    // Fetch documents where LeadFrom field exists, CallStatus array is empty,
+    // LeadCallStatus is empty or not present, and AssignedTo is empty or not present
     const leadFromData = await Lead.find(query)
       .skip(skip)
       .limit(size);
@@ -225,7 +261,6 @@ async function getAllLeadFromData(page, size) {
 
 
 
-
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
@@ -234,7 +269,6 @@ module.exports = {
   updateData,
   getEmployeeCallStatus,
   getAllEmployeeCallStatus,
-  // getEmployeeCallStatusByUserIds,
   getInterestedCallStatus,
   getInterestedCustomer,
   updateCustomer,
