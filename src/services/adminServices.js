@@ -72,8 +72,6 @@ async function getAllEmployeeCallStatus() {
 
 
 
-
-
 async function getInterestedCallStatus() {
   try {
     // Example: Retrieve interested call status data from a database
@@ -190,34 +188,6 @@ async function getPendingLeads(page, limit) {
 }
 
 
-
-
-// async function getAllLeadFromData(page, size) {
-//   try {
-//     const skip = (page - 1) * size;
-
-//     // Construct query based on CallStatus array
-//     const query = {
-//       LeadFrom: { $exists: true },
-//       CallStatus: { $size: 0 } // Ensures CallStatus array is empty
-//     };
-
-//     // Fetch documents where LeadFrom field exists and CallStatus array is empty
-//     const leadFromData = await Lead.find(query)
-//       .skip(skip)
-//       .limit(size);
-
-//     // Count total documents matching the query
-//     const leadFromCount = await Lead.countDocuments(query);
-
-//     return {
-//       LeadFromData: leadFromData,
-//       LeadFromCount: leadFromCount
-//     };
-//   } catch (error) {
-//     throw new Error("Error retrieving LeadFrom data with pagination: " + error.message);
-//   }
-// }
 
 
 

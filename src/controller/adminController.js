@@ -741,5 +741,32 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
 });
 
 
+adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId;
+
+    // Retrieve the follow-up data for the employee with the provided ID
+    const leadData = await Lead.find({ 
+      AssignedTo: employeeId, 
+      LeadCallStatus: 'Accept'
+    });
+
+    const leadCount = leadData.length;
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: `Accepted leads data for employee ${employeeId} retrieved successfully!`,
+      count: leadCount,
+      data: leadData,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 module.exports = adminController;

@@ -32,9 +32,9 @@ const adminSchema = mongoose.Schema({
     },    
     CallStatus: {
         type: [String],
-        enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp']
+        enum: ['CallNotReceived', 'NotInterested', 'Interested', 'SwitchOff', 'Invalid', 'NotExists', 'FollowUp', 'NotConnected']
     }, 
-    CalledBy:{type:String, ref: "EmployeeInfo"},
+    CalledBy:{type:String, ref: "EmployeeInfo"}, 
     SubStatus: {type:String},
     FollowUpDate:{type:String},
     FollowUpTime:{type:String}, 
