@@ -416,69 +416,55 @@ adminController.get("/callstatus/:id", async (req, res) => {
 
 adminController.get("/Allcallstatus", async (req, res) => {
   try {
+    // Fetch call status data with skip and limit
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10;
+    const callStatusData = await Admin.find({})
+      .skip(currentPage)
+      .limit(pageSize);
+    let users = {};
+    for (let i = 0; i < callStatusData.length; i++) {
+      const assignedTo = callStatusData[i].AssignedTo;
 
-    const callStatusData = await adminServices.getAllEmployeeCallStatus();
-    
-    // Retrieve only users whose department is Sales or has the specific department ID
-    const salesDepartmentId = '666e6eca32b92ee0216a56c5';
-    const users = await Employee.find({
-      $or: [
-        { Department: salesDepartmentId },
-        { Department: 'Sales' }
-      ]
-    });
+      // Find the current user with the specified conditions
+      let currentUser = await Employee.findOne({
+        _id: assignedTo,
+        Department: "666e6eca32b92ee0216a56c5",
+      });
 
-    let userData = [];
+      if (currentUser) {
+        if (!users[assignedTo]) {
+          users[assignedTo] = {
+            user: currentUser,
+            statusCounts: {
+              CallNotReceived: 0,
+              NotInterested: 0,
+              Interested: 0,
+              SwitchOff: 0,
+              Invalid: 0,
+              NotConnected: 0,
+              NotExists: 0,
+              FollowUp: 0,
+              totalCall: 0,
+            },
+          };
+        }
 
-    // Loop through each user
-    for (const user of users) {
-      let obj = {
-        user: user,
-        statusCounts: {
-          CallNotReceived: 0,
-          NotInterested: 0,
-          Interested: 0,
-          SwitchOff: 0,
-          Invalid: 0,
-          NotExists: 0,
-          FollowUp: 0
-        },
-        totalCalls: 0 // Initialize total calls count
-      };
-
-      // Loop through call status data to count status for each user
-      for (const data of callStatusData) {
-        // Check if data and user are defined and have the necessary properties
-        if (data && data.CalledBy && user && user._id && data.CalledBy.toString() === user._id.toString()) {
-          const status = data.CallStatus.length > 0 ? data.CallStatus[0] : null; // Check if CallStatus array is not empty
-          if (status && obj.statusCounts.hasOwnProperty(status)) {
-            obj.statusCounts[status]++;
-            obj.totalCalls++; // Increment total calls count
-          }
+        // Increment the appropriate status count
+        const callStatus = callStatusData[i].CallStatus[0];
+        if (users[assignedTo].statusCounts[callStatus] !== undefined) {
+          users[assignedTo].statusCounts[callStatus]++;
+          users[assignedTo].statusCounts.totalCall++;
         }
       }
-      userData.push(obj);
     }
 
-    // Calculate total pages
-    const totalUsers = userData.length;
-    const totalPage = Math.ceil(totalUsers / pageSize);
-
-    // Implement pagination
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = currentPage * pageSize;
-    const paginatedData = userData.slice(startIndex, endIndex);
+    const result = Object.values(users);
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Call status retrieved successfully",
-      data: paginatedData,
-      currentPage: currentPage,
-      pageSize: pageSize,
-      totalUsers: totalUsers,
-      totalPage: totalPage  // Include totalPage in the response
+      data: result,
     });
   } catch (error) {
     console.log(error);
@@ -748,7 +734,9 @@ adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
     // Retrieve the follow-up data for the employee with the provided ID
     const leadData = await Lead.find({ 
       AssignedTo: employeeId, 
-      LeadCallStatus: 'Accept'
+      LeadCallStatus: 'Accept',
+      CallStatus: { $size: 0 },
+      CallStatus: { $exists: false },
     });
 
     const leadCount = leadData.length;
