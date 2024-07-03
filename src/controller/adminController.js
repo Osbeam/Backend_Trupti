@@ -414,27 +414,99 @@ adminController.get("/callstatus/:id", async (req, res) => {
 });
 
 
+// adminController.get("/Allcallstatus", async (req, res) => {
+//   try {
+//     // Fetch call status data with skip and limit
+//     const currentPage = parseInt(req.query.currentPage) || 1; 
+//     const pageSize = parseInt(req.query.pageSize) || 10;
+//     const CallStatusData = await Admin.find({})
+//       .skip(currentPage)
+//       .limit(pageSize);
+//     let users = {};
+//     for (let i = 0; i < CallStatusData.length; i++) {
+//       const AssignedTo = CallStatusData[i].AssignedTo;
+
+
+//       let currentUser = await Employee.findOne({
+//         _id: AssignedTo,
+//         Department: "666e6eca32b92ee0216a56c5",
+//       });
+
+//       if (currentUser) {
+//         if (!users[AssignedTo]) {
+//           users[AssignedTo] = {
+//             user: currentUser,
+//             statusCounts: {
+//               CallNotReceived: 0,
+//               NotInterested: 0,
+//               Interested: 0,
+//               SwitchOff: 0,
+//               Invalid: 0,
+//               NotConnected: 0,
+//               NotExists: 0,
+//               FollowUp: 0,
+//               totalCall: 0,
+//             },
+//           };
+//         }
+
+//         // Increment the appropriate status count
+//         const CallStatus = CallStatusData[i].CallStatus[0];
+//         if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
+//           users[AssignedTo].statusCounts[CallStatus]++;
+//           users[AssignedTo].statusCounts.totalCall++;
+//         }
+//       }
+//     }
+
+//     const result = Object.values(users);
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Call status retrieved successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
 adminController.get("/Allcallstatus", async (req, res) => {
   try {
-    // Fetch call status data with skip and limit
-    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+    const currentPage = parseInt(req.query.currentPage) || 1; 
     const pageSize = parseInt(req.query.pageSize) || 10;
-    const callStatusData = await Admin.find({})
-      .skip(currentPage)
-      .limit(pageSize);
-    let users = {};
-    for (let i = 0; i < callStatusData.length; i++) {
-      const assignedTo = callStatusData[i].AssignedTo;
+    const skip = (currentPage - 1) * pageSize;
 
-      // Find the current user with the specified conditions
+    // Fetch all distinct employees in the Admin collection
+    const distinctEmployees = await Admin.distinct("AssignedTo");
+
+    // Total number of employees
+    const totalEmployees = distinctEmployees.length;
+    const totalPages = Math.ceil(totalEmployees / pageSize);
+
+    // Get the list of employees for the current page
+    const paginatedEmployees = distinctEmployees.slice(skip, skip + pageSize);
+
+    let users = {};
+
+    for (const AssignedTo of paginatedEmployees) {
       let currentUser = await Employee.findOne({
-        _id: assignedTo,
-        Department: "666e6eca32b92ee0216a56c5",
+        _id: AssignedTo,
+        $or: [
+          { Department: '666e6eca32b92ee0216a56c5' },
+          { Department: 'Sales' }
+        ]
       });
 
       if (currentUser) {
-        if (!users[assignedTo]) {
-          users[assignedTo] = {
+        if (!users[AssignedTo]) {
+          users[AssignedTo] = {
             user: currentUser,
             statusCounts: {
               CallNotReceived: 0,
@@ -450,11 +522,16 @@ adminController.get("/Allcallstatus", async (req, res) => {
           };
         }
 
-        // Increment the appropriate status count
-        const callStatus = callStatusData[i].CallStatus[0];
-        if (users[assignedTo].statusCounts[callStatus] !== undefined) {
-          users[assignedTo].statusCounts[callStatus]++;
-          users[assignedTo].statusCounts.totalCall++;
+        const callStatuses = await Admin.find({ AssignedTo });
+
+        for (const callStatusRecord of callStatuses) {
+          if (Array.isArray(callStatusRecord.CallStatus) && callStatusRecord.CallStatus.length > 0) {
+            const CallStatus = callStatusRecord.CallStatus[0];
+            if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
+              users[AssignedTo].statusCounts[CallStatus]++;
+              users[AssignedTo].statusCounts.totalCall++;
+            }
+          }
         }
       }
     }
@@ -465,6 +542,11 @@ adminController.get("/Allcallstatus", async (req, res) => {
       success: true,
       message: "Call status retrieved successfully",
       data: result,
+      pagination: {
+        currentPage,
+        totalPages,
+        pageSize
+      }
     });
   } catch (error) {
     console.log(error);
