@@ -735,8 +735,10 @@ adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
     const leadData = await Lead.find({ 
       AssignedTo: employeeId, 
       LeadCallStatus: 'Accept',
-      CallStatus: { $size: 0 },
-      CallStatus: { $exists: false },
+      $or: [
+        { CallStatus: { $exists: false } },  
+        { CallStatus: { $size: 0 } }         
+      ]
     });
 
     const leadCount = leadData.length;
@@ -754,6 +756,7 @@ adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
     });
   }
 });
+
 
 
 
