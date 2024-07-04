@@ -11,6 +11,7 @@ const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
 const jwt = require('jsonwebtoken');
+const moment = require('moment-timezone'); 
 
 
 
@@ -293,11 +294,17 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
   try {
     // Process uploaded images and build the photoArray
     const photoArray = req.files.map((file) => file.path);
+
+    const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
+    const currentTime = new Date();
+    console.log("Local Time: ", localTime);
+
     // Create a new log entry in the database
     const userLogData = {
       userId: req.params.userId, // Retrieve userId from URL parameter
       inTimeImage: photoArray[0], // Assuming the first image is the source image
-      inTime: new Date(),
+      // inTime: new Date(),
+      inTime: localTime,
     };
 
     const logCreated = await LogUser.create(userLogData);
@@ -339,8 +346,8 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
 
     // Update log data with new inTimeImage and inTime
     existingLog.inTimeImage = photoArray[0];
-    existingLog.inTime = new Date(inTime);
-    existingLog.outTime = new Date(outTime);
+    existingLog.inTime = String(inTime);
+    existingLog.outTime = String(outTime);
 
     await existingLog.save();
 
@@ -369,8 +376,13 @@ userController.put("/outTime", async (req, res) => {
     const inTimeData = await userServices.getInTimeById({ _id: req.body.logId });
     const inTime = inTimeData.inTime;
 
+    const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
+    const currentTime = new Date();
+    console.log("Local Time: ", localTime);
+
+
     const userLogData = {
-      outTime: new Date(),
+      outTime: localTime,
       totalHours: req.body.totalHours
     };
 

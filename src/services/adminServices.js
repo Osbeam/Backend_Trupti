@@ -32,10 +32,23 @@ async function saveExcelDataToDB(excelData) {
 
 
 
-async function getAllFiles(currentPage, pageSize) {
-  const skip = (currentPage - 1) * pageSize;
-  const getFile = await Admin.find().skip(skip).limit(pageSize);
-  return getFile;
+// async function getAllFiles(currentPage, pageSize) {
+//   const skip = (currentPage - 1) * pageSize;
+//   const getFile = await Admin.find().skip(skip).limit(pageSize);
+//   return getFile;
+// }
+
+
+
+async function getUnassignedFiles(currentPage, pageSize) {
+  try {
+    const skip = (currentPage - 1) * pageSize;
+    const unassignedFiles = await Admin.find({ AssignedTo: { $exists: false }, CallStatus: { $size: 0 } })
+    .skip(skip).limit(pageSize);
+    return unassignedFiles;
+  } catch (error) {
+    throw new Error(`Error fetching unassigned files: ${error.message}`);
+  }
 }
 
 
@@ -234,7 +247,7 @@ async function getAllLeadFromData(page, size) {
 module.exports = {
   processExcelFile,
   saveExcelDataToDB,
-  getAllFiles,
+  getUnassignedFiles,
   createData,
   updateData,
   getEmployeeCallStatus,

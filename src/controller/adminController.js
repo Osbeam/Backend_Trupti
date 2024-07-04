@@ -85,17 +85,42 @@ const storage = multer.diskStorage({
 
 
 
+// adminController.get("/getexcelfiles", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+//     const pageSize = parseInt(req.query.pageSize) || 10;
+//     const data = await adminServices.getAllFiles(currentPage, pageSize);
+//     const userCount = await Admin.countDocuments();
+//     const totalPage = Math.ceil(userCount / 10);
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "All Excel list retrieved successfully!",
+//       data: data, userCount, totalPage, currentPage
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 adminController.get("/getexcelfiles", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10;
-    const data = await adminServices.getAllFiles(currentPage, pageSize);
-    const userCount = await Admin.countDocuments();
-    const totalPage = Math.ceil(userCount / 10);
+    const data = await adminServices.getUnassignedFiles(currentPage, pageSize);
+    const userCount = await Admin.countDocuments({ AssignedTo: { $exists: false }, CallStatus: { $size: 0 } });
+    const totalPage = Math.ceil(userCount / pageSize);
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "All Excel list retrieved successfully!",
-      data: data, userCount, totalPage, currentPage
+      message: "Unassigned Excel files retrieved successfully!",
+      data: data,
+      userCount: userCount,
+      totalPage: totalPage,
+      currentPage: currentPage
     });
   } catch (error) {
     console.log(error);
@@ -412,69 +437,6 @@ adminController.get("/callstatus/:id", async (req, res) => {
     });
   }
 });
-
-
-// adminController.get("/Allcallstatus", async (req, res) => {
-//   try {
-//     // Fetch call status data with skip and limit
-//     const currentPage = parseInt(req.query.currentPage) || 1; 
-//     const pageSize = parseInt(req.query.pageSize) || 10;
-//     const CallStatusData = await Admin.find({})
-//       .skip(currentPage)
-//       .limit(pageSize);
-//     let users = {};
-//     for (let i = 0; i < CallStatusData.length; i++) {
-//       const AssignedTo = CallStatusData[i].AssignedTo;
-
-
-//       let currentUser = await Employee.findOne({
-//         _id: AssignedTo,
-//         Department: "666e6eca32b92ee0216a56c5",
-//       });
-
-//       if (currentUser) {
-//         if (!users[AssignedTo]) {
-//           users[AssignedTo] = {
-//             user: currentUser,
-//             statusCounts: {
-//               CallNotReceived: 0,
-//               NotInterested: 0,
-//               Interested: 0,
-//               SwitchOff: 0,
-//               Invalid: 0,
-//               NotConnected: 0,
-//               NotExists: 0,
-//               FollowUp: 0,
-//               totalCall: 0,
-//             },
-//           };
-//         }
-
-//         // Increment the appropriate status count
-//         const CallStatus = CallStatusData[i].CallStatus[0];
-//         if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
-//           users[AssignedTo].statusCounts[CallStatus]++;
-//           users[AssignedTo].statusCounts.totalCall++;
-//         }
-//       }
-//     }
-
-//     const result = Object.values(users);
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Call status retrieved successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
 
 
 adminController.get("/Allcallstatus", async (req, res) => {
