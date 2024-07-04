@@ -5,6 +5,7 @@ const Admin = require("../model/adminSchema");
 const Employee = require("../model/employeeSchema");
 const Lead = require("../model/leadSchema");
 const User = require("../model/userSchema")
+const LogUser = require("../model/loguserSchema")
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
@@ -671,7 +672,7 @@ adminController.get("/followUpData/:employeeId", async (req, res) => {
     const followUpData = await Admin.find({ 
       AssignedTo: employeeId, 
       CallStatus: 'FollowUp',
-      SubStatus: { $exists: true, $ne: null },
+      // SubStatus: { $exists: true, $ne: null },
       FollowUpDate: { $exists: true, $ne: null },
       FollowUpTime: { $exists: true, $ne: null }
     });
