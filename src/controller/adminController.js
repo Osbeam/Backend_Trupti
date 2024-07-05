@@ -295,7 +295,7 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
     const user = await Employee.findById(userId).select('Department').lean();
     if (!user || user.Department !== '666e6eca32b92ee0216a56c5') {
       return sendResponse(res, 200, "Success", {
-        success: false,
+        success: true,
         message: "Data is only for the Sales Department!"
       });
     }
@@ -310,7 +310,7 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
 
     if (userHandledData.length > 0) {
       return sendResponse(res, 200, "Success", {
-        success: false,
+        success: true,
         message: "Some of the user data call status is not updated",
         data: userHandledData
       });
@@ -322,7 +322,7 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
 
     if (data.length === 0) {
       return sendResponse(res, 200, "Success", {
-        success: false,
+        success: true,
         message: "No data left!"
       });
     }
