@@ -32,18 +32,11 @@ async function saveExcelDataToDB(excelData) {
 
 
 
-// async function getAllFiles(currentPage, pageSize) {
-//   const skip = (currentPage - 1) * pageSize;
-//   const getFile = await Admin.find().skip(skip).limit(pageSize);
-//   return getFile;
-// }
-
-
 
 async function getUnassignedFiles(currentPage, pageSize) {
   try {
     const skip = (currentPage - 1) * pageSize;
-    const unassignedFiles = await Admin.find({ AssignedTo: { $exists: false }, CallStatus: { $size: 0 } })
+    const unassignedFiles = await Admin.find({ AssignedTo: { $in: [null, undefined] }, CallStatus: { $size: 0 } })
     .skip(skip).limit(pageSize);
     return unassignedFiles;
   } catch (error) {

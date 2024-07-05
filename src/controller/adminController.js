@@ -86,27 +86,6 @@ const storage = multer.diskStorage({
 
 
 
-// adminController.get("/getexcelfiles", async (req, res) => {
-//   try {
-//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-//     const pageSize = parseInt(req.query.pageSize) || 10;
-//     const data = await adminServices.getAllFiles(currentPage, pageSize);
-//     const userCount = await Admin.countDocuments();
-//     const totalPage = Math.ceil(userCount / 10);
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "All Excel list retrieved successfully!",
-//       data: data, userCount, totalPage, currentPage
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
 
 adminController.get("/getexcelfiles", async (req, res) => {
   try {
@@ -188,32 +167,107 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 });
 
 
+// adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
+//   try {
+//     let user = await Employee.findOne({_id:req.params.id})
+//     if(user.Department!='666e6eca32b92ee0216a56c5'){
+//       return  sendResponse(res, 200, "Success", {
+//           success: true,
+//           message: "Data Is Only For Sales Department!"
+//         });
+//       }
+//       const userHandledData = await Admin.find({ AssignedTo: req.params.id, CallStatus: { $in: [null, []] }  });
+//       console.log(userHandledData)
+//       if(userHandledData.length>0){
+//         return  sendResponse(res, 200, "Success", {
+//             success: true,
+//             message: "Some of the user data call status is not updated",
+//             data:userHandledData
+//           });
+//         }
+//     const data = await Admin.find({AssignedTo:null})
+//     if(data.length==0){
+//     return  sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "No Data Left!"
+//       });
+//     }
+//     await Admin.updateOne({_id:data[0]._id},{AssignedTo:req.params.id},  { new: true })
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Data distributed to employees successfully!",
+//       data: data[0],
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
 adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
   try {
-    let user = await Employee.findOne({_id:req.params.id})
-    if(user.Department!='666e6eca32b92ee0216a56c5'){
-      return  sendResponse(res, 200, "Success", {
-          success: true,
-          message: "Data Is Only For Sales Department!"
-        });
-      }
-      const userHandledData = await Admin.find({ AssignedTo: req.params.id, CallStatus: { $in: [null, []] }  });
-      console.log(userHandledData)
-      if(userHandledData.length>0){
-        return  sendResponse(res, 200, "Success", {
-            success: true,
-            message: "Some of the user data call status is not updated",
-            data:userHandledData
-          });
-        }
-    const data = await Admin.find({AssignedTo:null})
-    if(data.length==0){
-    return  sendResponse(res, 200, "Success", {
+    const userId = req.params.id;
+
+    // Fetch the employee details
+    let user = await Employee.findOne({ _id: userId });
+    if (user.Department != '666e6eca32b92ee0216a56c5') {
+      return sendResponse(res, 200, "Success", {
         success: true,
-        message: "No Data Left!"
+        message: "Data is only for the Sales Department!"
       });
     }
-    await Admin.updateOne({_id:data[0]._id},{AssignedTo:req.params.id},  { new: true })
+
+    // Get current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    // Fetch the user's log for the current day
+    const userLog = await LogUser.findOne({
+      userId: userId,
+      inTime: { $regex: `^${currentDate}` } // Match inTime starting with the current date
+    });
+
+    if (!userLog) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "Please check in first!"
+      });
+    }
+
+    // Check if the user has checked out (outTime exists for today)
+    if (userLog.outTime && userLog.outTime.startsWith(currentDate)) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "You cannot receive data after checking out!"
+      });
+    }
+
+    // Check if there is user data with incomplete call status
+    const userHandledData = await Admin.find({ AssignedTo: userId, CallStatus: { $in: [null, []] } });
+    if (userHandledData.length > 0) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "Some of the user data call status is not updated",
+        data: userHandledData
+      });
+    }
+
+    // Fetch the unassigned data
+    const data = await Admin.find({ AssignedTo: null });
+    if (data.length == 0) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "No data left!"
+      });
+    }
+
+    // Assign the first unassigned data to the user
+    await Admin.updateOne({ _id: data[0]._id }, { AssignedTo: userId }, { new: true });
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Data distributed to employees successfully!",
