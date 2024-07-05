@@ -6,18 +6,18 @@ const Employee = require("../model/employeeSchema");
 const Lead = require("../model/leadSchema");
 const User = require("../model/userSchema")
 const LogUser = require("../model/loguserSchema")
+const Archive = require("../model/archiveSchema")
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
 const upload = require("../utils/excelUpload")
-// const {excelUpload} = require('../utils/excel'); // Ensure this path points to your excelUpload middleware
-const { saveExcelDataToDB } = require('../services/adminServices'); // Adjust the path as necessary
+const { saveExcelDataToDB } = require('../services/adminServices'); 
 const { processExcelFile } = require('../services/adminServices');
 const fs = require('fs');
 const xlsx = require('xlsx');
 const multer = require('multer');
 
-// const upload = multer({ dest: 'uploads/' });
+
 
 
 adminController.post('/upload', upload.single('file'), async (req, res) => {
@@ -209,70 +209,138 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 
 
 
+// adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+
+//     // Fetch the employee details
+//     let user = await Employee.findOne({ _id: userId });
+//     if (user.Department != '666e6eca32b92ee0216a56c5') {
+//       return sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "Data is only for the Sales Department!"
+//       });
+//     }
+
+//     // Get current date in YYYY-MM-DD format
+//     const currentDate = new Date().toISOString().split('T')[0];
+
+//     // Fetch the user's log for the current day
+//     const userLog = await LogUser.findOne({
+//       userId: userId,
+//       inTime: { $regex: `^${currentDate}` } // Match inTime starting with the current date
+//     });
+
+//     if (!userLog) {
+//       return sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "Please check in first!"
+//       });
+//     }
+
+//     // Check if the user has checked out (outTime exists for today)
+//     if (userLog.outTime && userLog.outTime.startsWith(currentDate)) {
+//       return sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "You cannot receive data after checking out!"
+//       });
+//     }
+
+//     // Check if there is user data with incomplete call status
+//     const userHandledData = await Admin.find({ AssignedTo: userId, CallStatus: { $in: [null, []] } });
+//     if (userHandledData.length > 0) {
+//       return sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "Some of the user data call status is not updated",
+//         data: userHandledData
+//       });
+//     }
+
+//     // Fetch the unassigned data
+//     const data = await Admin.find({ AssignedTo: null });
+//     if (data.length == 0) {
+//       return sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: "No data left!"
+//       });
+//     }
+
+//     // Assign the first unassigned data to the user
+//     await Admin.updateOne({ _id: data[0]._id }, { AssignedTo: userId }, { new: true });
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Data distributed to employees successfully!",
+//       data: data[0],
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+Admin.collection.createIndex({ AssignedTo: 1 });
+
 adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
+  const startTime = Date.now();
+
   try {
     const userId = req.params.id;
 
-    // Fetch the employee details
-    let user = await Employee.findOne({ _id: userId });
-    if (user.Department != '666e6eca32b92ee0216a56c5') {
+    // Fetch the employee details with only necessary fields
+    const user = await Employee.findById(userId).select('Department').lean();
+    if (!user || user.Department !== '666e6eca32b92ee0216a56c5') {
       return sendResponse(res, 200, "Success", {
-        success: true,
+        success: false,
         message: "Data is only for the Sales Department!"
       });
     }
-
-    // Get current date in YYYY-MM-DD format
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    // Fetch the user's log for the current day
-    const userLog = await LogUser.findOne({
-      userId: userId,
-      inTime: { $regex: `^${currentDate}` } // Match inTime starting with the current date
-    });
-
-    if (!userLog) {
-      return sendResponse(res, 200, "Success", {
-        success: true,
-        message: "Please check in first!"
-      });
-    }
-
-    // Check if the user has checked out (outTime exists for today)
-    if (userLog.outTime && userLog.outTime.startsWith(currentDate)) {
-      return sendResponse(res, 200, "Success", {
-        success: true,
-        message: "You cannot receive data after checking out!"
-      });
-    }
+    console.log(`Employee check: ${Date.now() - startTime}ms`);
 
     // Check if there is user data with incomplete call status
-    const userHandledData = await Admin.find({ AssignedTo: userId, CallStatus: { $in: [null, []] } });
+    const userHandledData = await Admin.find({
+      AssignedTo: userId,
+      CallStatus: { $in: [null, []] }
+    }).select('_id Name MobileNo1').lean();
+    console.log(`Incomplete call status check: ${Date.now() - startTime}ms`);
+
     if (userHandledData.length > 0) {
       return sendResponse(res, 200, "Success", {
-        success: true,
+        success: false,
         message: "Some of the user data call status is not updated",
         data: userHandledData
       });
     }
 
-    // Fetch the unassigned data
-    const data = await Admin.find({ AssignedTo: null });
-    if (data.length == 0) {
+    // Fetch the unassigned data with a limit
+    const data = await Admin.find({ AssignedTo: null }).select('_id Name MobileNo1').limit(1).lean();
+    console.log(`Fetch unassigned data: ${Date.now() - startTime}ms`);
+
+    if (data.length === 0) {
       return sendResponse(res, 200, "Success", {
-        success: true,
+        success: false,
         message: "No data left!"
       });
     }
 
     // Assign the first unassigned data to the user
-    await Admin.updateOne({ _id: data[0]._id }, { AssignedTo: userId }, { new: true });
+    const assignedData = await Admin.findByIdAndUpdate(
+      data[0]._id,
+      { AssignedTo: userId },
+      { new: true, select: '_id Name MobileNo1' }
+    ).lean();
+    console.log(`Data assignment: ${Date.now() - startTime}ms`);
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Data distributed to employees successfully!",
-      data: data[0],
+      data: assignedData,
     });
+    console.log(`Total response time: ${Date.now() - startTime}ms`);
   } catch (error) {
     console.log(error);
     sendResponse(res, 500, "Failed", {
@@ -280,6 +348,7 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
     });
   }
 });
+
 
 
 adminController.get("/leadDistributeToEmployees", async (req, res) => { 
@@ -857,6 +926,39 @@ adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
 });
 
 
+adminController.post('/archive-data', async (req, res) => {
+  try {
+    // Define the CallStatus values that should be moved
+    const statusesToMove = ['SwitchOff', 'Invalid', 'NotExists', 'NotInterested', 'CallNotReceived', 'NotConnected'];
+
+    // Find documents with the specified CallStatus values
+    const dataToMove = await Admin.find({ CallStatus: { $in: statusesToMove } }).lean();
+
+    if (dataToMove.length === 0) {
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: 'No data to move',
+      })
+    }
+
+    // Insert the documents into the new collection
+    await Archive.insertMany(dataToMove);
+
+    // Delete the documents from the original collection
+    await Admin.deleteMany({ CallStatus: { $in: statusesToMove } });
+
+    // res.status(200).send({ success: true, message: 'Data moved successfully' });
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: 'Data moved successfully',
+    })
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    })
+  }
+});
 
 
 module.exports = adminController;
