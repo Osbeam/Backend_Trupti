@@ -911,8 +911,8 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
     // Fetch lead from data with pagination
     const { LeadFromData, LeadFromCount } = await adminServices.getAllLeadFromData(currentPage, pageSize);
 
-    // Emit an event to notify all connected clients
-    req.io.emit('refreshData', {
+    // Create a response object
+    let response = {
       success: true,
       message: "Lead From data retrieved successfully!",
       data: {
@@ -922,26 +922,20 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
         pageSize,
         totalPage: Math.ceil(LeadFromCount / pageSize)
       }
-    });
+    };
 
+    // Check if the LeadFromData array is empty
     if (LeadFromData.length === 0) {
-      return sendResponse(res, 200, "Success", {
-        success: true,
-        message: "No data left!"
-      });
+      response.data.LeadFromCount = 0;
+      response.data.totalPage = 0;
+      response.message = "No data left!";
     }
 
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "Lead From data retrieved successfully!",
-      data: {
-        LeadFromData,
-        LeadFromCount,
-        currentPage,
-        pageSize,
-        totalPage: Math.ceil(LeadFromCount / pageSize)
-      }
-    });
+    // Emit an event to notify all connected clients
+    req.io.emit('refreshData', response);
+
+    // Send the response
+    sendResponse(res, 200, "Success", response);
   } catch (error) {
     console.error(error);
     sendResponse(res, 500, "Failed", {
@@ -949,6 +943,7 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
     });
   }
 });
+
 
 
 adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
