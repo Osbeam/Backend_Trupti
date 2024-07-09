@@ -3,11 +3,11 @@ const timestamps = require("mongoose-timestamp");
 
 
 const incomeEntrySchema = mongoose.Schema({
-    incomeType: {
+    IncomeType: {
         type: [String],
         enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome']
     },
-    incomePeriod: {
+    IncomePeriod: {
         type: [String],
         enum: ['PerYear', 'PerMonth']
     },

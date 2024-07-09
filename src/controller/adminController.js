@@ -503,7 +503,7 @@ adminController.post('/manualLeadDataUpload', async (req, res) => {
 
 adminController.put("/updatedata", async (req, res) => {
   try {
-    const data = await adminServices.updateData({ _id: req.body._id }, req.body);
+    const data = await adminServices.updateData({ _id: req.body._id }, {...req.body, CallStatusUpdatedAt:new Date()});
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Data Updated successfully!",
@@ -568,9 +568,12 @@ adminController.get("/Allcallstatus", async (req, res) => {
     const currentPage = parseInt(req.query.currentPage) || 1; 
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (currentPage - 1) * pageSize;
+    const startDate = (req.body.startDate); // e.g., "2023-01-01T00:00:00.000Z"
+    const endDate = (req.body.endDate);     // e.g., "2023-01-31T23:59:59.999Z"
 
     // Fetch all distinct employees in the Admin collection
     const distinctEmployees = await Admin.distinct("AssignedTo");
+    
 
     // Total number of employees
     const totalEmployees = distinctEmployees.length;
@@ -588,7 +591,7 @@ adminController.get("/Allcallstatus", async (req, res) => {
           { Department: '666e6eca32b92ee0216a56c5' },
           { Department: 'Sales' }
         ]
-      });
+      }).select('FirstName LastName EmployeeID _id');
 
       if (currentUser) {
         if (!users[AssignedTo]) {
@@ -608,7 +611,11 @@ adminController.get("/Allcallstatus", async (req, res) => {
           };
         }
 
-        const callStatuses = await Admin.find({ AssignedTo });
+        const callStatuses = await Admin.find({ AssignedTo,
+          CallStatusUpdatedAt: {
+          $gte: startDate,
+          $lte: endDate
+        } });
 
         for (const callStatusRecord of callStatuses) {
           if (Array.isArray(callStatusRecord.CallStatus) && callStatusRecord.CallStatus.length > 0) {
@@ -867,6 +874,35 @@ adminController.get("/pendingLeads", async (req, res) => {
 });
 
 
+// adminController.get("/AllMobileLeadFromData", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+//     const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+//     // Fetch lead from data with pagination
+//     const { LeadFromData, LeadFromCount } = await adminServices.getAllLeadFromData(currentPage, pageSize);
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Lead From data retrieved successfully!",
+//       data: {
+//         LeadFromData,
+//         LeadFromCount,
+//         currentPage,
+//         pageSize,
+//         totalPage: Math.ceil(LeadFromCount / pageSize)
+//       }
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 adminController.get("/AllMobileLeadFromData", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
@@ -874,6 +910,26 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
 
     // Fetch lead from data with pagination
     const { LeadFromData, LeadFromCount } = await adminServices.getAllLeadFromData(currentPage, pageSize);
+
+    // Emit an event to notify all connected clients
+    req.io.emit('refreshData', {
+      success: true,
+      message: "Lead From data retrieved successfully!",
+      data: {
+        LeadFromData,
+        LeadFromCount,
+        currentPage,
+        pageSize,
+        totalPage: Math.ceil(LeadFromCount / pageSize)
+      }
+    });
+
+    if (LeadFromData.length === 0) {
+      return sendResponse(res, 200, "Success", {
+        success: true,
+        message: "No data left!"
+      });
+    }
 
     sendResponse(res, 200, "Success", {
       success: true,

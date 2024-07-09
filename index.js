@@ -3,7 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const routes = require("./src/route");
-
+const socketIO = require('socket.io');
+const http = require('http');
 
 
 const app = express();
@@ -24,6 +25,39 @@ mongoose.connect(process.env.DB_STRING
 ).then(()=>{
     console.warn("db connection done")
 })
+
+
+
+const server1 = http.createServer(app);
+const io = socketIO(server1, {
+  cors: {
+    origin: "*",
+  },
+});
+
+const onlineUsers = new Map();
+
+io.on("connection", (socket) => {
+  socket.on("connectSocket", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+  });
+
+  socket.on("disconnect", () => {
+    onlineUsers.forEach((value, key) => {
+      if (value === socket.id) {
+        onlineUsers.delete(key);
+      }
+    });
+    io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+  });
+});
+
+// Make `io` available to your routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 
 app.get("/", (req, res) => res.send(`Server listing on port ${PORT}`));
