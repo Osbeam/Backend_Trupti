@@ -167,122 +167,6 @@ adminController.get("/distributeDataToEmployees", async (req, res) => {
 });
 
 
-// adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
-//   try {
-//     let user = await Employee.findOne({_id:req.params.id})
-//     if(user.Department!='666e6eca32b92ee0216a56c5'){
-//       return  sendResponse(res, 200, "Success", {
-//           success: true,
-//           message: "Data Is Only For Sales Department!"
-//         });
-//       }
-//       const userHandledData = await Admin.find({ AssignedTo: req.params.id, CallStatus: { $in: [null, []] }  });
-//       console.log(userHandledData)
-//       if(userHandledData.length>0){
-//         return  sendResponse(res, 200, "Success", {
-//             success: true,
-//             message: "Some of the user data call status is not updated",
-//             data:userHandledData
-//           });
-//         }
-//     const data = await Admin.find({AssignedTo:null})
-//     if(data.length==0){
-//     return  sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "No Data Left!"
-//       });
-//     }
-//     await Admin.updateOne({_id:data[0]._id},{AssignedTo:req.params.id},  { new: true })
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Data distributed to employees successfully!",
-//       data: data[0],
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-
-// adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-
-//     // Fetch the employee details
-//     let user = await Employee.findOne({ _id: userId });
-//     if (user.Department != '666e6eca32b92ee0216a56c5') {
-//       return sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "Data is only for the Sales Department!"
-//       });
-//     }
-
-//     // Get current date in YYYY-MM-DD format
-//     const currentDate = new Date().toISOString().split('T')[0];
-
-//     // Fetch the user's log for the current day
-//     const userLog = await LogUser.findOne({
-//       userId: userId,
-//       inTime: { $regex: `^${currentDate}` } // Match inTime starting with the current date
-//     });
-
-//     if (!userLog) {
-//       return sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "Please check in first!"
-//       });
-//     }
-
-//     // Check if the user has checked out (outTime exists for today)
-//     if (userLog.outTime && userLog.outTime.startsWith(currentDate)) {
-//       return sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "You cannot receive data after checking out!"
-//       });
-//     }
-
-//     // Check if there is user data with incomplete call status
-//     const userHandledData = await Admin.find({ AssignedTo: userId, CallStatus: { $in: [null, []] } });
-//     if (userHandledData.length > 0) {
-//       return sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "Some of the user data call status is not updated",
-//         data: userHandledData
-//       });
-//     }
-
-//     // Fetch the unassigned data
-//     const data = await Admin.find({ AssignedTo: null });
-//     if (data.length == 0) {
-//       return sendResponse(res, 200, "Success", {
-//         success: true,
-//         message: "No data left!"
-//       });
-//     }
-
-//     // Assign the first unassigned data to the user
-//     await Admin.updateOne({ _id: data[0]._id }, { AssignedTo: userId }, { new: true });
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Data distributed to employees successfully!",
-//       data: data[0],
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
 Admin.collection.createIndex({ AssignedTo: 1 });
 
 adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
@@ -348,7 +232,6 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
     });
   }
 });
-
 
 
 adminController.get("/leadDistributeToEmployees", async (req, res) => { 
@@ -503,7 +386,7 @@ adminController.post('/manualLeadDataUpload', async (req, res) => {
 
 adminController.put("/updatedata", async (req, res) => {
   try {
-    const data = await adminServices.updateData({ _id: req.body._id }, {...req.body, CallStatusUpdatedAt:new Date()});
+    const data = await adminServices.updateData({ _id: req.body._id }, {...req.body, CallStatusUpdatedAt:new Date().toISOString()});
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Data Updated successfully!",
@@ -565,18 +448,33 @@ adminController.get("/callstatus/:id", async (req, res) => {
 
 adminController.get("/Allcallstatus", async (req, res) => {
   try {
-    const currentPage = parseInt(req.query.currentPage) || 1; 
+    const currentPage = parseInt(req.query.currentPage) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (currentPage - 1) * pageSize;
-    const startDate = (req.body.startDate); // e.g., "2023-01-01T00:00:00.000Z"
-    const endDate = (req.body.endDate);     // e.g., "2023-01-31T23:59:59.999Z"
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    if (!startDate || !endDate) {
+      return sendResponse(res, 400, "Failed", {
+        message: "startDate and endDate query parameters are required",
+      });
+    }
 
     // Fetch all distinct employees in the Admin collection
     const distinctEmployees = await Admin.distinct("AssignedTo");
-    
 
     // Total number of employees
     const totalEmployees = distinctEmployees.length;
+
+    // Calculate the total user count matching the criteria
+    const totalUserCount = await Employee.countDocuments({
+      _id: { $in: distinctEmployees },
+      $or: [
+        { Department: "666e6eca32b92ee0216a56c5" },
+        { Department: "Sales" },
+      ],
+    });
+
     const totalPages = Math.ceil(totalEmployees / pageSize);
 
     // Get the list of employees for the current page
@@ -588,10 +486,10 @@ adminController.get("/Allcallstatus", async (req, res) => {
       let currentUser = await Employee.findOne({
         _id: AssignedTo,
         $or: [
-          { Department: '666e6eca32b92ee0216a56c5' },
-          { Department: 'Sales' }
-        ]
-      }).select('FirstName LastName EmployeeID _id');
+          { Department: "666e6eca32b92ee0216a56c5" },
+          { Department: "Sales" },
+        ],
+      }).select("FirstName LastName EmployeeID _id");
 
       if (currentUser) {
         if (!users[AssignedTo]) {
@@ -610,15 +508,23 @@ adminController.get("/Allcallstatus", async (req, res) => {
             },
           };
         }
-
-        const callStatuses = await Admin.find({ AssignedTo,
+        const formattedStartDate = new Date(startDate);
+        const formattedEndDate = new Date(endDate);
+        formattedStartDate.setHours(0, 0, 0, 0);
+        formattedEndDate.setHours(23, 59, 59, 999);
+        const callStatuses = await Admin.find({
+          AssignedTo,
           CallStatusUpdatedAt: {
-          $gte: startDate,
-          $lte: endDate
-        } });
+            $gte: new Date(formattedStartDate),
+            $lte: new Date(formattedEndDate),
+          },
+        });
 
         for (const callStatusRecord of callStatuses) {
-          if (Array.isArray(callStatusRecord.CallStatus) && callStatusRecord.CallStatus.length > 0) {
+          if (
+            Array.isArray(callStatusRecord.CallStatus) &&
+            callStatusRecord.CallStatus.length > 0
+          ) {
             const CallStatus = callStatusRecord.CallStatus[0];
             if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
               users[AssignedTo].statusCounts[CallStatus]++;
@@ -638,8 +544,9 @@ adminController.get("/Allcallstatus", async (req, res) => {
       pagination: {
         currentPage,
         totalPages,
-        pageSize
-      }
+        pageSize,
+      },
+      totalUserCount, // Include the total user count in the response
     });
   } catch (error) {
     console.log(error);
@@ -945,7 +852,6 @@ adminController.get("/AllMobileLeadFromData", async (req, res) => {
 });
 
 
-
 adminController.get("/LeadAccepted/:employeeId", async (req, res) => {
   try {
     const employeeId = req.params.employeeId;
@@ -1010,6 +916,38 @@ adminController.post('/archive-data', async (req, res) => {
     })
   }
 });
+
+
+adminController.put("/assignBulkLeads", async (req, res) => {
+  try {
+    const { employeeId, leadIds } = req.body;
+
+    if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0) {
+      return sendResponse(res, 400, "Failed", {
+        message: "employeeId and a non-empty array of leadIds are required",
+      });
+    }
+
+    // Update multiple lead documents with the new employeeId
+    const updateResult = await Lead.updateMany(
+      { _id: { $in: leadIds } },
+      { $set: { AssignedTo: employeeId } },
+      { new: true }
+    );
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Leads assigned successfully!",
+      data: updateResult
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 
 module.exports = adminController;
