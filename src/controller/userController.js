@@ -327,6 +327,51 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
 });
 
 
+// userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
+//   try {
+//     const logId = req.params.logId;
+//     const { inTime, outTime } = req.body;
+
+//     // Find the log entry in the database based on logId
+//     const existingLog = await LogUser.findById(logId);
+
+//     if (!existingLog) {
+//       return sendResponse(res, 404, "Not Found", {
+//         success: false,
+//         message: "Log entry not found"
+//       });
+//     }
+
+//     const photoArray = req.files.map((file) => file.path);
+
+//     // Update log data with new inTimeImage and inTime
+//     existingLog.inTimeImage = photoArray[0];
+//     existingLog.inTime = String(inTime);
+//     existingLog.outTime = String(outTime);
+
+//     await existingLog.save();
+
+//     // Fetch user data dynamically based on userId
+//     const userData = await EmployeeInfo.findById(existingLog.userId);
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "In-time document updated successfully",
+//       // user: userData, // Sending user data for reference
+//       log: existingLog // Sending updated log entry
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       success: false,
+//       message: error.message || "Internal server error"
+//     });
+//   }
+// });
+
+
+
+
 userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
     const logId = req.params.logId;
@@ -344,21 +389,32 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
 
     const photoArray = req.files.map((file) => file.path);
 
-    // Update log data with new inTimeImage and inTime
+    // Update log data with new inTime and outTime
     existingLog.inTimeImage = photoArray[0];
     existingLog.inTime = String(inTime);
     existingLog.outTime = String(outTime);
 
-    await existingLog.save();
+    // Parse the times into Moment objects
+    const checkInMoment = moment(inTime);
+    const checkOutMoment = moment(outTime);
 
-    // Fetch user data dynamically based on userId
-    const userData = await EmployeeInfo.findById(existingLog.userId);
+    // Calculate the difference in time
+    const totalHours = moment.duration(checkOutMoment.diff(checkInMoment));
+
+    // Format totalHours
+    const hours = Math.floor(totalHours.asHours());
+    const minutes = Math.floor(totalHours.asMinutes()) % 60;
+    const formattedTotalHours = `${hours}hr ${minutes}min`;
+
+    // Add formatted total hours to log data
+    existingLog.totalHours = formattedTotalHours;
+
+    await existingLog.save();
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "In-time document updated successfully",
-      // user: userData, // Sending user data for reference
-      log: existingLog // Sending updated log entry
+      log: existingLog,
     });
   } catch (error) {
     console.error(error);
@@ -368,6 +424,8 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
     });
   }
 });
+
+
 
 
 userController.put("/outTime", async (req, res) => {
