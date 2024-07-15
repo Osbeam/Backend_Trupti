@@ -19,6 +19,47 @@ const multer = require('multer');
 
 
 
+// new api to fetch and sort duplicate entry's
+
+
+// adminController.post('/upload', upload.single('file'), async (req, res) => {
+//   try {
+//     const file = req.file;
+//     const Employer = req.body.Employer; // Get employer ID from the request body
+//     const workbook = xlsx.readFile(file.path);
+//     const sheet_name_list = workbook.SheetNames;
+//     const jsonData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+
+//     // Deduplicate data based on a unique identifier, e.g., MobileNo1
+//     const uniqueEntries = new Set();
+//     const deduplicatedData = jsonData.filter(item => {
+//       const uniqueKey = item.MobileNo1; // Use MobileNo1 as the unique identifier
+//       if (!uniqueEntries.has(uniqueKey)) {
+//         uniqueEntries.add(uniqueKey);
+//         return true;
+//       }
+//       return false;
+//     });
+
+//     // Add employerId to each document
+//     const dataWithEmployer = deduplicatedData.map(item => ({ ...item, Employer }));
+
+//     const savedData = await Admin.insertMany(dataWithEmployer);
+//     sendResponse(res, 200, 'Success', {
+//       success: true,
+//       message: 'Excel file uploaded and data saved successfully',
+//       data: savedData
+//     });
+//   } catch (error) {
+//     console.error('Error uploading Excel file:', error);
+//     sendResponse(res, 500, 'Failed', {
+//       success: false,
+//       message: error.message || 'Internal server error'
+//     });
+//   }
+// });
+
+
 
 adminController.post('/upload', upload.single('file'), async (req, res) => {
   try {
@@ -454,12 +495,6 @@ adminController.get("/Allcallstatus", async (req, res) => {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
 
-    if (!startDate || !endDate) {
-      return sendResponse(res, 400, "Failed", {
-        message: "startDate and endDate query parameters are required",
-      });
-    }
-
     // Fetch all distinct employees in the Admin collection
     const distinctEmployees = await Admin.distinct("AssignedTo");
 
@@ -508,17 +543,34 @@ adminController.get("/Allcallstatus", async (req, res) => {
             },
           };
         }
-        const formattedStartDate = new Date(startDate);
-        const formattedEndDate = new Date(endDate);
-        formattedStartDate.setHours(0, 0, 0, 0);
-        formattedEndDate.setHours(23, 59, 59, 999);
-        const callStatuses = await Admin.find({
-          AssignedTo,
-          CallStatusUpdatedAt: {
-            $gte: new Date(formattedStartDate),
-            $lte: new Date(formattedEndDate),
-          },
-        });
+        let formattedStartDate;
+        let formattedEndDate;
+        let callStatuses;
+        if (req.query.showAllData) {
+          callStatuses = await Admin.find({
+            AssignedTo,
+          });
+        } else {
+          if (!startDate && !endDate) {
+            const today = new Date();
+            formattedStartDate = new Date(today);
+            formattedEndDate = new Date(today);
+            formattedStartDate.setHours(0, 0, 0, 0);
+            formattedEndDate.setHours(23, 59, 59, 999);
+          } else {
+            formattedStartDate = new Date(startDate);
+            formattedEndDate = new Date(endDate);
+            formattedStartDate.setHours(0, 0, 0, 0);
+            formattedEndDate.setHours(23, 59, 59, 999);
+          }
+          callStatuses = await Admin.find({
+            AssignedTo,
+            CallStatusUpdatedAt: {
+              $gte: new Date(formattedStartDate),
+              $lte: new Date(formattedEndDate),
+            },
+          });
+        }
 
         for (const callStatusRecord of callStatuses) {
           if (
@@ -781,35 +833,6 @@ adminController.get("/pendingLeads", async (req, res) => {
 });
 
 
-// adminController.get("/AllMobileLeadFromData", async (req, res) => {
-//   try {
-//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-//     const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
-
-//     // Fetch lead from data with pagination
-//     const { LeadFromData, LeadFromCount } = await adminServices.getAllLeadFromData(currentPage, pageSize);
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Lead From data retrieved successfully!",
-//       data: {
-//         LeadFromData,
-//         LeadFromCount,
-//         currentPage,
-//         pageSize,
-//         totalPage: Math.ceil(LeadFromCount / pageSize)
-//       }
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
 adminController.get("/AllMobileLeadFromData", async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
@@ -947,6 +970,11 @@ adminController.put("/assignBulkLeads", async (req, res) => {
     });
   }
 });
+
+
+
+
+
 
 
 

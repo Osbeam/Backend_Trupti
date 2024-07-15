@@ -8,6 +8,7 @@ const logUserSchema = mongoose.Schema({
     inTime: { type: String },
     outTime: { type: String },
     totalHours: { type: String },
+    editedHours: { type: String },
     approved: {type: Boolean, default: false},
     isPresent: {type: Boolean, default: false}
 });
