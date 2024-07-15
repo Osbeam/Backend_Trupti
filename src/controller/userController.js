@@ -371,11 +371,10 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
 
 
 
-
 userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
     const logId = req.params.logId;
-    const { inTime, outTime } = req.body;
+    const { inTime, outTime, inTimeImage } = req.body;
 
     // Find the log entry in the database based on logId
     const existingLog = await LogUser.findById(logId);
@@ -424,8 +423,6 @@ userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), asy
     });
   }
 });
-
-
 
 
 userController.put("/outTime", async (req, res) => {
