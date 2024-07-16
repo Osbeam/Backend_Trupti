@@ -88,7 +88,7 @@ const employeeSchema = mongoose.Schema({
     },
     Position: { 
         type: [String],
-        enum: ['TeamLeader', 'Manager', 'Boss']
+        enum: ['TeamLeader', 'Manager', 'Boss', 'None']
      },
      ManagedBy: {type: String, ref: "EmployeeInfo"},
 });
