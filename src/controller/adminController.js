@@ -19,47 +19,6 @@ const multer = require('multer');
 
 
 
-// new api to fetch and sort duplicate entry's
-
-
-// adminController.post('/upload', upload.single('file'), async (req, res) => {
-//   try {
-//     const file = req.file;
-//     const Employer = req.body.Employer; // Get employer ID from the request body
-//     const workbook = xlsx.readFile(file.path);
-//     const sheet_name_list = workbook.SheetNames;
-//     const jsonData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-
-//     // Deduplicate data based on a unique identifier, e.g., MobileNo1
-//     const uniqueEntries = new Set();
-//     const deduplicatedData = jsonData.filter(item => {
-//       const uniqueKey = item.MobileNo1; // Use MobileNo1 as the unique identifier
-//       if (!uniqueEntries.has(uniqueKey)) {
-//         uniqueEntries.add(uniqueKey);
-//         return true;
-//       }
-//       return false;
-//     });
-
-//     // Add employerId to each document
-//     const dataWithEmployer = deduplicatedData.map(item => ({ ...item, Employer }));
-
-//     const savedData = await Admin.insertMany(dataWithEmployer);
-//     sendResponse(res, 200, 'Success', {
-//       success: true,
-//       message: 'Excel file uploaded and data saved successfully',
-//       data: savedData
-//     });
-//   } catch (error) {
-//     console.error('Error uploading Excel file:', error);
-//     sendResponse(res, 500, 'Failed', {
-//       success: false,
-//       message: error.message || 'Internal server error'
-//     });
-//   }
-// });
-
-
 
 adminController.post('/upload', upload.single('file'), async (req, res) => {
   try {
@@ -71,8 +30,17 @@ adminController.post('/upload', upload.single('file'), async (req, res) => {
 
     // Add employerId to each document
     const dataWithEmployer = jsonData.map(item => ({ ...item, Employer }));
+    const uniqueEntries = new Set();
+        const deduplicatedData = dataWithEmployer.filter(item => {
+          const uniqueKey = item.MobileNo1; // Use MobileNo1 as the unique identifier
+          if (!uniqueEntries.has(uniqueKey)) {
+            uniqueEntries.add(uniqueKey);
+            return true;
+          }
+          return false;
+        });
 
-    const savedData = await Admin.insertMany(dataWithEmployer);
+    const savedData = await Admin.insertMany(deduplicatedData);
     sendResponse(res, 200, 'Success', {
       success: true,
       message: 'Excel file uploaded and data saved successfully',
@@ -970,57 +938,6 @@ adminController.put("/assignBulkLeads", async (req, res) => {
     });
   }
 });
-
-
-// adminController.put("/assignBulkLeads", async (req, res) => {
-//   try {
-//     const { employeeId, leadIds } = req.body;
-
-//     if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0) {
-//       return sendResponse(res, 400, "Failed", {
-//         message: "employeeId and a non-empty array of leadIds are required",
-//       });
-//     }
-
-//     // Update multiple lead documents with the new employeeId
-//     const updateResult = await Lead.updateMany(
-//       { _id: { $in: leadIds } },
-//       { $set: { AssignedTo: employeeId } },
-//       { new: true }
-//     );
-
-//     // Fetch all team leaders
-//     const teamLeaders = await Employee.find({ Designation: "666e752b32b92ee0216a571f" });
-
-//     // Create a list of team leaders and their employees
-//     const teamData = await Promise.all(teamLeaders.map(async (leader) => {
-//       const employees = await Employee.find({ ReportingTo: leader._id });
-//       return {
-//         leader: {
-//           id: leader._id,
-//           name: `${leader.FirstName} ${leader.LastName}`,
-//         },
-//         employees: employees.map(employee => ({
-//           id: employee._id,
-//           name: `${employee.FirstName} ${employee.LastName}`,
-//         })),
-//       };
-//     }));
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Leads assigned successfully!",
-//       data: updateResult,
-//       teamData, 
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
 
 
 

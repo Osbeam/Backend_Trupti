@@ -632,5 +632,40 @@ userController.put("/editLogUser/:logId", async (req, res) => {
 });
 
 
+userController.get("/getTeamLeaders", async (req, res) => {
+  try {
+    const data = await EmployeeInfo.find({Position:"TeamLeader"})
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Team Leaders list retrieved successfully!",
+      data : data, 
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
+userController.get("/getFollowers", async (req, res) => {
+  try {
+    const data = await EmployeeInfo.find({ManagedBy:req.body.leaderId})
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Followers list retrieved successfully!",
+      data : data, 
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 module.exports = userController;

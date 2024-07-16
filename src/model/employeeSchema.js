@@ -46,8 +46,6 @@ const employeeSchema = mongoose.Schema({
     Relation2: { type: String },
     ContanctNumber2: { type: String },
     Address2: { type: String },
-    ReportingTo: { type: [String] },
-    ManagerName: { type: [String] },
     DateOfJoining: { type: String },
     CompanyName: { type: String },
     BasicSalary: { type: String },
@@ -88,6 +86,11 @@ const employeeSchema = mongoose.Schema({
         type: [String],
         enum: ['Admin', 'HR', 'Other', 'TeleCalling']
     },
+    Position: { 
+        type: [String],
+        enum: ['TeamLeader', 'Manager', 'Boss']
+     },
+     ManagedBy: {type: String, ref: "EmployeeInfo"},
 });
 
 employeeSchema.plugin(timestamps);
