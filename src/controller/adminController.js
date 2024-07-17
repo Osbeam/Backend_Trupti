@@ -910,26 +910,66 @@ adminController.post('/archive-data', async (req, res) => {
 });
 
 
+// adminController.put("/assignBulkLeads", async (req, res) => {
+//   try {
+//     const { employeeId, leadIds } = req.body;
+
+//     if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0) {
+//       return sendResponse(res, 400, "Failed", {
+//         message: "employeeId and a non-empty array of leadIds are required",
+//       });
+//     }
+
+//     // Update multiple lead documents with the new employeeId
+//     const updateResult = await Lead.updateMany(
+//       { _id: { $in: leadIds } },
+//       { $set: { AssignedTo: employeeId } },
+//       { new: true }
+//     );
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Leads assigned successfully!",
+//       data: updateResult
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
 adminController.put("/assignBulkLeads", async (req, res) => {
   try {
-    const { employeeId, leadIds } = req.body;
+    const { employeeId, leadIds, leadCallStatus } = req.body;
 
-    if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0) {
+    if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0 || !leadCallStatus) {
       return sendResponse(res, 400, "Failed", {
-        message: "employeeId and a non-empty array of leadIds are required",
+        message: "employeeId, a non-empty array of leadIds, and leadCallStatus are required",
       });
     }
 
-    // Update multiple lead documents with the new employeeId
+    // Update multiple lead documents with the new employeeId and LeadCallStatus
     const updateResult = await Lead.updateMany(
       { _id: { $in: leadIds } },
-      { $set: { AssignedTo: employeeId } },
+      { 
+        $set: { 
+          AssignedTo: employeeId,
+          LeadCallStatus: leadCallStatus  // Update LeadCallStatus
+        } 
+      },
       { new: true }
     );
 
+    console.log("Update Result:", updateResult);
+
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Leads assigned successfully!",
+      message: "Leads assigned successfully and LeadCallStatus updated!",
       data: updateResult
     });
   } catch (error) {
@@ -939,7 +979,6 @@ adminController.put("/assignBulkLeads", async (req, res) => {
     });
   }
 });
-
 
 
 adminController.get("/allAssignedLeads", async (req, res) => {
