@@ -650,13 +650,13 @@ userController.get("/getTeamLeaders", async (req, res) => {
 
 
 
-userController.get("/getFollowers", async (req, res) => {
+userController.get("/getFollowers/:leaderId", async (req, res) => {
   try {
-    const data = await EmployeeInfo.find({ManagedBy:req.body.leaderId})
+    const data = await EmployeeInfo.find({ ManagedBy: req.params.leaderId });
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Followers list retrieved successfully!",
-      data : data, 
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -665,6 +665,7 @@ userController.get("/getFollowers", async (req, res) => {
     });
   }
 });
+
 
 
 
