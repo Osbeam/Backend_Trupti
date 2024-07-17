@@ -503,6 +503,7 @@ adminController.get("/Allcallstatus", async (req, res) => {
               NotInterested: 0,
               Interested: 0,
               SwitchOff: 0,
+              Connected: 0,
               Invalid: 0,
               NotConnected: 0,
               NotExists: 0,
@@ -946,7 +947,7 @@ adminController.get("/allAssignedLeads", async (req, res) => {
     // Retrieve all leads data assigned to any employee
     const assignedLeads = await Lead.find({
       AssignedTo: { $exists: true, $ne: null },
-      IsCalled: false,
+      LeadCallStatus: 'Accept',
       LeadFrom: { $exists: true }
     });
 
@@ -960,7 +961,7 @@ adminController.get("/allAssignedLeads", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    sendResponse(res, 500, "Failed", {
+    sendResponse(res, 500, "Failed", {        
       message: error.message || "Internal server error",
     });
   }
