@@ -948,8 +948,7 @@ adminController.get("/allAssignedLeads", async (req, res) => {
     const assignedLeads = await Lead.find({
       AssignedTo: { $exists: true, $ne: null },
       LeadCallStatus: 'Accept',
-      LeadFrom: { $exists: true }
-    });
+      LeadFrom: { $exists: true }}).populate('AssignedTo', 'FirstName LastName');
 
     const assignedLeadsCount = assignedLeads.length;
 

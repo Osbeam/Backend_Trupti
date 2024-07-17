@@ -207,7 +207,7 @@ exports.updateData = async (filter, update)=> {
 
 exports.getEmployee = async(currentPage, pageSize)=> {
   const skip = (currentPage - 1) * pageSize;
-  const getEmployee = await Employee.find().skip(skip).limit(pageSize).populate('ManagedBy', 'FirstName LastName');;
+  const getEmployee = await Employee.find().skip(skip).limit(pageSize).populate('ManagedBy', 'FirstName LastName');
   return getEmployee;
 }
 
