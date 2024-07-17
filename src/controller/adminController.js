@@ -941,5 +941,32 @@ adminController.put("/assignBulkLeads", async (req, res) => {
 
 
 
+adminController.get("/allAssignedLeads", async (req, res) => {
+  try {
+    // Retrieve all leads data assigned to any employee
+    const assignedLeads = await Lead.find({
+      AssignedTo: { $exists: true, $ne: null },
+      IsCalled: false,
+      LeadFrom: { $exists: true }
+    });
+
+    const assignedLeadsCount = assignedLeads.length;
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All assigned leads data retrieved successfully!",
+      count: assignedLeadsCount,
+      data: assignedLeads,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 
 module.exports = adminController;
