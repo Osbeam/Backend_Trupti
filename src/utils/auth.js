@@ -1,33 +1,25 @@
+const jwt = require("jsonwebtoken");
+
 const auth = (req, res, next) => {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    if (!authHeader?.startsWith("Bearer "))
-      return sendResponse(res, 403, "Failed", {
-        message: "Invalid authorization method!",
-      });
-    const token = authHeader.split(" ")[1];
-    if (!token || token === null) {
-      return sendResponse(res, 403, "Failed", {
-        message: "Authorization token not found!",
-      });
-    }
-    jwt.verify(token, process.env.JWT_KEY, async (err, decoded) => {
-      if (err)
-        return sendResponse(res, 403, "Failed", {
-          message: `Invalid Bearer token / ${err.message}`,
-        });
-      const { iat, exp, ...rest } = decoded;
-      const user = await userService.findOne({ _id: rest._id });
-      if (!user) {
-        return sendResponse(res, 400, "Failed", {
-          message: "User not found!",
-        });
-      }
-      if (!(user.token === token)) {
-        return sendResponse(res, 403, "Failed", {
-          message: "Multiple session not allowed. Please logout!",
-        });
-      }
-      req.user = user;
-      next();
+  const token = req.header("Authorization")?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).send({
+      success: false,
+      message: "Access Denied: No Token Provided!",
     });
-  };
+  }
+
+  try {
+    const verified = jwt.verify(token, process.env.JWT_KEY);
+    req.user = verified;
+    next();
+  } catch (error) {
+    res.status(400).send({
+      success: false,
+      message: "Invalid Token!",
+    });
+  }
+};
+
+module.exports = auth;

@@ -16,6 +16,7 @@ const { processExcelFile } = require('../services/adminServices');
 const fs = require('fs');
 const xlsx = require('xlsx');
 const multer = require('multer');
+const auth = require('../utils/auth');
 
 
 
@@ -96,7 +97,7 @@ const storage = multer.diskStorage({
 
 
 
-adminController.get("/getexcelfiles", async (req, res) => {
+adminController.get("/getexcelfiles", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10;
@@ -110,62 +111,6 @@ adminController.get("/getexcelfiles", async (req, res) => {
       userCount: userCount,
       totalPage: totalPage,
       currentPage: currentPage
-    });
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-adminController.get("/distributeDataToEmployees", async (req, res) => {
-  try {
-    const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
-    const data = await Admin.find({ IsCalled: false, AssignedTo: null }); // Find data with IsCalled status false and unassigned to any employee
-
-    const totalEmployees = employees.length;
-    const totalData = data.length;
-
-    if (totalData === 0) {
-      return sendResponse(res, 200, "Success", {
-        success: true,
-        message: "No data to distribute.",
-        data: []
-      });
-    } 
-
-    const dataPerEmployee = Math.floor(totalData / totalEmployees);
-    let remainingData = totalData % totalEmployees;
-
-    let dataIndex = 0;
-
-    for (const employee of employees) {
-      let dataCount = dataPerEmployee;
-      if (remainingData > 0) {
-        dataCount++; // Distribute the remaining data to the first few employees
-        remainingData--;
-      }
-
-      const employeeId = employee._id;
-
-      // Update the documents with the employee ID
-      const distributedData = await Admin.updateMany({ 
-        _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } 
-      }, { 
-        AssignedTo: employeeId 
-      });
-
-      dataIndex += dataCount;
-    }
-
-    let distributedData = await Admin.find({ IsCalled: false });
-
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "Data distributed to employees successfully!",
-      data: distributedData,
     });
   } catch (error) {
     console.log(error);
@@ -243,115 +188,7 @@ adminController.get("/assign-coldData-for-user/:id", async (req, res) => {
 });
 
 
-adminController.get("/leadDistributeToEmployees", async (req, res) => { 
-  try {
-    const employees = await Employee.find({}, '_id').lean(); // Fetch employee documents with only _id field
-    const data = await Lead.find({ IsCalled: false, AssignedTo: null, LeadFrom: { $exists: true } }); // Find data with IsCalled status false, unassigned to any employee, and LeadFrom exists
-
-    const totalEmployees = employees.length;
-    const totalData = data.length;
-
-    if (totalData === 0) {
-      return sendResponse(res, 200, "Success", {
-        success: true,
-        message: "No data to distribute.",
-        data: []
-      });
-    }
-
-    const dataPerEmployee = Math.floor(totalData / totalEmployees);
-    let remainingData = totalData % totalEmployees;
-
-    let dataIndex = 0;
-
-    for (const employee of employees) {
-      let dataCount = dataPerEmployee;
-      if (remainingData > 0) {
-        dataCount++; // Distribute the remaining data to the first few employees
-        remainingData--;
-      }
-
-      const employeeId = employee._id;
-
-      // Update the documents with the employee ID
-      const distributedData = await Lead.updateMany({ 
-        _id: { $in: data.slice(dataIndex, dataIndex + dataCount).map(item => item._id) } 
-      }, { 
-        AssignedTo: employeeId 
-      });
-
-      dataIndex += dataCount;
-    }
-
-    // Retrieve the distributed data that meets the LeadFrom condition
-    let distributedData = await Lead.find({ IsCalled: false, LeadFrom: { $exists: true } });
-
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "Data distributed to employees successfully!",
-      data: distributedData,
-    });
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-adminController.get("/employeeData/:employeeId", async (req, res) => {
-  try {
-    const employeeId = req.params.employeeId;
-    const currentPage = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.limit) || 10; // Default to 10 records per page if not provided
-
-    // Calculate the number of documents to skip
-    const skip = (currentPage - 1) * pageSize;
-
-    console.log(`Fetching data for employeeId: ${employeeId}`);
-    console.log(`Page: ${currentPage}, Limit: ${pageSize}, Skip: ${skip}`);
-
-    // Query to retrieve distributed data for the employee with pagination
-    const query = { AssignedTo: employeeId, IsCalled: false };
-
-    // Retrieve the total count of records matching the query (for pagination info)
-    const totalCount = await Admin.countDocuments(query);
-
-    // Calculate totalPages early
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    // Fetch data with pagination
-    const employeeData = await Admin.find(query)
-      .skip(skip)
-      .limit(pageSize);
-
-    console.log(`Total count of documents: ${totalCount}`);
-    console.log(`Data fetched for page ${currentPage}: ${employeeData.length} records`);
-    console.log(`Fetched records:`, employeeData);
-
-    // Respond with paginated data
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: `Distributed data for employee ${employeeId} retrieved successfully!`,
-      data: {
-        totalCount, // Total number of matching records
-        currentPage, // Current page number
-        totalPages, // Total number of pages
-        pageSize, // Number of records per page
-        records: employeeData // Actual records for the current page
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-adminController.post('/manualDataUpload', async (req, res) => {
+adminController.post('/manualDataUpload', auth,  async (req, res) => {
   try {
 
     const userData = { ...req.body }; // Add employee ID to user data
@@ -372,7 +209,7 @@ adminController.post('/manualDataUpload', async (req, res) => {
 });
 
 
-adminController.post('/manualLeadDataUpload', async (req, res) => {
+adminController.post('/manualLeadDataUpload', auth,  async (req, res) => {
   try {
 
     const userData = { ...req.body }; // Add employee ID to user data
@@ -455,7 +292,7 @@ adminController.get("/callstatus/:id", async (req, res) => {
 });
 
 
-adminController.get("/Allcallstatus", async (req, res) => {
+adminController.get("/Allcallstatus", auth,  async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
@@ -910,40 +747,7 @@ adminController.post('/archive-data', async (req, res) => {
 });
 
 
-// adminController.put("/assignBulkLeads", async (req, res) => {
-//   try {
-//     const { employeeId, leadIds } = req.body;
-
-//     if (!employeeId || !Array.isArray(leadIds) || leadIds.length === 0) {
-//       return sendResponse(res, 400, "Failed", {
-//         message: "employeeId and a non-empty array of leadIds are required",
-//       });
-//     }
-
-//     // Update multiple lead documents with the new employeeId
-//     const updateResult = await Lead.updateMany(
-//       { _id: { $in: leadIds } },
-//       { $set: { AssignedTo: employeeId } },
-//       { new: true }
-//     );
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Leads assigned successfully!",
-//       data: updateResult
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-
-adminController.put("/assignBulkLeads", async (req, res) => {
+adminController.put("/assignBulkLeads", auth,  async (req, res) => {
   try {
     const { employeeId, leadIds, leadCallStatus } = req.body;
 
@@ -981,7 +785,7 @@ adminController.put("/assignBulkLeads", async (req, res) => {
 });
 
 
-adminController.get("/allAssignedLeads", async (req, res) => {
+adminController.get("/allAssignedLeads", auth,  async (req, res) => {
   try {
     // Retrieve all leads data assigned to any employee
     const assignedLeads = await Lead.find({

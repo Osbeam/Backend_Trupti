@@ -12,6 +12,7 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
 const jwt = require('jsonwebtoken');
 const moment = require('moment-timezone'); 
+const auth = require('../utils/auth');
 
 
 
@@ -104,7 +105,7 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
 });
 
 
-userController.post("/EmployeeInfoLogin", async (req, res) => {
+userController.post("/EmployeeInfoLogin",  async (req, res) => {
   try {
     const { EmailId, Password } = req.body;
     const loggedUser = await userServices.EmployeeHrLogin({ EmailId, Password });
@@ -190,7 +191,7 @@ userController.put("/updateEmployeeData", async (req, res) => {
 });
 
 
-userController.get("/getEmployee", async (req, res) => {
+userController.get("/getEmployee", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10; 
@@ -327,51 +328,7 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
 });
 
 
-// userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
-//   try {
-//     const logId = req.params.logId;
-//     const { inTime, outTime } = req.body;
-
-//     // Find the log entry in the database based on logId
-//     const existingLog = await LogUser.findById(logId);
-
-//     if (!existingLog) {
-//       return sendResponse(res, 404, "Not Found", {
-//         success: false,
-//         message: "Log entry not found"
-//       });
-//     }
-
-//     const photoArray = req.files.map((file) => file.path);
-
-//     // Update log data with new inTimeImage and inTime
-//     existingLog.inTimeImage = photoArray[0];
-//     existingLog.inTime = String(inTime);
-//     existingLog.outTime = String(outTime);
-
-//     await existingLog.save();
-
-//     // Fetch user data dynamically based on userId
-//     const userData = await EmployeeInfo.findById(existingLog.userId);
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "In-time document updated successfully",
-//       // user: userData, // Sending user data for reference
-//       log: existingLog // Sending updated log entry
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       success: false,
-//       message: error.message || "Internal server error"
-//     });
-//   }
-// });
-
-
-
-userController.put("/editInTime/:logId", imgUpload.array("inTimeImage", 10), async (req, res) => {
+userController.put("/editInTime/:logId", auth, imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
     const logId = req.params.logId;
     const { inTime, outTime } = req.body;
@@ -483,7 +440,7 @@ userController.get("/getLogUserbyid", async (req, res) => {
 });
 
 
-userController.get("/getApprovedLogUsers", async (req, res) => {
+userController.get("/getApprovedLogUsers", auth,  async (req, res) => {
   try {
     const { approved, startDate, endDate, currentPage, pageSize } = req.query;
     const query = { approved: approved === 'true' }; // Convert approved to boolean
@@ -543,7 +500,7 @@ userController.get("/getApprovedLogUsers", async (req, res) => {
 });
 
 
-userController.get("/getLogUsers", async (req, res) => {
+userController.get("/getLogUsers", auth,   async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; 
     const pageSize = parseInt(req.query.pageSize) || 10; 
@@ -564,7 +521,7 @@ userController.get("/getLogUsers", async (req, res) => {
 });
 
 
-userController.delete("/deleteLog/:logId", async (req, res) => {
+userController.delete("/deleteLog/:logId", auth,  async (req, res) => {
   try {
     const logId = req.params.logId;
 
@@ -596,7 +553,7 @@ userController.delete("/deleteLog/:logId", async (req, res) => {
 });
 
 
-userController.put("/editLogUser/:logId", async (req, res) => {
+userController.put("/editLogUser/:logId", auth, async (req, res) => {
   try {
     const logId = req.params.logId;
     const updates = req.body;
@@ -632,7 +589,7 @@ userController.put("/editLogUser/:logId", async (req, res) => {
 });
 
 
-userController.get("/getTeamLeaders", async (req, res) => {
+userController.get("/getTeamLeaders", auth, async (req, res) => {
   try {
     const data = await EmployeeInfo.find({Position:"TeamLeader"})
     sendResponse(res, 200, "Success", {
@@ -650,7 +607,7 @@ userController.get("/getTeamLeaders", async (req, res) => {
 
 
 
-userController.get("/getFollowers/:leaderId", async (req, res) => {
+userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
   try {
     const data = await EmployeeInfo.find({ ManagedBy: req.params.leaderId });
     sendResponse(res, 200, "Success", {
