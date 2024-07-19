@@ -27,93 +27,55 @@ async function fetchLocations() {
 
 
 
+bussinessIncome.put("/updateOrCreateBussiness/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const additionalData = req.body;
 
+      // Fetch locations and add to userData if needed
+    const locations = await fetchLocations();
+    additionalData.BusinessLocation = locations;
 
-// bussinessIncome.post("/createBussiness", async (req, res) => {
-//   try {
-//     const userData = { ...req.body };
+    // Fetch the interested customer data by ID
+    const interestedCustomerData = await adminServices.getInterestedCustomer(id);
 
-//     // Fetch locations and add to userData if needed
-//     const locations = await fetchLocations();
-//     userData.BusinessLocation = locations;
+    if (!interestedCustomerData || interestedCustomerData.length === 0) {
+      return sendResponse(res, 404, "Failed", {
+        message: "Interested customer data not found",
+      });
+    }
 
-//     // Assuming you have a service function for creating business income
-//     const bussinessCreated = await bussinessServices.createBussinessIncome(userData);
+    // Combine the interested customer data with the additional data
+    const newData = {
+      ...interestedCustomerData[0]._doc, // Assuming you're using Mongoose and need to get the raw object
+      ...additionalData,
+    };
 
-//     // Respond with success message and created data
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Business Income form created successfully!",
-//       userData: bussinessCreated,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
+    // Check if a document exists in the BussinessIncome schema with the same ID
+    let updatedBussinessIncome = await BussinessIncome.findById(id);
 
+    if (updatedBussinessIncome) {
+      // Update the existing document
+      updatedBussinessIncome = await BussinessIncome.findByIdAndUpdate(id, newData, { new: true });
+    } else {
+      // Create a new document
+      newData._id = id; // Ensure the new document has the same ID
+      updatedBussinessIncome = new BussinessIncome(newData);
+      await updatedBussinessIncome.save();
+    }
 
-
-
-
-// bussinessIncome.put("/updateOrCreateBussiness/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const additionalData = req.body;
-
-//       // Fetch locations and add to userData if needed
-//     const locations = await fetchLocations();
-//     additionalData.BusinessLocation = locations;
-
-//     // Fetch the interested customer data by ID
-//     const interestedCustomerData = await adminServices.getInterestedCustomer(id);
-
-//     if (!interestedCustomerData || interestedCustomerData.length === 0) {
-//       return sendResponse(res, 404, "Failed", {
-//         message: "Interested customer data not found",
-//       });
-//     }
-
-//     // Combine the interested customer data with the additional data
-//     const newData = {
-//       ...interestedCustomerData[0]._doc, // Assuming you're using Mongoose and need to get the raw object
-//       ...additionalData,
-//     };
-
-//     // Check if a document exists in the BussinessIncome schema with the same ID
-//     let updatedBussinessIncome = await BussinessIncome.findById(id);
-
-//     if (updatedBussinessIncome) {
-//       // Update the existing document
-//       updatedBussinessIncome = await BussinessIncome.findByIdAndUpdate(id, newData, { new: true });
-//     } else {
-//       // Create a new document
-//       newData._id = id; // Ensure the new document has the same ID
-//       updatedBussinessIncome = new BussinessIncome(newData);
-//       await updatedBussinessIncome.save();
-//     }
-
-//     // Respond with the updated or created data
-//     sendResponse(res, 200, "Success", {
-//       message: "Business Income updated or created successfully!",
-//       data: updatedBussinessIncome,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-
-
-
-
+    // Respond with the updated or created data
+    sendResponse(res, 200, "Success", {
+      message: "Business Income updated or created successfully!",
+      data: updatedBussinessIncome,
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 
