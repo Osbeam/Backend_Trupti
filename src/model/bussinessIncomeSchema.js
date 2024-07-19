@@ -11,7 +11,15 @@ const bussinessIncomeSchema = mongoose.Schema({
     BusinessFormationDate: { type: Date },
     OfficeType: { type: String },
     OfficeOwnership: { type: String },
-    BusinessLocation: { type: String },
+    // BusinessLocation: { type: String },
+    BusinessLocation: [{
+        village_locality_name: { type: String },
+        officename___bo_so_ho_: { type: String },
+        pincode: { type: Number },
+        sub_distname: { type: String },
+        districtname: { type: String },
+        statename: { type: String }
+      }],
     ITRStatus: {
         type: [String],
         enum: ['Yes', 'No'] 

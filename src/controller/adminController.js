@@ -469,7 +469,7 @@ adminController.put("/editInterestedCustomer", async (req, res) => {
 });
 
 
-adminController.get("/LeadFromData", async (req, res) => {
+adminController.get("/LeadFromData", auth,  async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
