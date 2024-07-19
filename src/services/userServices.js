@@ -145,6 +145,9 @@ exports.getAllLogUser = async (currentPage, pageSize) => {
 
 
 exports.getApprovedLogUsers = async (query, skip, limit) => {
+  console.log("Service Query:", query);
+  console.log("Service Skip:", skip, "Limit:", limit);
+
   const aggregatePipeline = [
     { $match: query },
     {
@@ -159,14 +162,20 @@ exports.getApprovedLogUsers = async (query, skip, limit) => {
     { $limit: limit }
   ];
 
+  console.log("Aggregate Pipeline:", JSON.stringify(aggregatePipeline, null, 2));
+
   // Run the aggregation pipeline
   const logUserCounts = await LogUser.aggregate(aggregatePipeline).exec();
+
+  console.log("Log User Counts:", logUserCounts);
 
   // Populate the userId with user details
   const populatedResults = await LogUser.populate(logUserCounts, {
     path: 'userId',
     select: 'EmployeeID FirstName Designation' // Ensure fields match your schema
   });
+
+  console.log("Populated Results:", populatedResults);
 
   const userDataWithCount = populatedResults.map(log => {
     if (!log.userId || !log.userId._id) {
@@ -188,13 +197,11 @@ exports.getApprovedLogUsers = async (query, skip, limit) => {
     };
   });
 
+  console.log("User Data with Count:", userDataWithCount);
+
   // Return userDataWithCount
   return userDataWithCount;
 };
-
-  
-
-
 
 
 

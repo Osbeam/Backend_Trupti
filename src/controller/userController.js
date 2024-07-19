@@ -415,14 +415,13 @@ userController.get("/getLogUserbyid", async (req, res) => {
     const { userId, startDate, endDate } = req.query;
     const query = { userId };
 
-  
     if (startDate) {
-      query.inTime = { $gte: new Date(startDate) };
+      query.inTime = { $gte: new Date(startDate).toISOString() };
     }
     if (endDate) {
       const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999); 
-      query.inTime = { ...query.inTime, $lte: endOfDay };
+      endOfDay.setHours(23, 59, 59, 999);
+      query.inTime = { ...query.inTime, $lte: endOfDay.toISOString() };
     }
 
     const data = await userServices.getLogUser(query);
@@ -440,19 +439,19 @@ userController.get("/getLogUserbyid", async (req, res) => {
 });
 
 
-userController.get("/getApprovedLogUsers", auth,  async (req, res) => {
+userController.get("/getApprovedLogUsers", auth, async (req, res) => {
   try {
     const { approved, startDate, endDate, currentPage, pageSize } = req.query;
     const query = { approved: approved === 'true' }; // Convert approved to boolean
 
     // Apply date filters if provided
     if (startDate) {
-      query.inTime = { $gte: new Date(startDate) };
+      query.inTime = { $gte: new Date(startDate).toISOString() };
     }
     if (endDate) {
       const endOfDay = new Date(endDate);
       endOfDay.setHours(23, 59, 59, 999);
-      query.inTime = { ...query.inTime, $lte: endOfDay };
+      query.inTime = { ...query.inTime, $lte: endOfDay.toISOString() };
     }
 
     // Convert query strings to numbers
@@ -604,7 +603,6 @@ userController.get("/getTeamLeaders", auth, async (req, res) => {
     });
   }
 });
-
 
 
 userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
