@@ -23,21 +23,14 @@ exports.getAllUsers = async (currentPage, pageSize) => {
 
 
 
-// exports.getUser = async (query) => {
-//   return await Employee.find(query);
-// };
-
-
-
 
 exports.getUser = async (query) => {
   try {
     const employees = await Employee.find(query)
-      .populate('Department', 'name') // Populate department and select 'name' field
-      .populate('SubDepartment', 'name') // Populate subdepartment and select 'name' field
-      .populate('Designation', 'name'); // Populate designation and select 'name' field
-
-    // Map over each employee to structure the response as needed
+      .populate('Department', 'name') 
+      .populate('SubDepartment', 'name') 
+      .populate('Designation', 'name'); 
+    
     const formattedEmployees = employees.map(employee => ({
       _id: employee._id,
       MrMissMrs: employee.MrMissMrs,
@@ -48,9 +41,9 @@ exports.getUser = async (query) => {
       Password: employee.Password,
       EmailId: employee.EmailId,
       EmployeeID: employee.EmployeeID,
-      Department: employee.Department ? employee.Department.name : null, // Access 'name' if populated
-      SubDepartment: employee.SubDepartment ? employee.SubDepartment.name : null, // Access 'name' if populated
-      Designation: employee.Designation ? employee.Designation.name : null, // Access 'name' if populated
+      Department: employee.Department ? employee.Department.name : null, 
+      SubDepartment: employee.SubDepartment ? employee.SubDepartment.name : null, 
+      Designation: employee.Designation ? employee.Designation.name : null, 
       BloodGroup: employee.BloodGroup,
       CurrentAddress: employee.CurrentAddress,
       PermanentAddress: employee.PermanentAddress,
@@ -91,6 +84,8 @@ exports.getUser = async (query) => {
       AccountNumber: employee.AccountNumber,
       IFSCCode: employee.IFSCCode,
       Role: employee.Role,
+      Position: employee.Position,
+      ManagedBy: employee.ManagedBy,
       updatedAt: employee.updatedAt,
       createdAt: employee.createdAt,
       __v: employee.__v
@@ -212,11 +207,47 @@ exports.updateData = async (filter, update)=> {
 
 
 
-exports.getEmployee = async(currentPage, pageSize)=> {
+// exports.getEmployee = async(currentPage, pageSize)=> {
+//   const skip = (currentPage - 1) * pageSize;
+//   const getEmployee = await Employee.find().skip(skip).limit(pageSize).populate('ManagedBy', 'FirstName LastName');
+//   return getEmployee;
+// }
+
+
+
+
+exports.getEmployee = async (currentPage, pageSize) => {
   const skip = (currentPage - 1) * pageSize;
-  const getEmployee = await Employee.find().skip(skip).limit(pageSize).populate('ManagedBy', 'FirstName LastName');
-  return getEmployee;
-}
+
+  const employees = await Employee.find()
+    .skip(skip)
+    .limit(pageSize)
+    .lean(); 
+
+  const employeeIds = employees.map(emp => emp.ManagedBy).filter(id => id && id !== 'null');
+
+  const managers = await Employee.find({
+    _id: { $in: employeeIds }
+  }).select('FirstName LastName');
+
+  const managerMap = managers.reduce((acc, manager) => {
+    acc[manager._id] = manager;
+    return acc;
+  }, {});
+
+  const result = employees.map(emp => ({
+    ...emp,
+    ManagedBy: managerMap[emp.ManagedBy] || null
+  }));
+
+  return result;
+};
+
+
+
+
+
+
 
 
 
