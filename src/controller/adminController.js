@@ -810,55 +810,55 @@ adminController.get("/allAssignedLeads", auth,  async (req, res) => {
 });
 
 
-adminController.delete('/remove-duplicates', async (req, res) => {
-  try {
-    // Find and group duplicates by MobileNo
-    const duplicates = await Admin.aggregate([
-      {
-        $group: {
-          _id: { MobileNo1: "$MobileNo1" }, 
-          uniqueIds: { $addToSet: "$_id" }, 
-          count: { $sum: 1 } 
-        }
-      },
-      {
-        $match: { count: { $gt: 1 } } // Filter groups with more than one document
-      }
-    ]);
+// adminController.delete('/remove-duplicates', async (req, res) => {
+//   try {
+//     // Find and group duplicates by MobileNo
+//     const duplicates = await Admin.aggregate([
+//       {
+//         $group: {
+//           _id: { MobileNo1: "$MobileNo1" }, 
+//           uniqueIds: { $addToSet: "$_id" }, 
+//           count: { $sum: 1 } 
+//         }
+//       },
+//       {
+//         $match: { count: { $gt: 1 } } // Filter groups with more than one document
+//       }
+//     ]);
 
-    if (duplicates.length === 0) {
-      sendResponse(res, 200, "Success", {
-        success: true,
-        message: 'No duplicates found',
-      });
-      return;
-    }
+//     if (duplicates.length === 0) {
+//       sendResponse(res, 200, "Success", {
+//         success: true,
+//         message: 'No duplicates found',
+//       });
+//       return;
+//     }
     
-    for (const doc of duplicates) {
-      const { uniqueIds } = doc;
-       uniqueIds.shift(); // Remove the first ID to keep one document
+//     for (const doc of duplicates) {
+//       const { uniqueIds } = doc;
+//        uniqueIds.shift(); // Remove the first ID to keep one document
        
-       for(let i = 0; i<uniqueIds.length; i++){
-          const checkCallStatus = await Admin.findOne({_id:uniqueIds[i]._id})
-           if(checkCallStatus.CallStatus.length==0){
-             await Admin.deleteOne({_id:uniqueIds[i]._id});
-           console.log("to be deleted")
-            }
-            else{ console.log("to not be deleted")}
-       }
-    }
+//        for(let i = 0; i<uniqueIds.length; i++){
+//           const checkCallStatus = await Admin.findOne({_id:uniqueIds[i]._id})
+//            if(checkCallStatus.CallStatus.length==0){
+//              await Admin.deleteOne({_id:uniqueIds[i]._id});
+//            console.log("to be deleted")
+//             }
+//             else{ console.log("to not be deleted")}
+//        }
+//     }
 
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: 'Duplicates removed successfully',
-    });
-  } catch (error) {
-    console.error('Error removing duplicates:', error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: 'Duplicates removed successfully',
+//     });
+//   } catch (error) {
+//     console.error('Error removing duplicates:', error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
 
 
 

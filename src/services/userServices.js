@@ -132,7 +132,10 @@ exports.getLogUser = async (query) => {
 
 exports.getAllLogUser = async (currentPage, pageSize) => {
   const skip = (currentPage - 1) * pageSize;
-  const logUsers = await LogUser.find({ approved: false }).populate('userId', 'FirstName EmployeeID').skip(skip).limit(pageSize);
+  const logUsers = await LogUser.find({ approved: false })
+  .populate('userId', 'FirstName EmployeeID')
+  .sort({ createdAt: -1 })
+  .skip(skip).limit(pageSize);
   return logUsers;
 };
 
