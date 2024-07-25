@@ -128,6 +128,7 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
 
     // Respond with the updated or created data
     sendResponse(res, 200, "Success", {
+      success: true,
       message: "Salary Income updated or created successfully!",
       data: updatedSalaryIncome,
     });
