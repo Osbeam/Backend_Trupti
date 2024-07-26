@@ -13,7 +13,6 @@ const salaryIncomeSchema = mongoose.Schema({
              'AgricultureLoan', 'MechineryLoan']
     },
     LoanAmount: { type: String },
-    // PropertyLocation: { type: String },
     PropertyLocation: [{
         village_locality_name: { type: String },
         officename___bo_so_ho_: { type: String },
@@ -22,7 +21,7 @@ const salaryIncomeSchema = mongoose.Schema({
         districtname: { type: String },
         statename: { type: String }
       }],
-    City: { type: String },
+    City: { type: [String] },
     IncomeType: {   
         type: [String],
         enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome']  

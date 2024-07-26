@@ -14,7 +14,7 @@ const bussinessIncomeSchema = mongoose.Schema({
     },
     LoanAmount: { type: String },
     PropertyLocation: { type: String },
-    City: { type: String },
+    City: { type: [String] },
     BusinessName: { type: String },
     TypeOfBusiness: { type: String },
     BusinessIndustry: { type: String },
@@ -22,7 +22,6 @@ const bussinessIncomeSchema = mongoose.Schema({
     BusinessFormationDate: { type: Date },
     OfficeType: { type: String },
     OfficeOwnership: { type: String },
-    // BusinessLocation: { type: String },
     BusinessLocation: [{
         village_locality_name: { type: String },
         officename___bo_so_ho_: { type: String },
