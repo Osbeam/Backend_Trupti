@@ -27,8 +27,6 @@ async function fetchLocations() {
 
 
 
-
-
 salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
   try {
     let { id } = req.params;

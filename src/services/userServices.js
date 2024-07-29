@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../model/userSchema");
 const LogUser = require("../model/loguserSchema");
 const Employee = require("../model/employeeSchema");
+const Department = require("../model/departmentSchema");
 const { body } = require("express-validator");
 
 exports.create = async (body) => {
@@ -210,47 +211,63 @@ exports.updateData = async (filter, update)=> {
 
 
 
-// exports.getEmployee = async(currentPage, pageSize)=> {
-//   const skip = (currentPage - 1) * pageSize;
-//   const getEmployee = await Employee.find().skip(skip).limit(pageSize).populate('ManagedBy', 'FirstName LastName');
-//   return getEmployee;
-// }
 
 
-
-
-exports.getEmployee = async (currentPage, pageSize) => {
+exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
+  if (isNaN(currentPage) || currentPage < 1) {
+    currentPage = 1;
+  }
+  if (isNaN(pageSize) || pageSize < 1) {
+    pageSize = 10;
+  }
   const skip = (currentPage - 1) * pageSize;
 
-  const employees = await Employee.find()
-    .skip(skip)
-    .limit(pageSize)
-    .lean(); 
+  try {
+    // Fetch employees with pagination
+    const employees = await Employee.find()
+      .skip(skip)
+      .limit(pageSize)
+      .populate('Department', 'name')
+      .populate('SubDepartment', 'name')
+      .populate('Designation', 'name')
+      .lean();
 
-  const employeeIds = employees.map(emp => emp.ManagedBy).filter(id => id && id !== 'null');
+    // Extract non-null ManagedBy IDs
+    const employeeIds = employees.map(emp => emp.ManagedBy).filter(id => id && id !== 'null');
 
-  const managers = await Employee.find({
-    _id: { $in: employeeIds }
-  }).select('FirstName LastName');
+    // Fetch managers
+    const managers = await Employee.find({
+      _id: { $in: employeeIds }
+    }).select('FirstName LastName');
 
-  const managerMap = managers.reduce((acc, manager) => {
-    acc[manager._id] = manager;
-    return acc;
-  }, {});
+    // Create a map of manager IDs to manager details
+    const managerMap = managers.reduce((acc, manager) => {
+      acc[manager._id] = manager;
+      return acc;
+    }, {});
 
-  const result = employees.map(emp => ({
-    ...emp,
-    ManagedBy: managerMap[emp.ManagedBy] || null
-  }));
+    // Map employees with their manager details
+    const result = employees.map(emp => ({
+      ...emp,
+      ManagedBy: managerMap[emp.ManagedBy] || null
+    }));
 
-  return result;
+    // Get the total count of employees for pagination
+    const userCount = await Employee.countDocuments();
+    const totalPage = Math.ceil(userCount / pageSize);
+
+    // Format and return the result
+    return {
+      employees: result,
+      userCount,
+      totalPage,
+      currentPage
+    };
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    throw new Error("Unable to fetch employees. Please try again later.");
+  }
 };
-
-
-
-
-
-
 
 
 

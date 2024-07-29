@@ -401,22 +401,18 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
 
 bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
   try {
-    // Extract pagination parameters from query
-    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
+   
+    const currentPage = parseInt(req.query.currentPage) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
 
-    // Calculate the number of documents to skip
     const skip = (currentPage - 1) * limit;
 
-    // Fetch the total count of documents
     const totalCount = await BussinessIncome.countDocuments();
 
-    // Fetch paginated documents from the BusinessIncome schema
     const businessIncomes = await BussinessIncome.find()
       .skip(skip)
       .limit(limit);
 
-    // Respond with the fetched data and pagination info
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Business Income documents retrieved successfully!",
@@ -435,16 +431,6 @@ bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
     });
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 
 bussinessIncome.get("/cities", (req, res) =>
