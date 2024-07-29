@@ -408,43 +408,53 @@ bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (currentPage - 1) * limit;
 
-    // Fetch the total count of business income documents
-    const totalCount = await BussinessIncome.countDocuments();
+    // Fetch the total count of salary income documents
+    const totalSalaryCount = await SalaryIncome.countDocuments();
+    const totalBusinessCount = await BussinessIncome.countDocuments();
+    
+    // Fetch paginated salary income documents
+    const salaryIncomes = await SalaryIncome.find()
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     // Fetch paginated business income documents
     const businessIncomes = await BussinessIncome.find()
       .skip(skip)
       .limit(limit)
-      .lean(); // Convert Mongoose documents to plain JavaScript objects
+      .lean();
 
-    // Extract userIds from business incomes to fetch corresponding salary incomes
-    const userIds = businessIncomes.map(business => business._id);
-
-    // Fetch salary incomes for the extracted userIds
-    const salaryIncomes = await SalaryIncome.find({ _id: { $in: userIds } }).lean();
-
-    // Create a map for salary incomes for quick lookup
+    // Create maps for both salary and business incomes
     const salaryIncomeMap = salaryIncomes.reduce((acc, income) => {
       acc[income._id] = income;
       return acc;
     }, {});
+    
+    const businessIncomeMap = businessIncomes.reduce((acc, income) => {
+      acc[income._id] = income;
+      return acc;
+    }, {});
 
-    // Combine business incomes with their corresponding salary incomes
-    const combinedIncomes = businessIncomes.map(business => ({
-      ...business,
-      salaryIncome: salaryIncomeMap[business._id] || null
+    // Create a list of all user IDs found in both salary and business incomes
+    const allUserIds = new Set([...Object.keys(salaryIncomeMap), ...Object.keys(businessIncomeMap)]);
+
+    // Combine both salary and business income data
+    const combinedIncomes = Array.from(allUserIds).map(userId => ({
+      userId,
+      salaryIncome: salaryIncomeMap[userId] || null,
+      businessIncome: businessIncomeMap[userId] || null
     }));
 
     // Respond with the combined data and pagination info
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Business Income documents with salary data retrieved successfully!",
+      message: "User income documents retrieved successfully!",
       data: combinedIncomes,
       pagination: {
         currentPage,
         limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
+        totalCount: Math.max(totalSalaryCount, totalBusinessCount), // Total count should reflect the maximum
+        totalPages: Math.ceil(Math.max(totalSalaryCount, totalBusinessCount) / limit)
       }
     });
   } catch (error) {
@@ -454,6 +464,7 @@ bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
     });
   }
 });
+
 
 
 

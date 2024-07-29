@@ -12,6 +12,10 @@ const bussinessIncomeSchema = mongoose.Schema({
              'PropertyProgram', 'VehicalLoan', 'EducationLoan', 'LetterOfCredit', 'CreditCard', 
              'AgricultureLoan', 'MechineryLoan']
     },
+    IncomeType: {   
+        type: [String],
+        enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome']  
+    },
     LoanAmount: { type: String },
     PropertyLocation: { type: String },
     City: { type: [String] },
