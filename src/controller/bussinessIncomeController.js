@@ -3,6 +3,7 @@ const bussinessIncome = express.Router();
 const bussinessServices = require("../services/bussinessIncomeServices");
 const adminServices = require("../services/adminServices");
 const BussinessIncome = require("../model/bussinessIncomeSchema");
+const SalaryIncome = require("../model/salaryIncomeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
@@ -399,24 +400,46 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
 });
 
 
+
+
 bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
   try {
-   
-    const currentPage = parseInt(req.query.currentPage) || 1; 
-    const limit = parseInt(req.query.limit) || 10; 
-
+    const currentPage = parseInt(req.query.currentPage) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (currentPage - 1) * limit;
 
+    // Fetch the total count of business income documents
     const totalCount = await BussinessIncome.countDocuments();
 
+    // Fetch paginated business income documents
     const businessIncomes = await BussinessIncome.find()
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean(); // Convert Mongoose documents to plain JavaScript objects
 
+    // Extract userIds from business incomes to fetch corresponding salary incomes
+    const userIds = businessIncomes.map(business => business._id);
+
+    // Fetch salary incomes for the extracted userIds
+    const salaryIncomes = await SalaryIncome.find({ _id: { $in: userIds } }).lean();
+
+    // Create a map for salary incomes for quick lookup
+    const salaryIncomeMap = salaryIncomes.reduce((acc, income) => {
+      acc[income._id] = income;
+      return acc;
+    }, {});
+
+    // Combine business incomes with their corresponding salary incomes
+    const combinedIncomes = businessIncomes.map(business => ({
+      ...business,
+      salaryIncome: salaryIncomeMap[business._id] || null
+    }));
+
+    // Respond with the combined data and pagination info
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Business Income documents retrieved successfully!",
-      data: businessIncomes,
+      message: "Business Income documents with salary data retrieved successfully!",
+      data: combinedIncomes,
       pagination: {
         currentPage,
         limit,
@@ -433,6 +456,7 @@ bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
 });
 
 
+
 bussinessIncome.get("/cities", (req, res) =>
   sendResponse(res, 200, "Success", {
     success: true,
@@ -441,6 +465,38 @@ bussinessIncome.get("/cities", (req, res) =>
   })
 );
 
+
+bussinessIncome.get("/GetUserIncomes/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    if (!userId) {
+      return sendResponse(res, 400, "Failed", {
+        message: "userId parameter is required",
+      });
+    }
+
+    const salaryIncomes = await SalaryIncome.find({ _id: userId }).lean();
+    const businessIncomes = await BussinessIncome.find({ _id: userId }).lean();
+
+    const userIncomes = {
+      userId,
+      salaryIncomes,
+      businessIncomes
+    };
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "User income documents retrieved successfully!",
+      data: userIncomes
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 
