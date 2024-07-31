@@ -6,24 +6,23 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
 const SalaryIncome = require('../model/salaryIncomeSchema'); 
 const adminServices = require('../services/adminServices'); 
-const axios = require('axios');
 
 
 
-async function fetchLocations() {
-  const apiUrl = 'https://api.data.gov.in/resource/9115b89c-7a80-4f54-9b06-21086e0f0bd7';
-  const apiKey = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b';
-  const format = 'json';
+// async function fetchLocations() {
+//   const apiUrl = 'https://api.data.gov.in/resource/9115b89c-7a80-4f54-9b06-21086e0f0bd7';
+//   const apiKey = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b';
+//   const format = 'json';
 
 
-  try {
-    const response = await axios.get(`${apiUrl}?api-key=${apiKey}&format=${format}`);
-    return response.data.records; // Assuming 'records' is the key containing location data
-  } catch (error) {
-    console.error('Error fetching locations:', error);
-    return []; 
-  }
-}
+//   try {
+//     const response = await axios.get(`${apiUrl}?api-key=${apiKey}&format=${format}`);
+//     return response.data.records; // Assuming 'records' is the key containing location data
+//   } catch (error) {
+//     console.error('Error fetching locations:', error);
+//     return []; 
+//   }
+// }
 
 
 
@@ -31,10 +30,6 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
   try {
     let { id } = req.params;
     const additionalData = req.body;
-
-    // Fetch locations and add to additionalData if needed
-    const locations = await fetchLocations();
-    additionalData.PropertyLocation = locations;
 
     let interestedCustomerData = null;
 
@@ -86,7 +81,6 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
 });
 
 
-
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
   try {
     // Extract pagination parameters from query
@@ -123,7 +117,6 @@ salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
     });
   }
 });
-
 
 
 

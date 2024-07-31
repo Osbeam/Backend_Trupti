@@ -13,14 +13,7 @@ const salaryIncomeSchema = mongoose.Schema({
              'AgricultureLoan', 'MechineryLoan']
     },
     LoanAmount: { type: String },
-    PropertyLocation: [{
-        village_locality_name: { type: String },
-        officename___bo_so_ho_: { type: String },
-        pincode: { type: Number },
-        sub_distname: { type: String },
-        districtname: { type: String },
-        statename: { type: String }
-      }],
+    PropertyLocation:{ type: String }, 
     City: { type: [String] },
     IncomeType: {   
         type: [String],
