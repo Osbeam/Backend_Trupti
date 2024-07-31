@@ -5,7 +5,7 @@ const { type } = require("os");
 
 const salaryIncomeSchema = mongoose.Schema({
     Name: { type: String },
-    MobileNo: { type: Number },
+    MobileNo1: { type: Number },
     LoanType: {
         type: [String],
         enum: ['PersonalLoan', 'BussinessLoan', 'HomeLoan', 'LoanAgainstProperty',
