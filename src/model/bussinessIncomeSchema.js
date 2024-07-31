@@ -6,12 +6,13 @@ const { type } = require("os");
 const bussinessIncomeSchema = mongoose.Schema({
     Name: { type: String },
     MobileNo1: { type: Number },
-    LoanType: {
-        type: [String],
-        enum: ['PersonalLoan', 'BussinessLoan', 'HomeLoan', 'LoanAgainstProperty',
-             'PropertyProgram', 'VehicalLoan', 'EducationLoan', 'LetterOfCredit', 'CreditCard', 
-             'AgricultureLoan', 'MechineryLoan']
-    },
+    // LoanType: {
+    //     type: [String],
+    //     enum: ['PersonalLoan', 'BussinessLoan', 'HomeLoan', 'LoanAgainstProperty',
+    //          'PropertyProgram', 'VehicalLoan', 'EducationLoan', 'LetterOfCredit', 'CreditCard', 
+    //          'AgricultureLoan', 'MechineryLoan']
+    // },
+    LoanType: { type: String },
     IncomeType: {   
         type: [String],
         enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome']  
