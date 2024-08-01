@@ -26,9 +26,12 @@ const bussinessIncomeSchema = mongoose.Schema({
         type: [String],
         enum: ['Yes', 'No'] 
     },
-    FillingDate: { type: String },
-    Profit: { type: String },
-    TurnOver: { type: String },
+    YearWiseITR: [{
+        FillingDate: { type: String },
+        Profit: { type: String },
+        TurnOver: { type: String },
+      },
+    ],
     GstRegistration: {
         type: [String],
         enum: ['Yes', 'No']  
