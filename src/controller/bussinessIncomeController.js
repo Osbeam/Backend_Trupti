@@ -3,6 +3,7 @@ const bussinessIncome = express.Router();
 const bussinessServices = require("../services/bussinessIncomeServices");
 const adminServices = require("../services/adminServices");
 const BussinessIncome = require("../model/bussinessIncomeSchema");
+const Admin = require("../model/adminSchema");
 const SalaryIncome = require("../model/salaryIncomeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -340,30 +341,31 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
   try {
     const { id } = req.params;
     const additionalData = req.body;
-  
+
     let interestedCustomerData = null;
 
     if (id) {
-      // Fetch the interested customer data by ID
-      interestedCustomerData = await adminServices.getInterestedCustomer(id);
+      // Try to fetch data from SalaryIncome first
+      interestedCustomerData = await SalaryIncome.findById(id).lean();
+      if (!interestedCustomerData) {
+        // If not found in SalaryIncome, fetch from Admin
+        interestedCustomerData = await Admin.findById(id).lean();
+      }
     }
 
-    let newData;
+    let newData = { ...additionalData };
 
-    if (interestedCustomerData && interestedCustomerData.length > 0) {
+    if (interestedCustomerData) {
       // Combine the interested customer data with the additional data
       newData = {
-        ...interestedCustomerData[0]._doc, // Assuming you're using Mongoose and need to get the raw object
+        ...interestedCustomerData,
         ...additionalData,
       };
-    } else {
-      // Create new data with additionalData only
-      newData = { ...additionalData };
     }
 
     // Check if a document exists in the BussinessIncome schema with the same ID
     let updatedBussinessIncome;
-    if (id && interestedCustomerData && interestedCustomerData.length > 0) {
+    if (id) {
       updatedBussinessIncome = await BussinessIncome.findById(id);
     }
 
@@ -376,6 +378,7 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
       );
     } else {
       // Create a new document
+      newData._id = id; // Set the ID to the new document
       updatedBussinessIncome = new BussinessIncome(newData);
       await updatedBussinessIncome.save();
     }

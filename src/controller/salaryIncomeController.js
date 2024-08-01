@@ -5,6 +5,8 @@ const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
 const SalaryIncome = require('../model/salaryIncomeSchema'); 
+const BusinessIncome = require('../model/bussinessIncomeSchema'); 
+const Admin = require('../model/adminSchema'); 
 const adminServices = require('../services/adminServices'); 
 
 
@@ -28,27 +30,28 @@ const adminServices = require('../services/adminServices');
 
 salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
   try {
-    let { id } = req.params;
+    const { id } = req.params;
     const additionalData = req.body;
 
-    let interestedCustomerData = null;
+    let existingData = null;
 
     if (id) {
-      // Fetch the interested customer data by ID
-      interestedCustomerData = await adminServices.getInterestedCustomer(id);
+      // Try to fetch data from Admin first
+      existingData = await Admin.findById(id).lean();
+      if (!existingData) {
+        // If not found in Admin, fetch from BusinessIncome
+        existingData = await BusinessIncome.findById(id).lean();
+      }
     }
 
-    let newData;
+    let newData = { ...additionalData };
 
-    if (interestedCustomerData && interestedCustomerData.length > 0) {
-      // Combine the interested customer data with the additional data
+    if (existingData) {
+      // Combine the existing data with the additional data
       newData = {
-        ...interestedCustomerData[0]._doc, // Assuming you're using Mongoose and need to get the raw object
+        ...existingData,
         ...additionalData,
       };
-    } else {
-      // Create new data with additionalData only
-      newData = { ...additionalData };
     }
 
     // Check if a document exists in the SalaryIncome schema with the same ID
@@ -62,6 +65,7 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
     } else {
       // Create a new document
+      newData._id = id; // Set the ID to the new document
       updatedSalaryIncome = new SalaryIncome(newData);
       await updatedSalaryIncome.save();
     }
@@ -79,6 +83,7 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
     });
   }
 });
+
 
 
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
@@ -117,8 +122,6 @@ salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
     });
   }
 });
-
-
 
 
 module.exports = salaryIncome;
