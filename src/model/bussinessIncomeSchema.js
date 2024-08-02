@@ -18,7 +18,7 @@ const bussinessIncomeSchema = mongoose.Schema({
     TypeOfBusiness: { type: String },
     BusinessIndustry: { type: String },
     BusinessFormationType: { type: String },
-    BusinessFormationDate: { type: Date },
+    BusinessFormationDate: { type: String },
     OfficeType: { type: String },
     OfficeOwnership: { type: String },
     BusinessLocation:{ type: String },
@@ -37,13 +37,13 @@ const bussinessIncomeSchema = mongoose.Schema({
         enum: ['Yes', 'No']  
     },
     GstNumber: { type: String },
-    DateOfGstRegistration: { type: Date },
+    DateOfGstRegistration: { type: String },
     IndustryRegistration: {
         type: [String],
         enum: ['Yes', 'No']  
     },
     IndustryNumber: { type: String },
-    DateOfIndustryRegistration: { type: Date },
+    DateOfIndustryRegistration: { type: String },
     CurrentAccount: {
         type: [String],
         enum: ['Yes', 'No']  
