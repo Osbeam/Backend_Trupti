@@ -4,13 +4,11 @@ const bussinessServices = require("../services/bussinessIncomeServices");
 const adminServices = require("../services/adminServices");
 const BussinessIncome = require("../model/bussinessIncomeSchema");
 const Admin = require("../model/adminSchema");
+const ProfessionalIncome = require("../model/professionalIncomeSchema");
 const SalaryIncome = require("../model/salaryIncomeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
-
-
-
 
 // async function fetchLocations() {
 //   const apiUrl =
@@ -28,8 +26,6 @@ const imgUpload = require("../utils/imageUpload");
 //     return [];
 //   }
 // }
-
-
 
 const City = [
   "Agartala",
@@ -332,9 +328,8 @@ const City = [
   "Yavatmal",
   "Yelahanka",
   "Yemmiganur",
-  "Yerraguntla"
+  "Yerraguntla",
 ];
-
 
 
 bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
@@ -350,6 +345,10 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
       if (!interestedCustomerData) {
         // If not found in SalaryIncome, fetch from Admin
         interestedCustomerData = await Admin.findById(id).lean();
+        if (!interestedCustomerData) {
+          // If not found in Admin, fetch from ProfessionalIncome
+          interestedCustomerData = await ProfessionalIncome.findById(id).lean();
+        }
       }
     }
 
@@ -398,63 +397,139 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
 });
 
 
-  bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
-    try {
-      const currentPage = parseInt(req.query.currentPage) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const skip = (currentPage - 1) * limit;
-  
-      // Fetch all salary income documents
-      const salaryIncomes = await SalaryIncome.find().lean();
-      // Fetch all business income documents
-      const businessIncomes = await BussinessIncome.find().lean();
-  
-      // Create maps for both salary and business incomes
-      const salaryIncomeMap = salaryIncomes.reduce((acc, income) => {
-        acc[income._id] = income;
-        return acc;
-      }, {});
-      
-      const businessIncomeMap = businessIncomes.reduce((acc, income) => {
-        acc[income._id] = income;
-        return acc;
-      }, {});
-  
-      // Create a list of all user IDs found in both salary and business incomes
-      const allUserIds = new Set([...Object.keys(salaryIncomeMap), ...Object.keys(businessIncomeMap)]);
-  
-      // Combine both salary and business income data
-      const combinedIncomes = Array.from(allUserIds).map(userId => ({
-        userId,
-        salaryIncome: salaryIncomeMap[userId] || null,
-        businessIncome: businessIncomeMap[userId] || null
-      }));
-  
-      // Calculate totalCount for combined data
-      const totalCount = combinedIncomes.length;
-      // Paginate combined data
-      const paginatedIncomes = combinedIncomes.slice(skip, skip + limit);
-  
-      // Respond with the combined data and pagination info
-      sendResponse(res, 200, "Success", {
-        success: true,
-        message: "User income documents retrieved successfully!",
-        data: paginatedIncomes,
-        pagination: {
-          currentPage,
-          limit,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limit)
-        }
-      });
-    } catch (error) {
-      console.error(error);
-      sendResponse(res, 500, "Failed", {
-        message: error.message || "Internal server error",
-      });
-    }
-  });
-  
+// bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.currentPage) || 1;
+//     const limit = parseInt(req.query.limit) || 10;
+//     const skip = (currentPage - 1) * limit;
+
+//     // Fetch all salary income documents
+//     const salaryIncomes = await SalaryIncome.find().lean();
+//     // Fetch all business income documents
+//     const businessIncomes = await BussinessIncome.find().lean();
+
+//     // Create maps for both salary and business incomes
+//     const salaryIncomeMap = salaryIncomes.reduce((acc, income) => {
+//       acc[income._id] = income;
+//       return acc;
+//     }, {});
+
+//     const businessIncomeMap = businessIncomes.reduce((acc, income) => {
+//       acc[income._id] = income;
+//       return acc;
+//     }, {});
+
+//     // Create a list of all user IDs found in both salary and business incomes
+//     const allUserIds = new Set([
+//       ...Object.keys(salaryIncomeMap),
+//       ...Object.keys(businessIncomeMap),
+//     ]);
+
+//     // Combine both salary and business income data
+//     const combinedIncomes = Array.from(allUserIds).map((userId) => ({
+//       userId,
+//       salaryIncome: salaryIncomeMap[userId] || null,
+//       businessIncome: businessIncomeMap[userId] || null,
+//     }));
+
+//     // Calculate totalCount for combined data
+//     const totalCount = combinedIncomes.length;
+//     // Paginate combined data
+//     const paginatedIncomes = combinedIncomes.slice(skip, skip + limit);
+
+//     // Respond with the combined data and pagination info
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "User income documents retrieved successfully!",
+//       data: paginatedIncomes,
+//       pagination: {
+//         currentPage,
+//         limit,
+//         totalCount,
+//         totalPages: Math.ceil(totalCount / limit),
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
+
+bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.currentPage) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (currentPage - 1) * limit;
+
+    // Fetch all salary income documents
+    const salaryIncomes = await SalaryIncome.find().lean();
+    // Fetch all business income documents
+    const businessIncomes = await BussinessIncome.find().lean();
+    // Fetch all professional income documents
+    const professionalIncomes = await ProfessionalIncome.find().lean();
+
+    // Create maps for salary, business, and professional incomes
+    const salaryIncomeMap = salaryIncomes.reduce((acc, income) => {
+      acc[income._id] = income;
+      return acc;
+    }, {});
+    
+    const businessIncomeMap = businessIncomes.reduce((acc, income) => {
+      acc[income._id] = income;
+      return acc;
+    }, {});
+
+    const professionalIncomeMap = professionalIncomes.reduce((acc, income) => {
+      acc[income._id] = income;
+      return acc;
+    }, {});
+
+    // Create a list of all user IDs found in salary, business, and professional incomes
+    const allUserIds = new Set([
+      ...Object.keys(salaryIncomeMap),
+      ...Object.keys(businessIncomeMap),
+      ...Object.keys(professionalIncomeMap)
+    ]);
+
+    // Combine salary, business, and professional income data
+    const combinedIncomes = Array.from(allUserIds).map(userId => ({
+      userId,
+      salaryIncome: salaryIncomeMap[userId] || null,
+      businessIncome: businessIncomeMap[userId] || null,
+      professionalIncome: professionalIncomeMap[userId] || null
+    }));
+
+    // Calculate totalCount for combined data
+    const totalCount = combinedIncomes.length;
+    // Paginate combined data
+    const paginatedIncomes = combinedIncomes.slice(skip, skip + limit);
+
+    // Respond with the combined data and pagination info
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "User income documents retrieved successfully!",
+      data: paginatedIncomes,
+      pagination: {
+        currentPage,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 bussinessIncome.get("/cities", (req, res) =>
   sendResponse(res, 200, "Success", {
@@ -481,13 +556,13 @@ bussinessIncome.get("/GetUserIncomes/:userId", async (req, res) => {
     const userIncomes = {
       userId,
       salaryIncomes,
-      businessIncomes
+      businessIncomes,
     };
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "User income documents retrieved successfully!",
-      data: userIncomes
+      data: userIncomes,
     });
   } catch (error) {
     console.error(error);

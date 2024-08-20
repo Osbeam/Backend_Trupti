@@ -8,6 +8,7 @@ const formController = require("./controller/formController");
 const adminController = require("./controller/adminController");
 const salaryIncomeController = require("./controller/salaryIncomeController");
 const bussinessIncomeController = require("./controller/bussinessIncomeController");
+const professionalIncomeController = require("./controller/professionalIncomeController");
 
 router.use("/user", userController);
 router.use("/department", departmentcontroller);
@@ -15,6 +16,7 @@ router.use("/form", formController);
 router.use("/admin", adminController);
 router.use("/salaryIncome", salaryIncomeController);
 router.use("/bussinessIncome", bussinessIncomeController);
+router.use("/professionalIncome", professionalIncomeController);
 
 
 
