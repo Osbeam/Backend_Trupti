@@ -129,4 +129,22 @@ salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
 });
 
 
+salaryIncome.put("/EditSalaryData", async (req, res) => {
+  try {
+    const data = await salaryServices.updateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Salary Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 module.exports = salaryIncome;

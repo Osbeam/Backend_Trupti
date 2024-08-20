@@ -4,7 +4,6 @@ const adminServices = require("../services/adminServices");
 const Admin = require("../model/adminSchema");
 const Employee = require("../model/employeeSchema");
 const Lead = require("../model/leadSchema");
-const User = require("../model/userSchema")
 const LogUser = require("../model/loguserSchema")
 const Archive = require("../model/archiveSchema")
 const { sendResponse } = require("../utils/common");

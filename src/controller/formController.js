@@ -1,7 +1,7 @@
 const express = require("express");
 const formController = express.Router();
 const formServices = require("../services/formServices");
-const User = require("../model/userSchema");
+const User = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")

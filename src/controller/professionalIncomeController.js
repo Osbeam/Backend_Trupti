@@ -403,6 +403,21 @@ professionalIncome.put("/updateOrCreateProfession/:id?", async (req, res) => {
 });
 
 
+professionalIncome.put("/EditProfessionalIncomesData", async (req, res) => {
+  try {
+    const data = await professionalIncomeServices.updateData({ _id: req.body._id }, req.body);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "ProfessionalIncome Updated successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 module.exports = professionalIncome;

@@ -5,7 +5,6 @@ const LogUser = require("../model/loguserSchema");
 const Department = require("../model/departmentSchema");
 const SubDepartment = require("../model/subDepartmentSchema");
 const Designation = require("../model/designationSchema");
-const User = require("../model/userSchema");
 const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -221,66 +220,6 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
       success: true,
       message: "User retrieved successfully!",
       data
-    });
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-userController.post('/register', async (req, res) => {
-  try {
-    // Check if the email or mobile number already exists in the database
-    const existingUser = await User.findOne({
-      $or: [{ Email: req.body.Email }, { MobileNumber: req.body.MobileNumber }]
-    });
-
-    if (existingUser) {
-      // If user already exists with the same email or mobile number, send a response indicating the conflict
-      sendResponse(res, 409, "Failed", {
-        message: "Email or mobile number already exists"
-      });
-    } else {
-      // Generate employee ID
-      const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
-
-      // If no existing user found, proceed with user creation
-      const userData = { ...req.body, EmployeeID: employeeID }; // Add employee ID to user data
-      const userCreated = await userServices.create(userData);
-      
-      sendResponse(res, 200, "Success", {
-        success: true,
-        message: "Registered successfully!",
-        userData: userCreated
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    sendResponse(res, 500, "Failed", {
-      message: error.message || "Internal server error",
-    });
-  }
-});
-
-
-userController.post("/login", async (req, res) => {
-  try {
-    let message = "";
-    const loggedUser = await userServices.login(req.body);
-    if (loggedUser) {
-      message = "logged in successfully";
-    } else {
-      message = "Invalid Userdetails";
-    }
-    let token = await jwt.sign({ loggedUser }, process.env.JWT_KEY);
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: message,
-      token ,
-      loggedUser, 
     });
   } catch (error) {
     console.log(error);

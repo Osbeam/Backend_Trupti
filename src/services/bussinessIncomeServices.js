@@ -11,3 +11,9 @@ exports.createBussinessIncome = async (newData) => {
   const newBussinessIncome = new BussinessIncome(newData);
   return await newBussinessIncome.save();
 };
+
+
+
+exports.updateData = async (filter, update)=> {
+  return await BussinessIncome.updateOne(filter, update, { new: true });
+};

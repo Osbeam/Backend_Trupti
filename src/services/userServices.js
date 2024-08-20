@@ -1,18 +1,9 @@
 const mongoose = require("mongoose");
-const User = require("../model/userSchema");
 const LogUser = require("../model/loguserSchema");
 const Employee = require("../model/employeeSchema");
 const Department = require("../model/departmentSchema");
 const { body } = require("express-validator");
 
-exports.create = async (body) => {
-  return await User.create(body);
-};
-
-
-exports.login = async (body) => {
-  return await User.findOne(body);
-};
 
 
 
