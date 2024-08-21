@@ -60,7 +60,63 @@ const bussinessIncomeSchema = mongoose.Schema({
         type: [String],
         enum: ['Yes', 'No']  
     },
-
+    LeadId:{type: String },
+    LeadDate:{type: String },
+    SourcingChanel:{type: String },
+    SourceName:{type: String },
+    LeadName:{type: String },
+    EmailId:{type: String },
+    DateOfBirth:{type: String },
+    Age:{type: String },
+    Sex:{type: String },
+    MaritalStatus:{type: String },
+    ResidenceType:{type: String },
+    ResidenceCity:{type: String },
+    PermanentAddress:{type: String },
+    PCity:{type: String },
+    PPinCode:{type: String },
+    PState:{type: String },
+    FormationType:{type: String },
+    OrganizationName:{type: String },
+    OfficeType:{type: String },
+    Designation:{type: String },
+    CurrentExperience:{type: String },
+    IndustryType:{type: String },
+    Dated:{type: String },
+    ExperienceProof:{type: String },
+    Form26AS: {
+        type: [String],
+        enum: ['Yes', 'No']
+    },
+    PFApplicability: {
+        type: [String],
+        enum: ['Yes', 'No']
+    },
+    IncomeDetails: [{
+        AssesmentYear: { type: String }, 
+        GrossIncome: { type: String }, 
+        NetIncome: { type: String }, 
+        OtherIncome: { type: String }, 
+        TotalIncome: { type: String },
+        PaymentMode: { type: String },
+        DateOfFilling: { type: Date }, 
+    }],
+    TurnOverDetails: [{
+        TurnOver: { type: String }, 
+        ITR: { type: String }, 
+        GST: { type: String }, 
+        Banking: { type: String }, 
+        Export: { type: String },
+        Other: { type: String },
+    }],
+    BankDetails: [{
+        ABB: { type: String }, 
+        DR1: { type: String }, 
+        DR2: { type: String }, 
+        DR3: { type: String }, 
+        DR4: { type: String },
+        DR5: { type: String },
+    }],
 });
 
 bussinessIncomeSchema.plugin(timestamps);
