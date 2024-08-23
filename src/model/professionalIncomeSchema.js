@@ -119,6 +119,8 @@ const ProfessionalIncomeSchema = mongoose.Schema({
         DR4: { type: String },
         DR5: { type: String },
     }],
+    LoanEligibility:{type: String },
+    LoanStage:{type: String },
 });
 
 ProfessionalIncomeSchema.plugin(timestamps);

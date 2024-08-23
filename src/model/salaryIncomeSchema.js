@@ -91,6 +91,20 @@ const salaryIncomeSchema = mongoose.Schema({
         DR4: { type: String },
         DR5: { type: String },
     }],
+    Analysis: [{
+        CibilAnalysis: { type: String }, 
+        Month: { type: String }, 
+        Bounce: { type: String }, 
+        Enquiry: { type: String }, 
+        RecentFunding: { type: String },
+    }],
+    LoanEligibility:{type: String },
+    LoanStage:{type: String },
+    Score: [{
+        CibilScore: { type: String }, 
+        Settelement1Yr: { type: String }, 
+        Settelement2Yr: { type: String }, 
+    }],
 });
 
 salaryIncomeSchema.plugin(timestamps);

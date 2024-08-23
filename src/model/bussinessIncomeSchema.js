@@ -117,6 +117,8 @@ const bussinessIncomeSchema = mongoose.Schema({
         DR4: { type: String },
         DR5: { type: String },
     }],
+    LoanEligibility:{type: String },
+    LoanStage:{type: String },
 });
 
 bussinessIncomeSchema.plugin(timestamps);
