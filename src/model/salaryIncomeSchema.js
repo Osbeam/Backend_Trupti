@@ -93,7 +93,6 @@ const salaryIncomeSchema = mongoose.Schema({
     }],
     Analysis: [{
         CibilAnalysis: { type: String }, 
-        Month: { type: String }, 
         Bounce: { type: String }, 
         Enquiry: { type: String }, 
         RecentFunding: { type: String },
@@ -102,6 +101,7 @@ const salaryIncomeSchema = mongoose.Schema({
     LoanStage:{type: String },
     Score: [{
         CibilScore: { type: String }, 
+        PayOut: { type: String }, 
         Settelement1Yr: { type: String }, 
         Settelement2Yr: { type: String }, 
     }],
