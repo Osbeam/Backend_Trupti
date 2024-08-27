@@ -15,26 +15,95 @@ const calculateLeaveDays = (StartDate, EndDate) => {
 };
 
 
+// leaveManagementController.post('/applyLeave', async (req, res) => {
+//     const { userId, LeaveType, StartDate, EndDate, Reason } = req.body;
+
+//     if (!userId || !LeaveType || !StartDate || !EndDate) {
+//         return sendResponse(res, 400, 'Bad Request', {
+//             Success: false,
+//             Message: 'User ID, leave type, start date, and end date are required.'
+//         });
+//     }
+
+//     const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
+//     if (!validLeaveTypes.includes(LeaveType)) {
+//         return sendResponse(res, 400, 'Bad Request', {
+//             Success: false,
+//             Message: 'Invalid leave type.'
+//         });
+//     }
+
+//     try {
+//         // Find or create a leave record for the user
+//         let leaveRecord = await LeaveManagement.findOne({ userId });
+
+//         if (!leaveRecord) {
+//             leaveRecord = new LeaveManagement({
+//                 userId,
+//                 LeaveBalances: {
+//                     SickLeave: { Available: 12, Taken: 0 },
+//                     EarnedLeave: { Available: 12, Taken: 0 },
+//                     CasualLeave: { Available: 8, Taken: 0 },
+//                     HolidayLeave: { Available: 4, Taken: 0 },
+//                     NationalHolidayLeave: { Available: 4, Taken: 0 }
+//                 }
+//             });
+//         }
+
+//         const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
+//         const leaveDays = calculateLeaveDays(StartDate, EndDate);
+
+//         // Check if the user has enough available leaves
+//         if (leaveDays > leaveCategory.Available) {
+//             return sendResponse(res, 400, 'Bad Request', {
+//                 Success: false,
+//                 Message: 'Insufficient leave balance.'
+//             });
+//         }
+
+//         // Deduct leave balance and update taken leaves
+//         leaveCategory.Available -= leaveDays;
+//         leaveCategory.Taken += leaveDays;
+
+//         // Add leave entry to history
+//         leaveRecord.LeaveHistory.push({
+//             LeaveType,
+//             StartDate,
+//             EndDate,
+//             Status: 'Pending',
+//             Reason
+//         });
+
+//         // Save the updated leave record
+//         await leaveRecord.save();
+
+//         sendResponse(res, 201, 'Created', {
+//             Success: true,
+//             Message: 'Leave applied successfully.',
+//             Data: leaveRecord
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         sendResponse(res, 500, 'Internal Server Error', {
+//             Success: false,
+//             Message: error.message || 'Internal server error'
+//         });
+//     }
+// });
+
+
+
 leaveManagementController.post('/applyLeave', async (req, res) => {
-    const { userId, LeaveType, StartDate, EndDate, Reason } = req.body;
+    const { userId, leaveRequests } = req.body;
 
-    if (!userId || !LeaveType || !StartDate || !EndDate) {
+    if (!userId || !leaveRequests || !Array.isArray(leaveRequests)) {
         return sendResponse(res, 400, 'Bad Request', {
             Success: false,
-            Message: 'User ID, leave type, start date, and end date are required.'
-        });
-    }
-
-    const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
-    if (!validLeaveTypes.includes(LeaveType)) {
-        return sendResponse(res, 400, 'Bad Request', {
-            Success: false,
-            Message: 'Invalid leave type.'
+            Message: 'User ID and an array of leave requests are required.'
         });
     }
 
     try {
-        // Find or create a leave record for the user
         let leaveRecord = await LeaveManagement.findOne({ userId });
 
         if (!leaveRecord) {
@@ -50,37 +119,54 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
             });
         }
 
-        const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
-        const leaveDays = calculateLeaveDays(StartDate, EndDate);
+        const leaveResponses = [];
+        
+        for (const request of leaveRequests) {
+            const { LeaveType, StartDate, EndDate, Reason } = request;
 
-        // Check if the user has enough available leaves
-        if (leaveDays > leaveCategory.Available) {
-            return sendResponse(res, 400, 'Bad Request', {
-                Success: false,
-                Message: 'Insufficient leave balance.'
+            const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
+            if (!validLeaveTypes.includes(LeaveType)) {
+                return sendResponse(res, 400, 'Bad Request', {
+                    Success: false,
+                    Message: 'Invalid leave type.'
+                });
+            }
+
+            const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
+            const leaveDays = calculateLeaveDays(StartDate, EndDate);
+
+            if (leaveDays > leaveCategory.Available) {
+                return sendResponse(res, 400, 'Bad Request', {
+                    Success: false,
+                    Message: 'Insufficient leave balance.'
+                });
+            }
+
+            leaveCategory.Available -= leaveDays;
+            leaveCategory.Taken += leaveDays;
+
+            leaveRecord.LeaveHistory.push({
+                LeaveType,
+                StartDate,
+                EndDate,
+                Status: 'Pending',
+                Reason
+            });
+
+            leaveResponses.push({
+                LeaveType,
+                StartDate,
+                EndDate,
+                LeaveDays: leaveDays
             });
         }
 
-        // Deduct leave balance and update taken leaves
-        leaveCategory.Available -= leaveDays;
-        leaveCategory.Taken += leaveDays;
-
-        // Add leave entry to history
-        leaveRecord.LeaveHistory.push({
-            LeaveType,
-            StartDate,
-            EndDate,
-            Status: 'Pending',
-            Reason
-        });
-
-        // Save the updated leave record
         await leaveRecord.save();
 
         sendResponse(res, 201, 'Created', {
             Success: true,
             Message: 'Leave applied successfully.',
-            Data: leaveRecord
+            Data: leaveResponses
         });
     } catch (error) {
         console.error(error);
@@ -90,6 +176,7 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
         });
     }
 });
+
 
 
 
