@@ -5,6 +5,7 @@ const adminServices = require("../services/adminServices");
 const ProfessionalIncome = require("../model/professionalIncomeSchema");
 const BusinessIncome = require("../model/bussinessIncomeSchema");
 const Admin = require("../model/adminSchema");
+const Lead = require("../model/leadSchema");
 const SalaryIncome = require("../model/salaryIncomeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -354,6 +355,10 @@ professionalIncome.put("/updateOrCreateProfession/:id?", async (req, res) => {
         if (!interestedCustomerData) {
           // If not found in Admin, fetch from BusinessIncome
           interestedCustomerData = await BusinessIncome.findById(id).lean();
+          if (!interestedCustomerData) {
+            // If not found in Admin, fetch from LeadSchema
+            interestedCustomerData = await Lead.findById(id).lean();
+          }
         }
       }
     }

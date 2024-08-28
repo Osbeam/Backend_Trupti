@@ -4,6 +4,7 @@ const bussinessServices = require("../services/bussinessIncomeServices");
 const adminServices = require("../services/adminServices");
 const BussinessIncome = require("../model/bussinessIncomeSchema");
 const Admin = require("../model/adminSchema");
+const Lead = require("../model/leadSchema");
 const ProfessionalIncome = require("../model/professionalIncomeSchema");
 const SalaryIncome = require("../model/salaryIncomeSchema");
 const { sendResponse } = require("../utils/common");
@@ -348,6 +349,10 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
         if (!interestedCustomerData) {
           // If not found in Admin, fetch from ProfessionalIncome
           interestedCustomerData = await ProfessionalIncome.findById(id).lean();
+          if (!interestedCustomerData) {
+            // If not found in Admin, fetch from LeadSchema
+            interestedCustomerData = await Lead.findById(id).lean();
+          }
         }
       }
     }

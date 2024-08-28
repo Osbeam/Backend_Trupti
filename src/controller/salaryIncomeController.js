@@ -6,6 +6,7 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
 const SalaryIncome = require('../model/salaryIncomeSchema'); 
 const ProfessionalIncome = require('../model/professionalIncomeSchema'); 
+const Lead = require('../model/leadSchema'); 
 const BusinessIncome = require('../model/bussinessIncomeSchema'); 
 const Admin = require('../model/adminSchema'); 
 const adminServices = require('../services/adminServices'); 
@@ -45,6 +46,10 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
         if (!existingData) {
           // If not found in Admin, fetch from ProfessionalIncome
           existingData = await ProfessionalIncome.findById(id).lean();
+          if (!existingData) {
+            // If not found in Admin, fetch from LeadSchema
+            existingData = await Lead.findById(id).lean();
+          }
         }
       }
     }
