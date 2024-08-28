@@ -364,7 +364,7 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
       newData = {
         ...interestedCustomerData,
         ...additionalData,        
-      };                                            b 
+      };                                            
     }
 
     // Check if a document exists in the BussinessIncome schema with the same ID

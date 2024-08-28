@@ -98,8 +98,8 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
 
     if (!userId || !leaveRequests || !Array.isArray(leaveRequests)) {
         return sendResponse(res, 400, 'Bad Request', {
-            Success: false,
-            Message: 'User ID and an array of leave requests are required.'
+            success: false,
+            message: 'User ID and an array of leave requests are required.'
         });
     }
 
@@ -127,8 +127,8 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
             const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
             if (!validLeaveTypes.includes(LeaveType)) {
                 return sendResponse(res, 400, 'Bad Request', {
-                    Success: false,
-                    Message: 'Invalid leave type.'
+                    success: false,
+                    message: 'Invalid leave type.'
                 });
             }
 
@@ -137,8 +137,8 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
 
             if (leaveDays > leaveCategory.Available) {
                 return sendResponse(res, 400, 'Bad Request', {
-                    Success: false,
-                    Message: 'Insufficient leave balance.'
+                    success: false,
+                    message: 'Insufficient leave balance.'
                 });
             }
 
@@ -163,16 +163,16 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
 
         await leaveRecord.save();
 
-        sendResponse(res, 201, 'Created', {
-            Success: true,
-            Message: 'Leave applied successfully.',
-            Data: leaveResponses
+        sendResponse(res, 201, 'Success', {
+            success: true,
+            message: 'Leave applied successfully.',
+            data: leaveResponses
         });
     } catch (error) {
         console.error(error);
         sendResponse(res, 500, 'Internal Server Error', {
-            Success: false,
-            Message: error.message || 'Internal server error'
+            success: false,
+            message: error.message || 'Internal server error'
         });
     }
 });
@@ -188,16 +188,16 @@ leaveManagementController.post('/applyHalfDayLeave', async (req, res) => {
 
     if (!userId || !LeaveType || !Date || !HalfDayType  || !Reason) {
         return res.status(400).json({
-            Success: false,
-            Message: 'User ID, leave type, date, and half-day type are required.'
+            success: false,
+            message: 'User ID, leave type, date, and half-day type are required.'
         });
     }
 
     const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
     if (!validLeaveTypes.includes(LeaveType) || !isValidHalfDayType(HalfDayType)) {
         return res.status(400).json({
-            Success: false,
-            Message: 'Invalid leave type or half-day type.'
+            success: false,
+            message: 'Invalid leave type or half-day type.'
         });
     }
 
@@ -217,8 +217,8 @@ leaveManagementController.post('/applyHalfDayLeave', async (req, res) => {
         // Check if the user has enough available leaves
         if (deduction > leaveCategory.Available) {
             return res.status(400).json({
-                Success: false,
-                Message: 'Insufficient leave balance.'
+                success: false,
+                message: 'Insufficient leave balance.'
             });
         }
 
@@ -240,16 +240,16 @@ leaveManagementController.post('/applyHalfDayLeave', async (req, res) => {
         // Save the updated leave record
         await leaveRecord.save();
 
-        sendResponse(res, 201, 'Created', {
-            Success: true,
-            Message: 'Leave applied successfully.',
-            Data: leaveRecord
+        sendResponse(res, 201, 'Success', {
+            success: true,
+            message: 'Leave applied successfully.',
+            data: leaveRecord
         });
     } catch (error) {
         console.error(error);
         sendResponse(res, 500, 'Internal Server Error', {
-            Success: false,
-            Message: error.message || 'Internal server error'
+            success: false,
+            message: error.message || 'Internal server error'
         });
     }
 });
@@ -268,6 +268,8 @@ leaveManagementController.get('/getLeaveHistory/:userId', async (req, res) => {
         }
 
         sendResponse(res, 200, 'Success', {
+            success: true,
+            message: 'Leave History Retrieve successfully.',
             LeaveHistory: leaveRecord.LeaveHistory,
         });
     } catch (error) {
@@ -292,6 +294,8 @@ leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
         }
 
         sendResponse(res, 200, 'Success', {
+            success: true,
+            message: 'Leave Balance Retrieve successfully.',
             LeaveBalances: leaveRecord.LeaveBalances,
         });
     } catch (error) {
@@ -323,8 +327,9 @@ leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) =>
         await leaveRecord.save();
 
         sendResponse(res, 200, 'Success', {
+            success: true,
             message: `Leave request ${status} successfully.`,
-            Data: leaveRecord,
+            data: leaveRecord,
         });
     } catch (error) {
         console.error(error);
