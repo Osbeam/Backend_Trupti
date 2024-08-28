@@ -270,7 +270,7 @@ leaveManagementController.get('/getLeaveHistory/:userId', async (req, res) => {
         sendResponse(res, 200, 'Success', {
             success: true,
             message: 'Leave History Retrieve successfully.',
-            LeaveHistory: leaveRecord.LeaveHistory,
+            data: leaveRecord.LeaveHistory,
         });
     } catch (error) {
         console.error(error);
@@ -296,7 +296,7 @@ leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
         sendResponse(res, 200, 'Success', {
             success: true,
             message: 'Leave Balance Retrieve successfully.',
-            LeaveBalances: leaveRecord.LeaveBalances,
+            data: leaveRecord.LeaveBalances,
         });
     } catch (error) {
         console.error(error);
