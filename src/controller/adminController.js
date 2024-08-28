@@ -451,6 +451,28 @@ adminController.get("/InterestedCustomer/:id", async (req, res) => {
 });
 
 
+
+
+adminController.get("/InterestedLeads/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+
+    // Retrieve interested call status data for the specified customer ID
+    const interestedCallStatusData = await adminServices.getInterestedLeads(_id);
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Interested call status retrieved successfully",
+      data: interestedCallStatusData
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 adminController.put("/editInterestedCustomer", async (req, res) => {
   try {
     const data = await adminServices.updateCustomer({ _id: req.body._id }, req.body);

@@ -113,6 +113,23 @@ async function getInterestedCustomer(id) {
 
 
 
+
+async function getInterestedLeads(id) {
+  try {
+    // Example: Retrieve interested call status data from a MongoDB collection
+    const interestedCallStatusData = await Lead.find({
+      _id: id,
+      CallStatus: 'Interested'
+    });
+
+    return interestedCallStatusData;
+  } catch (error) {
+    throw new Error("Error retrieving interested call status data by customer ID: " + error.message);
+  }
+}
+
+
+
 async function updateCustomer(filter, update) {
   return await Admin.updateOne(filter, update, { new: true });
 };
@@ -253,6 +270,7 @@ module.exports = {
   getInterestedCustomersByEmployee,
   getPendingLeads,
   getAllLeadFromData,
-  createLeadData
+  createLeadData,
+  getInterestedLeads
 };
 
