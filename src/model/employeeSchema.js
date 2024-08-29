@@ -14,6 +14,7 @@ const employeeSchema = mongoose.Schema({
     Department: {type: String, ref: "Department"},
     SubDepartment: {type: String, ref: "SubDepartment"},
     Designation: {type: String, ref: "Designation"},
+    Leaves: {type: String, ref: "LeaveManagement"},
     BloodGroup: {
         type: [String],
         enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']

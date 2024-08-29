@@ -2,6 +2,7 @@ const express = require("express");
 const leaveManagementController = express.Router();
 const leaveManagementServices = require("../services/leaveManagementServices");
 const LeaveManagement = require("../model/leaveManagementSchema");
+const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload")
@@ -13,83 +14,6 @@ const calculateLeaveDays = (StartDate, EndDate) => {
     const end = new Date(EndDate);
     return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; 
 };
-
-
-// leaveManagementController.post('/applyLeave', async (req, res) => {
-//     const { userId, LeaveType, StartDate, EndDate, Reason } = req.body;
-
-//     if (!userId || !LeaveType || !StartDate || !EndDate) {
-//         return sendResponse(res, 400, 'Bad Request', {
-//             Success: false,
-//             Message: 'User ID, leave type, start date, and end date are required.'
-//         });
-//     }
-
-//     const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
-//     if (!validLeaveTypes.includes(LeaveType)) {
-//         return sendResponse(res, 400, 'Bad Request', {
-//             Success: false,
-//             Message: 'Invalid leave type.'
-//         });
-//     }
-
-//     try {
-//         // Find or create a leave record for the user
-//         let leaveRecord = await LeaveManagement.findOne({ userId });
-
-//         if (!leaveRecord) {
-//             leaveRecord = new LeaveManagement({
-//                 userId,
-//                 LeaveBalances: {
-//                     SickLeave: { Available: 12, Taken: 0 },
-//                     EarnedLeave: { Available: 12, Taken: 0 },
-//                     CasualLeave: { Available: 8, Taken: 0 },
-//                     HolidayLeave: { Available: 4, Taken: 0 },
-//                     NationalHolidayLeave: { Available: 4, Taken: 0 }
-//                 }
-//             });
-//         }
-
-//         const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
-//         const leaveDays = calculateLeaveDays(StartDate, EndDate);
-
-//         // Check if the user has enough available leaves
-//         if (leaveDays > leaveCategory.Available) {
-//             return sendResponse(res, 400, 'Bad Request', {
-//                 Success: false,
-//                 Message: 'Insufficient leave balance.'
-//             });
-//         }
-
-//         // Deduct leave balance and update taken leaves
-//         leaveCategory.Available -= leaveDays;
-//         leaveCategory.Taken += leaveDays;
-
-//         // Add leave entry to history
-//         leaveRecord.LeaveHistory.push({
-//             LeaveType,
-//             StartDate,
-//             EndDate,
-//             Status: 'Pending',
-//             Reason
-//         });
-
-//         // Save the updated leave record
-//         await leaveRecord.save();
-
-//         sendResponse(res, 201, 'Created', {
-//             Success: true,
-//             Message: 'Leave applied successfully.',
-//             Data: leaveRecord
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         sendResponse(res, 500, 'Internal Server Error', {
-//             Success: false,
-//             Message: error.message || 'Internal server error'
-//         });
-//     }
-// });
 
 
 
@@ -200,7 +124,6 @@ leaveManagementController.post('/applyHalfDayLeave', async (req, res) => {
             message: 'Invalid leave type or half-day type.'
         });
     }
-
     try {
         let leaveRecord = await LeaveManagement.findOne({ userId });
 
@@ -209,12 +132,10 @@ leaveManagementController.post('/applyHalfDayLeave', async (req, res) => {
             leaveRecord = new LeaveManagement({ userId });
         }
 
-        const deduction = 0.5; // Half-day leave
+        const deduction = 0.5; 
 
-        // Get the leave category
         const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
         
-        // Check if the user has enough available leaves
         if (deduction > leaveCategory.Available) {
             return res.status(400).json({
                 success: false,
@@ -339,6 +260,45 @@ leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) =>
     }
 });
 
+
+leaveManagementController.get('/getAvailableLeave/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // Check if the user has an existing leave record
+        let leaveRecord = await LeaveManagement.findOne({ userId });
+
+        // If no leave record exists, return default leave balances
+        if (!leaveRecord) {
+            const defaultLeaveBalances = {
+                SickLeave: { Available: 12, Taken: 0 },
+                EarnedLeave: { Available: 12, Taken: 0 },
+                CasualLeave: { Available: 8, Taken: 0 },
+                HolidayLeave: { Available: 4, Taken: 0 },
+                NationalHolidayLeave: { Available: 4, Taken: 0 }
+            };
+
+            return sendResponse(res, 200, 'Success', {
+                success: true,
+                message: 'Default leave balances retrieved successfully.',
+                data: defaultLeaveBalances
+            });
+        }
+
+        // If a leave record exists, return the current leave balances
+        sendResponse(res, 200, 'Success', {
+            success: true,
+            message: 'Leave balances retrieved successfully.',
+            data: leaveRecord.LeaveBalances
+        });
+    } catch (error) {
+        console.error(error);
+        sendResponse(res, 500, 'Internal Server Error', {
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }
+});
 
 
 module.exports = leaveManagementController;
