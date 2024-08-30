@@ -203,30 +203,73 @@ leaveManagementController.get('/getLeaveHistory/:userId', async (req, res) => {
 });
 
 
+// leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
+//     const { userId } = req.params;
+
+//     try {
+//         const leaveRecord = await LeaveManagement.findOne({ userId });
+
+//         if (!leaveRecord) {
+//             return sendResponse(res, 404, 'Not Found', {
+//                 message: 'Leave record not found for the specified user.',
+//             });
+//         }
+
+//         sendResponse(res, 200, 'Success', {
+//             success: true,
+//             message: 'Leave Balance Retrieve successfully.',
+//             data: leaveRecord.LeaveBalances,
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         sendResponse(res, 500, 'Internal Server Error', {
+//             message: error.message || 'Internal server error',
+//         });
+//     }
+// });
+
+
+
+
 leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
-        const leaveRecord = await LeaveManagement.findOne({ userId });
+        let leaveRecord = await LeaveManagement.findOne({ userId });
 
         if (!leaveRecord) {
-            return sendResponse(res, 404, 'Not Found', {
-                message: 'Leave record not found for the specified user.',
+            // Create a new leave record if none exists
+            leaveRecord = new LeaveManagement({
+                userId,
+                LeaveBalances: {
+                    SickLeave: { Available: 12, Taken: 0 },
+                    EarnedLeave: { Available: 12, Taken: 0 },
+                    CasualLeave: { Available: 8, Taken: 0 },
+                    HolidayLeave: { Available: 4, Taken: 0 },
+                    NationalHolidayLeave: { Available: 4, Taken: 0 }
+                }
             });
+
+            await leaveRecord.save();
         }
 
         sendResponse(res, 200, 'Success', {
             success: true,
-            message: 'Leave Balance Retrieve successfully.',
+            message: 'Leave Balance Retrieved successfully.',
             data: leaveRecord.LeaveBalances,
         });
     } catch (error) {
         console.error(error);
         sendResponse(res, 500, 'Internal Server Error', {
+            success: false,
             message: error.message || 'Internal server error',
         });
     }
 });
+
+
+
+
 
 
 leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) => {
