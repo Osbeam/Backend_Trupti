@@ -203,32 +203,34 @@ leaveManagementController.get('/getLeaveHistory/:userId', async (req, res) => {
 });
 
 
-// leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
-//     const { userId } = req.params;
+leaveManagementController.get('/getAllLeaveHistory', async (req, res) => {
+    try {
+        const leaveRecords = await LeaveManagement.find({}, 'LeaveHistory userId')
+            .populate({
+                path: 'userId',
+                select: 'FirstName LastName',
+                model: 'EmployeeInfo'
+            })
+            .exec();
 
-//     try {
-//         const leaveRecord = await LeaveManagement.findOne({ userId });
+        const allLeaveHistories = leaveRecords.map(record => ({
+            userId: record.userId, 
+            LeaveHistory: record.LeaveHistory
+        }));
 
-//         if (!leaveRecord) {
-//             return sendResponse(res, 404, 'Not Found', {
-//                 message: 'Leave record not found for the specified user.',
-//             });
-//         }
-
-//         sendResponse(res, 200, 'Success', {
-//             success: true,
-//             message: 'Leave Balance Retrieve successfully.',
-//             data: leaveRecord.LeaveBalances,
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         sendResponse(res, 500, 'Internal Server Error', {
-//             message: error.message || 'Internal server error',
-//         });
-//     }
-// });
-
-
+        sendResponse(res, 200, 'Success', {
+            success: true,
+            message: 'All leave histories retrieved successfully.',
+            data: allLeaveHistories,
+        });
+    } catch (error) {
+        console.error(error);
+        sendResponse(res, 500, 'Internal Server Error', {
+            success: false,
+            message: error.message || 'Internal server error',
+        });
+    }
+});
 
 
 leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
@@ -268,6 +270,38 @@ leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
 });
 
 
+leaveManagementController.get('/getAllLeaveBalance', async (req, res) => {
+    try {
+        // Retrieve all leave records with associated employee names
+        const leaveRecords = await LeaveManagement.find({}, 'userId LeaveBalances')
+            .populate({
+                path: 'userId',
+                select: 'FirstName LastName',
+                model: 'EmployeeInfo'
+            })
+            .exec();
+
+        // Extract and structure the data to include leave balances and user details
+        const leaveBalancesData = leaveRecords.map(record => ({
+            userId: record.userId._id, // Include userId in the response
+            Name: record.userId ? record.userId.FirstName : 'Unknown',
+            Surname: record.userId ? record.userId.LastName : 'Unknown',
+            LeaveBalances: record.LeaveBalances
+        }));
+
+        sendResponse(res, 200, 'Success', {
+            success: true,
+            message: 'All leave balances retrieved successfully.',
+            data: leaveBalancesData,
+        });
+    } catch (error) {
+        console.error(error);
+        sendResponse(res, 500, 'Internal Server Error', {
+            success: false,
+            message: error.message || 'Internal server error',
+        });
+    }
+});
 
 
 
@@ -305,35 +339,34 @@ leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) =>
 });
 
 
-leaveManagementController.get('/getAvailableLeave/:userId', async (req, res) => {
-    const { userId } = req.params;
-
+leaveManagementController.get('/getAllLeaveRequests', async (req, res) => {
     try {
-        // Check if the user has an existing leave record
-        let leaveRecord = await LeaveManagement.findOne({ userId });
+        // Retrieve all leave records with associated employee names
+        const leaveRequests = await LeaveManagement.find({}, 'LeaveHistory userId')
+            .populate({
+                path: 'userId',
+                select: 'FirstName LastName',
+                model: 'EmployeeInfo'
+            })
+            .exec();
 
-        // If no leave record exists, return default leave balances
-        if (!leaveRecord) {
-            const defaultLeaveBalances = {
-                SickLeave: { Available: 12, Taken: 0 },
-                EarnedLeave: { Available: 12, Taken: 0 },
-                CasualLeave: { Available: 8, Taken: 0 },
-                HolidayLeave: { Available: 4, Taken: 0 },
-                NationalHolidayLeave: { Available: 4, Taken: 0 }
+        // Extract and structure the data to include only pending leave requests and user names
+        const leaveRequestsWithDetails = leaveRequests.map(record => {
+            // Filter leave history to include only pending requests
+            const pendingLeaveHistory = record.LeaveHistory.filter(leave => leave.Status === 'Pending');
+
+            return {
+                userId: record.userId, // Include userId in the response
+                // Name: record.userId ? record.userId.FirstName : 'Unknown',
+                // Surname: record.userId ? record.userId.LastName : 'Unknown',
+                LeaveHistory: pendingLeaveHistory
             };
+        });
 
-            return sendResponse(res, 200, 'Success', {
-                success: true,
-                message: 'Default leave balances retrieved successfully.',
-                data: defaultLeaveBalances
-            });
-        }
-
-        // If a leave record exists, return the current leave balances
         sendResponse(res, 200, 'Success', {
             success: true,
-            message: 'Leave balances retrieved successfully.',
-            data: leaveRecord.LeaveBalances
+            message: 'Pending leave requests retrieved successfully.',
+            data: leaveRequestsWithDetails,
         });
     } catch (error) {
         console.error(error);
@@ -343,6 +376,7 @@ leaveManagementController.get('/getAvailableLeave/:userId', async (req, res) => 
         });
     }
 });
+
 
 
 module.exports = leaveManagementController;
