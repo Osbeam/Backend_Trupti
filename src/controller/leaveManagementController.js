@@ -74,7 +74,8 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
                 StartDate,
                 EndDate,
                 Status: 'Pending',
-                Reason
+                Reason,
+                LeaveDays: leaveDays
             });
 
             leaveResponses.push({
