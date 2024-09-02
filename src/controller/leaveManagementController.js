@@ -17,6 +17,7 @@ const calculateLeaveDays = (StartDate, EndDate) => {
 
 
 
+
 leaveManagementController.post('/applyLeave', async (req, res) => {
     const { userId, leaveRequests } = req.body;
 
@@ -46,7 +47,7 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
         const leaveResponses = [];
         
         for (const request of leaveRequests) {
-            const { LeaveType, StartDate, EndDate, Reason } = request;
+            const { LeaveType, StartDate, EndDate, Reason, Status } = request;
 
             const validLeaveTypes = ['SickLeave', 'EarnedLeave', 'CasualLeave', 'HolidayLeave', 'NationalHolidayLeave'];
             if (!validLeaveTypes.includes(LeaveType)) {
@@ -59,21 +60,24 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
             const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
             const leaveDays = calculateLeaveDays(StartDate, EndDate);
 
-            if (leaveDays > leaveCategory.Available) {
-                return sendResponse(res, 400, 'Bad Request', {
-                    success: false,
-                    message: 'Insufficient leave balance.'
-                });
-            }
+            // Check if the leave request is approved and update the counts
+            if (Status === 'Approved') {
+                if (leaveDays > leaveCategory.Available) {
+                    return sendResponse(res, 400, 'Bad Request', {
+                        success: false,
+                        message: 'Insufficient leave balance.'
+                    });
+                }
 
-            leaveCategory.Available -= leaveDays;
-            leaveCategory.Taken += leaveDays;
+                leaveCategory.Available -= leaveDays;
+                leaveCategory.Taken += leaveDays;
+            }
 
             leaveRecord.LeaveHistory.push({
                 LeaveType,
                 StartDate,
                 EndDate,
-                Status: 'Pending',
+                Status: Status || 'Pending', // Set status to provided value or default to 'Pending'
                 Reason,
                 LeaveDays: leaveDays
             });
@@ -82,7 +86,8 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
                 LeaveType,
                 StartDate,
                 EndDate,
-                LeaveDays: leaveDays
+                LeaveDays: leaveDays,
+                Status: Status || 'Pending'
             });
         }
 
@@ -314,12 +319,26 @@ leaveManagementController.put('/updateLeaveStatus', async (req, res) => {
 
         if (!leaveRecord) {
             return sendResponse(res, 404, 'Not Found', {
-                message: 'Leave request not found.',
+                success: false,
+                message: 'Leave request not found.'
             });
         }
 
         const leave = leaveRecord.LeaveHistory.id(leaveId);
         if (leave) {
+            if (leave.Status !== 'Approved' && status === 'Approved') {
+                const leaveCategory = leaveRecord.LeaveBalances[leave.LeaveType];
+                if (leave.LeaveDays > leaveCategory.Available) {
+                    return sendResponse(res, 400, 'Bad Request', {
+                        success: false,
+                        message: 'Insufficient leave balance.'
+                    });
+                }
+
+                leaveCategory.Available -= leave.LeaveDays;
+                leaveCategory.Taken += leave.LeaveDays;
+            }
+
             leave.Status = status;
             await leaveRecord.save();
 
@@ -331,12 +350,14 @@ leaveManagementController.put('/updateLeaveStatus', async (req, res) => {
         }
 
         return sendResponse(res, 404, 'Not Found', {
-            message: 'Leave request not found.',
+            success: false,
+            message: 'Leave request not found.'
         });
     } catch (error) {
         console.error(error);
         sendResponse(res, 500, 'Internal Server Error', {
-            message: error.message || 'Internal server error',
+            success: false,
+            message: error.message || 'Internal server error'
         });
     }
 });
