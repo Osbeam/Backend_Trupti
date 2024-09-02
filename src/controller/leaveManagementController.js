@@ -279,22 +279,35 @@ leaveManagementController.get('/getLeaveBalance/:userId', async (req, res) => {
 
 leaveManagementController.get('/getAllLeaveBalance', async (req, res) => {
     try {
-        // Retrieve all leave records with associated employee names
+        // Retrieve all employees from EmployeeInfo
+        const allEmployees = await EmployeeInfo.find({}, '_id FirstName LastName');
+
+        // Retrieve leave records and map them by userId
         const leaveRecords = await LeaveManagement.find({}, 'userId LeaveBalances')
-            .populate({
-                path: 'userId',
-                select: 'FirstName LastName',
-                model: 'EmployeeInfo'
-            })
             .exec();
 
-        // Extract and structure the data to include leave balances and user details
-        const leaveBalancesData = leaveRecords.map(record => ({
-            userId: record.userId._id, // Include userId in the response
-            Name: record.userId ? record.userId.FirstName : 'Unknown',
-            Surname: record.userId ? record.userId.LastName : 'Unknown',
-            LeaveBalances: record.LeaveBalances
-        }));
+        const leaveRecordsMap = new Map();
+        leaveRecords.forEach(record => {
+            leaveRecordsMap.set(record.userId.toString(), record.LeaveBalances);
+        });
+
+        // Structure the data to include leave balances for all employees
+        const leaveBalancesData = allEmployees.map(employee => {
+            const leaveBalances = leaveRecordsMap.get(employee._id.toString()) || {
+                SickLeave: { Available: 12, Taken: 0 },
+                EarnedLeave: { Available: 12, Taken: 0 },
+                CasualLeave: { Available: 8, Taken: 0 },
+                HolidayLeave: { Available: 4, Taken: 0 },
+                NationalHolidayLeave: { Available: 4, Taken: 0 }
+            };
+
+            return {
+                userId: employee._id,
+                Name: employee.FirstName,
+                Surname: employee.LastName,
+                LeaveBalances: leaveBalances
+            };
+        });
 
         sendResponse(res, 200, 'Success', {
             success: true,
