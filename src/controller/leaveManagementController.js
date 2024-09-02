@@ -104,7 +104,6 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
 
 
 
-
 // Function to check if a half-day leave type is valid
 const isValidHalfDayType = (type) => ["AM", "PM"].includes(type);
 
@@ -213,15 +212,18 @@ leaveManagementController.get('/getAllLeaveHistory', async (req, res) => {
             })
             .exec();
 
-        const allLeaveHistories = leaveRecords.map(record => ({
-            userId: record.userId, 
-            LeaveHistory: record.LeaveHistory
-        }));
+        const filteredLeaveHistories = leaveRecords.map(record => {
+            const filteredHistory = record.LeaveHistory.filter(leave => leave.Status !== 'Pending');
+            return filteredHistory.length > 0 ? {
+                userId: record.userId,
+                LeaveHistory: filteredHistory
+            } : null;
+        }).filter(record => record !== null);
 
         sendResponse(res, 200, 'Success', {
             success: true,
             message: 'All leave histories retrieved successfully.',
-            data: allLeaveHistories,
+            data: filteredLeaveHistories,
         });
     } catch (error) {
         console.error(error);
@@ -304,11 +306,9 @@ leaveManagementController.get('/getAllLeaveBalance', async (req, res) => {
 });
 
 
+leaveManagementController.put('/updateLeaveStatus', async (req, res) => {
+    const { leaveId, status } = req.body;
 
-
-leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) => {
-    const { leaveId } = req.params;
-    const { status } = req.body;
     try {
         const leaveRecord = await LeaveManagement.findOne({ 'LeaveHistory._id': leaveId });
 
@@ -321,14 +321,17 @@ leaveManagementController.put('/updateLeaveStatus/:leaveId', async (req, res) =>
         const leave = leaveRecord.LeaveHistory.id(leaveId);
         if (leave) {
             leave.Status = status;
+            await leaveRecord.save();
+
+            return sendResponse(res, 200, 'Success', {
+                success: true,
+                message: `Leave request ${status} successfully.`,
+                data: leave, // Return only the updated leave object
+            });
         }
 
-        await leaveRecord.save();
-
-        sendResponse(res, 200, 'Success', {
-            success: true,
-            message: `Leave request ${status} successfully.`,
-            data: leaveRecord,
+        return sendResponse(res, 404, 'Not Found', {
+            message: 'Leave request not found.',
         });
     } catch (error) {
         console.error(error);
@@ -355,13 +358,17 @@ leaveManagementController.get('/getAllLeaveRequests', async (req, res) => {
             // Filter leave history to include only pending requests
             const pendingLeaveHistory = record.LeaveHistory.filter(leave => leave.Status === 'Pending');
 
-            return {
-                userId: record.userId, // Include userId in the response
-                // Name: record.userId ? record.userId.FirstName : 'Unknown',
-                // Surname: record.userId ? record.userId.LastName : 'Unknown',
-                LeaveHistory: pendingLeaveHistory
-            };
-        });
+            // Return the structured object only if there are pending leave requests
+            if (pendingLeaveHistory.length > 0) {
+                return {
+                    userId: record.userId, // Include userId in the response
+                    LeaveHistory: pendingLeaveHistory
+                };
+            }
+
+            // If no pending leave requests, return null (to be filtered out later)
+            return null;
+        }).filter(record => record !== null); // Filter out records with no pending leave requests
 
         sendResponse(res, 200, 'Success', {
             success: true,
@@ -376,6 +383,7 @@ leaveManagementController.get('/getAllLeaveRequests', async (req, res) => {
         });
     }
 });
+
 
 
 
