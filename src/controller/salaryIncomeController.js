@@ -95,7 +95,6 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
 });
 
 
-
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
   try {
     // Extract pagination parameters from query
@@ -149,7 +148,6 @@ salaryIncome.put("/EditSalaryData", async (req, res) => {
     });
   }
 });
-
 
 
 module.exports = salaryIncome;

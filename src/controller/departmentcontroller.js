@@ -47,7 +47,6 @@ departmentController.get("/getDepartments", async (req, res) => {
 });
 
 
-
 departmentController.post('/createSubDepartments', async (req, res) => {
     try {
         const subDepData = { ...req.body };
@@ -69,7 +68,6 @@ departmentController.post('/createSubDepartments', async (req, res) => {
 });
 
 
-
 departmentController.get("/getSubDepartments/:id", async (req, res) => {
     try {
 
@@ -86,7 +84,6 @@ departmentController.get("/getSubDepartments/:id", async (req, res) => {
         });
     }
 });
-
 
 
 departmentController.post('/createDesignation', async (req, res) => {

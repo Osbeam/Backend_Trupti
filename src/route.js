@@ -11,6 +11,8 @@ const bussinessIncomeController = require("./controller/bussinessIncomeControlle
 const professionalIncomeController = require("./controller/professionalIncomeController");
 const channelPartnerController = require("./controller/channelPartnerController");
 const leaveManagementController = require("./controller/leaveManagementController");
+const loanFormController = require("./controller/loanFormController");
+const propertyController = require("./controller/propertyController");
 
 router.use("/user", userController);
 router.use("/department", departmentcontroller);
@@ -21,6 +23,8 @@ router.use("/bussinessIncome", bussinessIncomeController);
 router.use("/professionalIncome", professionalIncomeController);
 router.use("/channelPartner", channelPartnerController);
 router.use("/leaveManagement", leaveManagementController);
+router.use("/loanForm", loanFormController);
+router.use("/propertyForm", propertyController);
 
 
 

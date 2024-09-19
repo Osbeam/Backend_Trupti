@@ -419,6 +419,4 @@ leaveManagementController.get('/getAllLeaveRequests', async (req, res) => {
 });
 
 
-
-
 module.exports = leaveManagementController;

@@ -95,7 +95,6 @@ const storage = multer.diskStorage({
 
 
 
-
 adminController.get("/getexcelfiles", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
@@ -449,8 +448,6 @@ adminController.get("/InterestedCustomer/:id", async (req, res) => {
     });
   }
 });
-
-
 
 
 adminController.get("/InterestedLeads/:id", async (req, res) => {
@@ -880,11 +877,6 @@ adminController.get("/allAssignedLeads", auth,  async (req, res) => {
 //     });
 //   }
 // });
-
-
-
-
-
 
 
 module.exports = adminController;

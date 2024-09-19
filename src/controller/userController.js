@@ -562,5 +562,4 @@ userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
 
 
 
-
 module.exports = userController;
