@@ -211,6 +211,26 @@ userController.get("/getEmployee", auth, async (req, res) => {
 });
 
 
+
+
+
+userController.get("/getEmployeeNames", auth, async (req, res) => {
+  try {
+    const data = await userServices.getEmployeeName();
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All Employee list retrieved successfully!",
+      data: data
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 userController.get("/getEmployeebyId/:userId", async (req, res) => {
   try {
     const { userId } = req.params;

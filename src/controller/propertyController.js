@@ -29,6 +29,4 @@ propertyController.post('/propertyFormCreate', async (req, res) => {
 
 
 
-
-
 module.exports = propertyController;
