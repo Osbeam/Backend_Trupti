@@ -262,7 +262,7 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
 
 
 exports.getEmployeeName = async (query) => {
-  return await Employee.find(query, 'FirstName MiddleName LastName _id');
+  return await Employee.find(query);
 };
 
 
