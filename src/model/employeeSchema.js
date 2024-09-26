@@ -51,8 +51,12 @@ const employeeSchema = mongoose.Schema({
     CompanyName: { type: String },
     BasicSalary: { type: String },
     FixedAllowance: { type: String },
+    MedicalAllowance: { type: String },
+    Reimbursment: { type: String },
     SpecialAllowance: { type: String },
     VeriableAllowance: { type: String },
+    AmountInWords: { type: String },
+    AmountInDigits: { type: String },
     Deductions: {
         type: [String],
         enum: ['PF', 'ESI', 'PT', 'TDS']
@@ -83,6 +87,10 @@ const employeeSchema = mongoose.Schema({
     AccountHolderName: { type: String },
     AccountNumber: { type: String },
     IFSCCode: { type: String },
+    CalenderDays: { type: String },
+    WorkingDays: { type: String },
+    PanNumber: { type: String },
+    UANNumber: { type: String },
     Role: {
         type: [String],
         enum: ['Admin', 'HR', 'Other', 'TeleCalling']
