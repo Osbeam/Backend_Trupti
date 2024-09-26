@@ -262,7 +262,9 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
 
 
 exports.getEmployeeName = async (query) => {
-  return await Employee.find(query);
+  return await Employee.find(query).populate('Department', 'name')
+  .populate('SubDepartment', 'name')
+  .populate('Designation', 'name');
 };
 
 
