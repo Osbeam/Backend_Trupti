@@ -50,17 +50,14 @@ const employeeSchema = mongoose.Schema({
     DateOfJoining: { type: String },
     CompanyName: { type: String },
     BasicSalary: { type: String },
-    FixedAllowance: { type: String },
+    HRA: { type: String },
     MedicalAllowance: { type: String },
+    FixedAllowance: { type: String },
     Reimbursment: { type: String },
     SpecialAllowance: { type: String },
     VeriableAllowance: { type: String },
     AmountInWords: { type: String },
     AmountInDigits: { type: String },
-    Deductions: {
-        type: [String],
-        enum: ['PF', 'ESI', 'PT', 'TDS']
-    },
     NoteBook: {
         type: [String],
         enum: ['Yes', 'No']
@@ -91,6 +88,13 @@ const employeeSchema = mongoose.Schema({
     WorkingDays: { type: String },
     PanNumber: { type: String },
     UANNumber: { type: String },
+    TotalIncome: { type: String },
+    DeductedIncome: { type: String },
+    NetSalary: { type: String },
+    NetSalaryInWords: { type: String },
+    PF: { type: String },
+    PT: { type: String },
+    SalaryMonth: { type: Date },
     Role: {
         type: [String],
         enum: ['Admin', 'HR', 'Other', 'TeleCalling']

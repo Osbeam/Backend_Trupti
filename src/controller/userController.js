@@ -211,9 +211,6 @@ userController.get("/getEmployee", auth, async (req, res) => {
 });
 
 
-
-
-
 userController.get("/getEmployeeNames", auth, async (req, res) => {
   try {
     const data = await userServices.getEmployeeName();
@@ -579,6 +576,79 @@ userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
     });
   }
 });
+
+
+
+userController.get('/generateSalarySlip/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Fetch the employee details by _id (assuming userId is _id in your EmployeeInfo schema)
+    const employee = await EmployeeInfo.findOne({ _id: userId });
+    if (!employee) {
+      return res.status(404).send({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Calculate total income and deductions
+    const totalIncome = parseFloat(employee.BasicSalary || 0) +
+      parseFloat(employee.FixedAllowance || 0) +
+      parseFloat(employee.MedicalAllowance || 0) +
+      parseFloat(employee.Reimbursment || 0) +
+      parseFloat(employee.SpecialAllowance || 0) +
+      parseFloat(employee.VeriableAllowance || 0);
+
+    const totalDeductions = parseFloat(employee.PF || 0) +
+      parseFloat(employee.PT || 0); // You can add more deduction fields if necessary
+
+    // Calculate net salary
+    const netSalary = totalIncome - totalDeductions;
+
+    // Construct the salary slip data
+    const salarySlip = {
+      EmployeeName: `${employee.FirstName} ${employee.LastName}`,
+      EmployeeCode: employee.EmployeeID,
+      Designation: employee.Designation,
+      DateOfJoining: employee.DateOfJoining,
+      BankName: employee.BankName,
+      AccountNumber: employee.AccountNumber,
+      UANNumber: employee.UANNumber,
+      PANNumber: employee.PanNumber,
+      TotalIncome: totalIncome.toFixed(2),
+      TotalDeductions: totalDeductions.toFixed(2),
+      NetSalary: netSalary.toFixed(2),
+      SalaryMonth: employee.SalaryMonth, // Month for the salary slip
+      IncomeBreakdown: {
+        BasicSalary: employee.BasicSalary,
+        FixedAllowance: employee.FixedAllowance,
+        MedicalAllowance: employee.MedicalAllowance,
+        Reimbursment: employee.Reimbursment,
+        SpecialAllowance: employee.SpecialAllowance,
+        VeriableAllowance: employee.VeriableAllowance,
+      },
+      DeductionBreakdown: {
+        PF: employee.PF,
+        PT: employee.PT,
+      },
+    };
+
+    // Send response
+    sendResponse(res, 200, "Salary Slip Generated", {
+      success: true,
+      message: "Salary slip generated successfully",
+      salarySlip: salarySlip,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
 
 
 
