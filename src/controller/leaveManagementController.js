@@ -16,8 +16,6 @@ const calculateLeaveDays = (StartDate, EndDate) => {
 };
 
 
-
-
 leaveManagementController.post('/applyLeave', async (req, res) => {
     const { userId, leaveRequests } = req.body;
 
@@ -59,6 +57,7 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
 
             const leaveCategory = leaveRecord.LeaveBalances[LeaveType];
             const leaveDays = calculateLeaveDays(StartDate, EndDate);
+
 
             // Check if the leave request is approved and update the counts
             if (Status === 'Approved') {
@@ -106,7 +105,6 @@ leaveManagementController.post('/applyLeave', async (req, res) => {
         });
     }
 });
-
 
 
 // Function to check if a half-day leave type is valid

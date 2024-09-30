@@ -42,7 +42,7 @@ const leaveManagementSchema = mongoose.Schema({
             HalfDayType: { 
                 type: String,  enum: ['AM', 'PM'],  default: null}, 
             IsHalfDay: { type: Boolean, default: false } ,
-            LeaveDays: {type: String}
+            LeaveDays: {type: Number}
         }
     ],
 });

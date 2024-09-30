@@ -50,6 +50,61 @@ const uploadimg = imgUpload.fields([
 ]);
 
 
+// userController.post('/employeeInfo', uploadimg, async (req, res) => {
+//   try {
+//     // Check if the email or mobile number already exists in the database
+//     const existingEmployee = await EmployeeInfo.findOne({
+//       $or: [{ EmailId: req.body.EmailId }, { MobileNumber: req.body.MobileNumber }]
+//     });
+
+//     if (existingEmployee) {
+//       // If employee already exists with the same email or mobile number, send a response indicating the conflict
+//       return res.status(409).send({
+//         success: false,
+//         message: "Email or mobile number already exists"
+//       });
+//     }
+
+//     // Prepare employee data
+//     const employeeData = { ...req.body };
+
+//     // Generate Employee ID
+//     const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
+//     employeeData.EmployeeID = employeeID;
+//     console.log(`Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`);
+    
+
+//     // Add the document paths to the employee data if files were uploaded
+//     if (req.files) {
+//       if (req.files.PanCard) employeeData.PanCard = req.files.PanCard[0].path;
+//       if (req.files.AadharCard) employeeData.AadharCard = req.files.AadharCard[0].path;
+//       if (req.files.Photo) employeeData.Photo = req.files.Photo[0].path;
+//       if (req.files.AddressProof) employeeData.AddressProof = req.files.AddressProof[0].path;
+//       if (req.files.HighestQuaCertificate) employeeData.HighestQuaCertificate = req.files.HighestQuaCertificate[0].path;
+//       if (req.files.LastComRellievingLetter) employeeData.LastComRellievingLetter = req.files.LastComRellievingLetter[0].path;
+//       if (req.files.BankDetails) employeeData.BankDetails = req.files.BankDetails[0].path;
+//     }
+
+//     // Create a new employee record
+//     const employeeCreated = new EmployeeInfo(employeeData);
+//     await employeeCreated.save();
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Employee Registered successfully!",
+//       employeeData: employeeCreated
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 userController.post('/employeeInfo', uploadimg, async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
@@ -72,7 +127,6 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
     employeeData.EmployeeID = employeeID;
     console.log(`Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`);
-    
 
     // Add the document paths to the employee data if files were uploaded
     if (req.files) {
@@ -89,10 +143,17 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     const employeeCreated = new EmployeeInfo(employeeData);
     await employeeCreated.save();
 
+    // Populate related fields (Department, SubDepartment, Designation, and ManagedBy)
+    const populatedEmployee = await EmployeeInfo.findById(employeeCreated._id)
+      .populate('Department', 'name')       // Assuming 'name' is the field in the Department model
+      .populate('SubDepartment', 'name')    // Assuming 'name' is the field in the SubDepartment model
+      .populate('Designation', 'name')      // Assuming 'name' is the field in the Designation model
+      .populate('ManagedBy', 'FirstName LastName');       // Populating manager's name
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Employee Registered successfully!",
-      employeeData: employeeCreated
+      employeeData: populatedEmployee
     });
   } catch (error) {
     console.log(error);
@@ -583,7 +644,6 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    // Fetch the employee details by _id (assuming userId is _id in your EmployeeInfo schema)
     const employee = await EmployeeInfo.findOne({ _id: userId });
     if (!employee) {
       return res.status(404).send({
@@ -601,12 +661,12 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
       parseFloat(employee.VeriableAllowance || 0);
 
     const totalDeductions = parseFloat(employee.PF || 0) +
-      parseFloat(employee.PT || 0); // You can add more deduction fields if necessary
+      parseFloat(employee.PT || 0); 
 
-    // Calculate net salary
+    
     const netSalary = totalIncome - totalDeductions;
 
-    // Construct the salary slip data
+  
     const salarySlip = {
       EmployeeName: `${employee.FirstName} ${employee.LastName}`,
       EmployeeCode: employee.EmployeeID,
@@ -619,7 +679,6 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
       TotalIncome: totalIncome.toFixed(2),
       TotalDeductions: totalDeductions.toFixed(2),
       NetSalary: netSalary.toFixed(2),
-      SalaryMonth: employee.SalaryMonth, // Month for the salary slip
       IncomeBreakdown: {
         BasicSalary: employee.BasicSalary,
         FixedAllowance: employee.FixedAllowance,
@@ -634,7 +693,6 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
       },
     };
 
-    // Send response
     sendResponse(res, 200, "Salary Slip Generated", {
       success: true,
       message: "Salary slip generated successfully",
