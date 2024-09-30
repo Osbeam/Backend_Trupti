@@ -21,8 +21,8 @@ exports.getUser = async (query) => {
     const employees = await Employee.find(query)
       .populate('Department', 'name') 
       .populate('SubDepartment', 'name') 
-      .populate('Designation', 'name'); 
-    
+      .populate('Designation', 'name')
+      .populate('ManagedBy', 'FirstName LastName');
     const formattedEmployees = employees.map(employee => ({
       _id: employee._id,
       MrMissMrs: employee.MrMissMrs,
