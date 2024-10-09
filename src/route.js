@@ -13,6 +13,7 @@ const channelPartnerController = require("./controller/channelPartnerController"
 const leaveManagementController = require("./controller/leaveManagementController");
 const loanFormController = require("./controller/loanFormController");
 const propertyController = require("./controller/propertyController");
+const reportController = require("./controller/reportController");
 
 router.use("/user", userController);
 router.use("/department", departmentcontroller);
@@ -25,6 +26,7 @@ router.use("/channelPartner", channelPartnerController);
 router.use("/leaveManagement", leaveManagementController);
 router.use("/loanForm", loanFormController);
 router.use("/propertyForm", propertyController);
+router.use("/report", reportController);
 
 
 
