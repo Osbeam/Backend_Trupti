@@ -342,10 +342,10 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
 
     if (id) {
       // Try to fetch data from SalaryIncome first
-      interestedCustomerData = await SalaryIncome.findById(id).lean();
+      interestedCustomerData = await Admin.findById(id).lean();
       if (!interestedCustomerData) {
         // If not found in SalaryIncome, fetch from Admin
-        interestedCustomerData = await Admin.findById(id).lean();
+        interestedCustomerData = await SalaryIncome.findById(id).lean();
         if (!interestedCustomerData) {
           // If not found in Admin, fetch from ProfessionalIncome
           interestedCustomerData = await ProfessionalIncome.findById(id).lean();
