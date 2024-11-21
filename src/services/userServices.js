@@ -261,6 +261,46 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
 };
 
 
+
+
+exports.getAllEmployee = async () => {
+  try {
+    const employees = await Employee.find()
+      .populate('Department', 'name')
+      .populate('SubDepartment', 'name')
+      .populate('Designation', 'name')
+      .lean();
+
+    // Extract non-null ManagedBy IDs
+    const employeeIds = employees.map(emp => emp.ManagedBy).filter(id => id && id !== 'null');
+
+    // Fetch managers
+    const managers = await Employee.find({
+      _id: { $in: employeeIds }
+    }).select('FirstName LastName');
+
+    // Create a map of manager IDs to manager details
+    const managerMap = managers.reduce((acc, manager) => {
+      acc[manager._id] = manager;
+      return acc;
+    }, {});
+
+    // Map employees with their manager details
+    const result = employees.map(emp => ({
+      ...emp,
+      ManagedBy: managerMap[emp.ManagedBy] || null
+    }));
+
+    return {
+      employees: result,
+    };
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    throw new Error("Unable to fetch employees. Please try again later.");
+  }
+};
+
+
 exports.getEmployeeName = async (query) => {
   return await Employee.find(query).populate('Department', 'name')
   .populate('SubDepartment', 'name')

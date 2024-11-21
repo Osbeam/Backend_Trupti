@@ -961,4 +961,35 @@ adminController.get("/allAssignedLeads", auth,  async (req, res) => {
 // });
 
 
+
+adminController.get('/leadCustomerList', async (req, res) => {
+  try {
+      const data = await Admin.aggregate([
+          {
+              '$match': {
+                  'CallStatus': 'Interested'
+              }
+          },
+          {
+              '$project':{
+                  '_id':1,
+                  'Name':1
+              }
+          }
+      ]);
+
+      sendResponse(res, 200, "Success", {
+          success: true,
+          message: "Lead retrieved successfully!",
+          data: data,
+      })
+  } catch (error) {
+      console.log(error);
+      sendResponse(res, 500, "Failed", {
+          message: error.message || "Internal server error",
+      });
+  }
+})
+
+
 module.exports = adminController;

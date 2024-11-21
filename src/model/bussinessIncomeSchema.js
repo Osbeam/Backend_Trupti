@@ -50,12 +50,15 @@ const bussinessIncomeSchema = mongoose.Schema({
     },
     AccountNumber: { type: String },
     DateOfOpening: { type: Date },
-    BankAnalysis: { type: String },
+    BankAnalysis: [{
+        ABB: { type: String }, 
+        Turnover: { type: String }
+    }],
     Exporter: {
         type: [String],
         enum: ['Yes', 'No']  
     }, 
-    ExportTurnoverLastYear: { type: String },
+    ExportTurnoverLastYear: { type: String },   
     TDSDeduction: {
         type: [String],
         enum: ['Yes', 'No']  
