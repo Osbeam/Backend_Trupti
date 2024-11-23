@@ -235,6 +235,7 @@ const City = [
   "Rajapalayam",
   "Rajgarh",
   "Rajkot",
+  "Raniganj",
   "Rajsamand",
   "Ramagundam",
   "Rampur",
@@ -309,12 +310,13 @@ const City = [
   "Visakhapatnam",
   "Vizianagaram",
   "Warangal",
+  "West Bengal",
   "Wardha",
   "Wayanad",
   "Yavatmal",
   "Yelahanka",
   "Yemmiganur",
-  "Yerraguntla"
+  "Yerraguntla",
 ];
 
 
