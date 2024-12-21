@@ -9,7 +9,8 @@ const logUserSchema = mongoose.Schema({
     outTime: { type: String },
     totalHours: { type: String },
     approved: {type: Boolean, default: false},
-    isPresent: {type: Boolean, default: false}
+    isPresent: {type: Boolean, default: false},
+    isHrApproved: {type: Boolean, default: false}
 });
 
 logUserSchema.plugin(timestamps);

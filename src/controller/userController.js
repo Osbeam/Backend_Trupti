@@ -251,17 +251,46 @@ userController.put("/updateEmployeeData", async (req, res) => {
 });
 
 
+// userController.get("/getEmployee", auth, async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
+//     const pageSize = parseInt(req.query.pageSize) || 10; 
+//     const data = await userServices.getEmployee(currentPage, pageSize);
+//     const userCount = await EmployeeInfo.countDocuments();
+//     const totalPage = Math.ceil(userCount/10);
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "All Employee list retrieved successfully!",
+//       data: data, userCount, totalPage, currentPage
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 userController.get("/getEmployee", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10; 
-    const data = await userServices.getEmployee(currentPage, pageSize);
-    const userCount = await EmployeeInfo.countDocuments();
-    const totalPage = Math.ceil(userCount/10);
+
+    // Extract filters from query parameters
+    const { name, role, employeeId, designation } = req.query;
+
+    // Pass filters to the service function
+    const data = await userServices.getEmployee(currentPage, pageSize, { name, role, employeeId, designation });
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Employee list retrieved successfully!",
-      data: data, userCount, totalPage, currentPage
+      data: data.employees,
+      userCount: data.userCount,
+      totalPage: data.totalPage,
+      currentPage: data.currentPage
     });
   } catch (error) {
     console.log(error);
@@ -270,8 +299,6 @@ userController.get("/getEmployee", auth, async (req, res) => {
     });
   }
 });
-
-
 
 
 userController.get("/getAllEmployee", auth, async (req, res) => {
@@ -727,6 +754,40 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
   }
 });
 
+
+
+
+userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
+  try {
+    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 records per page
+
+    const { leaderId } = req.query; // Extract the leaderId from query parameters
+    if (!leaderId) {
+      return sendResponse(res, 400, "Failed", {
+        message: "LeaderId is required",
+      });
+    }
+
+    // Fetch paginated data using the service function
+    const data = await userServices.getLeaderEmployeeData(currentPage, pageSize, leaderId);
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Leader and employee data retrieved successfully!",
+      data: data.employees,
+      leader: data.leader,
+      totalCallCount: data.totalCallCount,
+      totalPage: data.totalPage,
+      currentPage: data.currentPage,
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
 
 
 

@@ -335,6 +335,82 @@ const City = [
 ];
 
 
+// bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const additionalData = req.body;
+
+//     let interestedCustomerData = null;
+
+//     if (id) {
+//       // Try to fetch data from SalaryIncome first
+//       interestedCustomerData = await Admin.findById(id).lean();
+//       if (!interestedCustomerData) {
+//         // If not found in SalaryIncome, fetch from Admin
+//         interestedCustomerData = await SalaryIncome.findById(id).lean();
+//         if (!interestedCustomerData) {
+//           // If not found in Admin, fetch from ProfessionalIncome
+//           interestedCustomerData = await ProfessionalIncome.findById(id).lean();
+//           if (!interestedCustomerData) {
+//             // If not found in Admin, fetch from LeadSchema
+//             interestedCustomerData = await Lead.findById(id).lean();
+//           }
+//         }
+//       }
+//     }
+
+//     let newData = { ...additionalData };
+
+//     if (interestedCustomerData) {
+//       // Combine the interested customer data with the additional data
+//       newData = {
+//         ...interestedCustomerData,
+//         ...additionalData,        
+//       };                                            
+//     }
+
+//     // Check if a document exists in the BussinessIncome schema with the same ID
+//     let updatedBussinessIncome;
+//     if (id) {
+//       updatedBussinessIncome = await BussinessIncome.findById(id);
+//     }
+
+//     if (updatedBussinessIncome) {
+//       // Update the existing document
+//       updatedBussinessIncome = await BussinessIncome.findByIdAndUpdate(
+//         id,
+//         newData,
+//         { new: true }
+//       );
+//     } else {
+//       // Create a new document
+//       newData._id = id; // Set the ID to the new document
+//       updatedBussinessIncome = new BussinessIncome(newData);
+//       await updatedBussinessIncome.save();
+//     }
+
+//     // Respond with the updated or created data
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Business Income updated or created successfully!",
+//       data: updatedBussinessIncome,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
+const omitTimestamps = (data) => {
+  const { createdAt, updatedAt, ...rest } = data;
+  return rest;
+};
+
 bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
   try {
     const { id } = req.params;
@@ -343,49 +419,40 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
     let interestedCustomerData = null;
 
     if (id) {
-      // Try to fetch data from SalaryIncome first
-      interestedCustomerData = await Admin.findById(id).lean();
-      if (!interestedCustomerData) {
-        // If not found in SalaryIncome, fetch from Admin
-        interestedCustomerData = await SalaryIncome.findById(id).lean();
-        if (!interestedCustomerData) {
-          // If not found in Admin, fetch from ProfessionalIncome
-          interestedCustomerData = await ProfessionalIncome.findById(id).lean();
-          if (!interestedCustomerData) {
-            // If not found in Admin, fetch from LeadSchema
-            interestedCustomerData = await Lead.findById(id).lean();
-          }
-        }
-      }
+      // Try to fetch data from other collections
+      interestedCustomerData = await SalaryIncome.findById(id).lean() ||
+        await Admin.findById(id).lean() ||
+        await ProfessionalIncome.findById(id).lean() ||
+        await Lead.findById(id).lean();
     }
 
     let newData = { ...additionalData };
 
     if (interestedCustomerData) {
-      // Combine the interested customer data with the additional data
+      // Merge data and exclude createdAt and updatedAt
       newData = {
-        ...interestedCustomerData,
-        ...additionalData,        
-      };                                            
+        ...omitTimestamps(interestedCustomerData),
+        ...omitTimestamps(additionalData),
+      };
     }
 
-    // Check if a document exists in the BussinessIncome schema with the same ID
     let updatedBussinessIncome;
+
     if (id) {
       updatedBussinessIncome = await BussinessIncome.findById(id);
     }
 
     if (updatedBussinessIncome) {
-      // Update the existing document
+      // Update the document
       updatedBussinessIncome = await BussinessIncome.findByIdAndUpdate(
         id,
-        newData,
+        omitTimestamps(newData), // Exclude timestamps
         { new: true }
       );
     } else {
       // Create a new document
-      newData._id = id; // Set the ID to the new document
-      updatedBussinessIncome = new BussinessIncome(newData);
+      newData._id = id; // Assign the same ID if available
+      updatedBussinessIncome = new BussinessIncome(omitTimestamps(newData));
       await updatedBussinessIncome.save();
     }
 
@@ -402,6 +469,7 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
     });
   }
 });
+
 
 
 bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {

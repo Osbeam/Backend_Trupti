@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const LogUser = require("../model/loguserSchema");
 const Employee = require("../model/employeeSchema");
 const Department = require("../model/departmentSchema");
+const Designation = require("../model/designationSchema");
 const { body } = require("express-validator");
 
 
@@ -204,7 +205,7 @@ exports.updateData = async (filter, update)=> {
 
 
 
-exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
+exports.getEmployee = async (currentPage = 1, pageSize = 10, filters = {}) => {
   if (isNaN(currentPage) || currentPage < 1) {
     currentPage = 1;
   }
@@ -214,13 +215,45 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
   const skip = (currentPage - 1) * pageSize;
 
   try {
-    // Fetch employees with pagination
-    const employees = await Employee.find()
+    // Construct query object
+    const query = {};
+    if (filters.name) {
+      query.$or = [
+        { FirstName: { $regex: filters.name, $options: 'i' } }, // Case-insensitive search in FirstName
+        { LastName: { $regex: filters.name, $options: 'i' } }   // Case-insensitive search in LastName
+      ];
+    }
+    if (filters.role) {
+      query.Role = { $regex: filters.role, $options: 'i' }; // Case-insensitive search in Role
+    }
+    if (filters.employeeId) {
+      query.EmployeeId = { $regex: filters.employeeId, $options: 'i' }; // Case-insensitive search in EmployeeId
+    }
+
+    // If designation filter is provided
+    if (filters.designation) {
+      // Find the Designation document by name
+      const designation = await Designation.findOne({ name: { $regex: filters.designation, $options: 'i' } });
+      if (designation) {
+        query.Designation = designation._id; // Use the Designation's ID for filtering
+      } else {
+        // No matching Designation found, return empty results
+        return {
+          employees: [],
+          userCount: 0,
+          totalPage: 0,
+          currentPage
+        };
+      }
+    }
+
+    // Fetch employees with pagination and filters
+    const employees = await Employee.find(query)
       .skip(skip)
       .limit(pageSize)
       .populate('Department', 'name')
       .populate('SubDepartment', 'name')
-      .populate('Designation', 'name')
+      .populate('Designation', 'name') // Populate Designation name
       .lean();
 
     // Extract non-null ManagedBy IDs
@@ -244,7 +277,7 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10) => {
     }));
 
     // Get the total count of employees for pagination
-    const userCount = await Employee.countDocuments();
+    const userCount = await Employee.countDocuments(query);
     const totalPage = Math.ceil(userCount / pageSize);
 
     // Format and return the result
@@ -325,4 +358,56 @@ exports.EmployeeHrLogin = async ({ EmailId, Password }) => {
     return user;
   }
   return null;
+};
+
+
+
+
+exports.getLeaderEmployeeData = async (currentPage, pageSize, leaderId) => {
+  try {
+    // Fetch leader details
+    const leader = await Employee.findOne({ EmployeeId: leaderId }).select("FirstName LastName").lean();
+    if (!leader) {
+      throw new Error("Leader not found");
+    }
+
+    // Fetch employees under the leader with pagination
+    const employeesQuery = Employee.find({ ManagedBy: leader._id }).select("EmployeeId FirstName LastName");
+    const totalEmployees = await employeesQuery.clone().countDocuments();
+    const employees = await employeesQuery
+      .skip((currentPage - 1) * pageSize)
+      .limit(pageSize)
+      .lean();
+
+    // Fetch call records for these employees
+    const employeeIds = employees.map((emp) => emp.EmployeeId);
+    const callRecords = await CallRecord.find({ EmployeeId: { $in: employeeIds } }).lean();
+
+    // Group call records by employee
+    const callRecordsByEmployee = employees.map((employee) => {
+      const records = callRecords.filter((call) => call.EmployeeId === employee.EmployeeId);
+      return {
+        ...employee,
+        callRecords: records,
+        callCount: records.length,
+      };
+    });
+
+    // Calculate total pages
+    const totalPage = Math.ceil(totalEmployees / pageSize);
+
+    // Return the formatted data
+    return {
+      leader: {
+        name: `${leader.FirstName} ${leader.LastName}`,
+        employeeCount: totalEmployees,
+      },
+      employees: callRecordsByEmployee,
+      totalCallCount: callRecords.length,
+      totalPage,
+      currentPage,
+    };
+  } catch (error) {
+    throw error;
+  }
 };

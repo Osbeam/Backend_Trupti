@@ -88,6 +88,7 @@ const employeeSchema = mongoose.Schema({
     CalenderDays: { type: String },
     WorkingDays: { type: String },
     PanNumber: { type: String },
+    AadharNumber: { type: String },
     UANNumber: { type: String },
     TotalIncome: { type: String },
     DeductedIncome: { type: String },
