@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 const LogUser = require("../model/loguserSchema");
 const Employee = require("../model/employeeSchema");
 const Department = require("../model/departmentSchema");
+const SubDepartment = require("../model/subDepartmentSchema");
 const Designation = require("../model/designationSchema");
+const AdminSchema = require("../model/adminSchema");
 const { body } = require("express-validator");
+const { Admin } = require("mongodb");
 
 
 
@@ -362,52 +365,25 @@ exports.EmployeeHrLogin = async ({ EmailId, Password }) => {
 
 
 
-
-exports.getLeaderEmployeeData = async (currentPage, pageSize, leaderId) => {
-  try {
-    // Fetch leader details
-    const leader = await Employee.findOne({ EmployeeId: leaderId }).select("FirstName LastName").lean();
-    if (!leader) {
-      throw new Error("Leader not found");
-    }
-
-    // Fetch employees under the leader with pagination
-    const employeesQuery = Employee.find({ ManagedBy: leader._id }).select("EmployeeId FirstName LastName");
-    const totalEmployees = await employeesQuery.clone().countDocuments();
-    const employees = await employeesQuery
-      .skip((currentPage - 1) * pageSize)
-      .limit(pageSize)
-      .lean();
-
-    // Fetch call records for these employees
-    const employeeIds = employees.map((emp) => emp.EmployeeId);
-    const callRecords = await CallRecord.find({ EmployeeId: { $in: employeeIds } }).lean();
-
-    // Group call records by employee
-    const callRecordsByEmployee = employees.map((employee) => {
-      const records = callRecords.filter((call) => call.EmployeeId === employee.EmployeeId);
-      return {
-        ...employee,
-        callRecords: records,
-        callCount: records.length,
-      };
-    });
-
-    // Calculate total pages
-    const totalPage = Math.ceil(totalEmployees / pageSize);
-
-    // Return the formatted data
-    return {
-      leader: {
-        name: `${leader.FirstName} ${leader.LastName}`,
-        employeeCount: totalEmployees,
+exports.getAllDepartments = async () => {
+  const departments = await Department.find()
+    .populate({
+      path: 'SubDepartment',
+      populate: {
+        path: 'designation', // Populate the Designation field inside SubDepartment
       },
-      employees: callRecordsByEmployee,
-      totalCallCount: callRecords.length,
-      totalPage,
-      currentPage,
-    };
-  } catch (error) {
-    throw error;
-  }
+    });
+    // Add the filtered users to the response
+  // for (const department of departments) {
+  //   for (const subDepartment of department.SubDepartment) {
+  //     if (subDepartment.designation) {
+  //       const users = await Employee.find({
+  //         Designation: subDepartment.designation._id, // Match users with the same designation
+  //         Position: 'TeamLeader', // Only fetch users with the position 'Team Leader'
+  //       });
+  //       subDepartment.users = users; // Add the filtered users to the subDepartment
+  //     }
+  //   }
+  // }
+  return departments;
 };

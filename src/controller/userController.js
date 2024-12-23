@@ -1,10 +1,12 @@
 const express = require("express");
 const userController = express.Router();
 const userServices = require("../services/userServices");
+const departmentServices = require("../services/departmentServices");
 const LogUser = require("../model/loguserSchema");
 const Department = require("../model/departmentSchema");
 const SubDepartment = require("../model/subDepartmentSchema");
 const Designation = require("../model/designationSchema");
+const Admin = require("../model/adminSchema");
 const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
@@ -755,39 +757,177 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
 });
 
 
+// userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
+//   try {
+//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1
+//     const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 records per page
+
+//     // Fetch data from the service
+//     const data = await userServices.getAllLeadersWithEmployees(currentPage, pageSize);
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Leaders and their employee data retrieved successfully!",
+//       data: data.leadersWithEmployees,
+//       totalCallCount: data.totalCallCount,
+//       totalPage: data.totalPage,
+//       currentPage: data.currentPage,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       success: false,
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 
 
 userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1
     const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 records per page
+    const skip = (currentPage - 1) * pageSize;
 
-    const { leaderId } = req.query; // Extract the leaderId from query parameters
-    if (!leaderId) {
-      return sendResponse(res, 400, "Failed", {
-        message: "LeaderId is required",
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    // Fetch leaders
+    const leadersQuery = EmployeeInfo.find({
+      Position: { $in: ["TeamLeader", "Manager", "Boss"] },
+    }).select("EmployeeID FirstName LastName Position");
+    
+    const totalLeaders = await leadersQuery.clone().countDocuments();
+
+    const leaders = await leadersQuery
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+
+    const leadersWithEmployees = [];
+    let totalCallCount = 0;
+
+    // Iterate over each leader
+    for (const leader of leaders) {
+      const employees = await EmployeeInfo.find({ ManagedBy: leader._id })
+        .select("EmployeeID FirstName LastName")
+        .lean();
+
+      // Get call records for these employees based on the date range if provided
+      const employeeIds = employees.map(emp => emp.EmployeeID);
+      let formattedStartDate, formattedEndDate, callStatuses;
+
+      if (!startDate && !endDate) {
+        const today = new Date();
+        formattedStartDate = new Date(today);
+        formattedEndDate = new Date(today);
+        formattedStartDate.setHours(0, 0, 0, 0);
+        formattedEndDate.setHours(23, 59, 59, 999);
+      } else {
+        formattedStartDate = new Date(startDate);
+        formattedEndDate = new Date(endDate);
+        formattedStartDate.setHours(0, 0, 0, 0);
+        formattedEndDate.setHours(23, 59, 59, 999);
+      }
+
+      callStatuses = await Admin.find({
+        EmployeeID: { $in: employeeIds },
+        CallStatusUpdatedAt: {
+          $gte: formattedStartDate,
+          $lte: formattedEndDate,
+        },
+      }).lean();
+
+      let statusCounts = {
+        CallNotReceived: 0,
+        NotInterested: 0,
+        Interested: 0,
+        SwitchOff: 0,
+        Connected: 0,
+        Invalid: 0,
+        NotConnected: 0,
+        NotExists: 0,
+        FollowUp: 0,
+        totalCall: 0,
+      };
+
+      // Count call statuses for employees
+      for (const callStatusRecord of callStatuses) {
+        console.log(callStatusRecord); // Log the entire call record to inspect its structure
+        if (
+          Array.isArray(callStatusRecord.CallStatus) &&
+          callStatusRecord.CallStatus.length > 0
+        ) {
+          const callStatus = callStatusRecord.CallStatus[0]; // Assuming we're only interested in the first status
+          console.log(callStatus); // Log the status to check if it matches expected values
+          if (statusCounts[callStatus] !== undefined) {
+            statusCounts[callStatus]++;
+            statusCounts.totalCall++;
+          }
+        }
+      }
+      
+
+      // Add the leader and their employees along with status counts
+      leadersWithEmployees.push({
+        leader: {
+          id: leader.EmployeeID,
+          name: `${leader.FirstName} ${leader.LastName}`,
+          position: leader.Position,
+        },
+        employees: employees.map((employee) => ({
+          employee: {
+            id: employee.EmployeeID,
+            name: `${employee.FirstName} ${employee.LastName}`,
+          },
+          statusCounts: { ...statusCounts },
+        })),
       });
+
+      totalCallCount += statusCounts.totalCall;
     }
 
-    // Fetch paginated data using the service function
-    const data = await userServices.getLeaderEmployeeData(currentPage, pageSize, leaderId);
+    const totalPage = Math.ceil(totalLeaders / pageSize);
 
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Leader and employee data retrieved successfully!",
-      data: data.employees,
-      leader: data.leader,
-      totalCallCount: data.totalCallCount,
-      totalPage: data.totalPage,
-      currentPage: data.currentPage,
+      message: "Leaders and their employee data with call status counts retrieved successfully!",
+      data: leadersWithEmployees,
+      totalCallCount,
+      totalPage,
+      currentPage,
     });
   } catch (error) {
     console.error(error);
     sendResponse(res, 500, "Failed", {
+      success: false,
       message: error.message || "Internal server error",
     });
   }
 });
+
+
+
+userController.get("/getDepartmentDetails", async (req, res) => {
+    try {
+
+        const data = await userServices.getAllDepartments();
+        sendResponse(res, 200, "Success", {
+            success: true,
+            message: "All Department list retrieved successfully!",
+            data: data
+        });
+    } catch (error) {
+        console.log(error);
+        sendResponse(res, 500, "Failed", {
+            message: error.message || "Internal server error",
+        });
+    }
+});
+
 
 
 
