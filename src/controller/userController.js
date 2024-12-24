@@ -832,6 +832,7 @@ userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
         formattedStartDate.setHours(0, 0, 0, 0);
         formattedEndDate.setHours(23, 59, 59, 999);
       }
+      
 
       callStatuses = await Admin.find({
         EmployeeID: { $in: employeeIds },
@@ -861,13 +862,13 @@ userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
           Array.isArray(callStatusRecord.CallStatus) &&
           callStatusRecord.CallStatus.length > 0
         ) {
-          const callStatus = callStatusRecord.CallStatus[0]; // Assuming we're only interested in the first status
-          console.log(callStatus); // Log the status to check if it matches expected values
-          if (statusCounts[callStatus] !== undefined) {
-            statusCounts[callStatus]++;
-            statusCounts.totalCall++;
+          const CallStatus = callStatusRecord.CallStatus[0];
+          if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
+            users[AssignedTo].statusCounts[CallStatus]++;
+            users[AssignedTo].statusCounts.totalCall++;
           }
         }
+        
       }
       
 

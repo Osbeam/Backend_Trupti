@@ -150,4 +150,34 @@ salaryIncome.put("/EditSalaryData", async (req, res) => {
 });
 
 
+salaryIncome.get('/getAllIncomeInfo', async (req, res) => {
+  try {
+      // Fetch data from all schemas
+      const businessIncome = await BusinessIncome.find({});
+      const professionalIncome = await ProfessionalIncome.find({});
+      const salaryIncome = await SalaryIncome.find({});
+
+      // Combine the data into a single response
+      const combinedData = {
+          BusinessIncome: businessIncome,
+          ProfessionalIncome: professionalIncome,
+          SalaryIncome: salaryIncome,
+      };
+
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: "Data Retrieve successfully!",
+        data: combinedData
+      });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
+
 module.exports = salaryIncome;
