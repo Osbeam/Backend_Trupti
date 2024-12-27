@@ -298,7 +298,6 @@ exports.getEmployee = async (currentPage = 1, pageSize = 10, filters = {}) => {
 
 
 
-
 exports.getAllEmployee = async () => {
   try {
     const employees = await Employee.find()
@@ -366,24 +365,37 @@ exports.EmployeeHrLogin = async ({ EmailId, Password }) => {
 
 
 exports.getAllDepartments = async () => {
+  // Fetch departments with populated sub-departments and designations
   const departments = await Department.find()
     .populate({
       path: 'SubDepartment',
       populate: {
         path: 'designation', // Populate the Designation field inside SubDepartment
       },
-    });
-    // Add the filtered users to the response
-  // for (const department of departments) {
-  //   for (const subDepartment of department.SubDepartment) {
-  //     if (subDepartment.designation) {
-  //       const users = await Employee.find({
-  //         Designation: subDepartment.designation._id, // Match users with the same designation
-  //         Position: 'TeamLeader', // Only fetch users with the position 'Team Leader'
-  //       });
-  //       subDepartment.users = users; // Add the filtered users to the subDepartment
-  //     }
-  //   }
-  // }
-  return departments;
+    })
+    .lean(); // Use .lean() to get plain JS objects
+
+  // Process departments
+  const updatedDepartments = await Promise.all(
+    departments.map(async (department) => {
+      for (const subDepartment of department.SubDepartment) {
+        // Process designations in each sub-department
+        await Promise.all(
+          subDepartment.designation.map(async (designation) => {
+            const teamLeaders = await Employee.find({
+              Position: 'TeamLeader',
+              Designation: designation._id,
+            }) 
+            .lean();
+            designation.teamLeader = teamLeaders; // Add the team leader(s) to the designation
+          })
+        );
+      }
+      return department; // Return the modified department
+    })
+  );
+
+  return updatedDepartments; // Return the final processed data
 };
+
+

@@ -688,7 +688,6 @@ userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
 });
 
 
-
 userController.get('/generateSalarySlip/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -757,149 +756,60 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
 });
 
 
-// userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
-//   try {
-//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1
-//     const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 records per page
-
-//     // Fetch data from the service
-//     const data = await userServices.getAllLeadersWithEmployees(currentPage, pageSize);
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Leaders and their employee data retrieved successfully!",
-//       data: data.leadersWithEmployees,
-//       totalCallCount: data.totalCallCount,
-//       totalPage: data.totalPage,
-//       currentPage: data.currentPage,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       success: false,
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-
-
 userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
   try {
-    const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default to 10 records per page
-    const skip = (currentPage - 1) * pageSize;
+    // Fetch all team leaders
+    const teamLeaders = await EmployeeInfo.find({ Position: "TeamLeader" }).lean().select("EmployeeID FirstName LastName Position");;
 
-    const startDate = req.query.startDate;
-    const endDate = req.query.endDate;
+    // Add managed employees and their call details for each team leader
+    await Promise.all(
+      teamLeaders.map(async (leader) => {
+        const managedEmployees = await EmployeeInfo.find({ ManagedBy: leader._id }).lean().select("EmployeeID FirstName LastName Position");
 
-    // Fetch leaders
-    const leadersQuery = EmployeeInfo.find({
-      Position: { $in: ["TeamLeader", "Manager", "Boss"] },
-    }).select("EmployeeID FirstName LastName Position");
-    
-    const totalLeaders = await leadersQuery.clone().countDocuments();
+        // Add call details for each employee
+        await Promise.all(
+          managedEmployees.map(async (employee) => {
+            const callDetails = await Admin.find({ AssignedTo: employee._id }).lean();
 
-    const leaders = await leadersQuery
-      .skip(skip)
-      .limit(pageSize)
-      .lean();
+            // Initialize status counts
+            const statusCounts = {
+              CallNotReceived: 0,
+              NotInterested: 0,
+              Interested: 0,
+              SwitchOff: 0,
+              Connected: 0,
+              Invalid: 0,
+              NotConnected: 0,
+              NotExists: 0,
+              FollowUp: 0,
+              totalCall: 0,
+            };
 
-    const leadersWithEmployees = [];
-    let totalCallCount = 0;
+            // Aggregate call statuses
+            callDetails.forEach((call) => {
+              call.CallStatus.forEach((status) => {
+                if (statusCounts[status] !== undefined) {
+                  statusCounts[status]++;
+                }
+              });
+              statusCounts.totalCall++;
+            });
 
-    // Iterate over each leader
-    for (const leader of leaders) {
-      const employees = await EmployeeInfo.find({ ManagedBy: leader._id })
-        .select("EmployeeID FirstName LastName")
-        .lean();
+            // Attach statusCounts to the employee
+            employee.callDetails = statusCounts;
+          })
+        );
 
-      // Get call records for these employees based on the date range if provided
-      const employeeIds = employees.map(emp => emp.EmployeeID);
-      let formattedStartDate, formattedEndDate, callStatuses;
+        // Attach managed employees to the leader
+        leader.managedEmployees = managedEmployees;
+      })
+    );
 
-      if (!startDate && !endDate) {
-        const today = new Date();
-        formattedStartDate = new Date(today);
-        formattedEndDate = new Date(today);
-        formattedStartDate.setHours(0, 0, 0, 0);
-        formattedEndDate.setHours(23, 59, 59, 999);
-      } else {
-        formattedStartDate = new Date(startDate);
-        formattedEndDate = new Date(endDate);
-        formattedStartDate.setHours(0, 0, 0, 0);
-        formattedEndDate.setHours(23, 59, 59, 999);
-      }
-      
-
-      callStatuses = await Admin.find({
-        EmployeeID: { $in: employeeIds },
-        CallStatusUpdatedAt: {
-          $gte: formattedStartDate,
-          $lte: formattedEndDate,
-        },
-      }).lean();
-
-      let statusCounts = {
-        CallNotReceived: 0,
-        NotInterested: 0,
-        Interested: 0,
-        SwitchOff: 0,
-        Connected: 0,
-        Invalid: 0,
-        NotConnected: 0,
-        NotExists: 0,
-        FollowUp: 0,
-        totalCall: 0,
-      };
-
-      // Count call statuses for employees
-      for (const callStatusRecord of callStatuses) {
-        console.log(callStatusRecord); // Log the entire call record to inspect its structure
-        if (
-          Array.isArray(callStatusRecord.CallStatus) &&
-          callStatusRecord.CallStatus.length > 0
-        ) {
-          const CallStatus = callStatusRecord.CallStatus[0];
-          if (users[AssignedTo].statusCounts[CallStatus] !== undefined) {
-            users[AssignedTo].statusCounts[CallStatus]++;
-            users[AssignedTo].statusCounts.totalCall++;
-          }
-        }
-        
-      }
-      
-
-      // Add the leader and their employees along with status counts
-      leadersWithEmployees.push({
-        leader: {
-          id: leader.EmployeeID,
-          name: `${leader.FirstName} ${leader.LastName}`,
-          position: leader.Position,
-        },
-        employees: employees.map((employee) => ({
-          employee: {
-            id: employee.EmployeeID,
-            name: `${employee.FirstName} ${employee.LastName}`,
-          },
-          statusCounts: { ...statusCounts },
-        })),
-      });
-
-      totalCallCount += statusCounts.totalCall;
-    }
-
-    const totalPage = Math.ceil(totalLeaders / pageSize);
-
+    // Send response
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Leaders and their employee data with call status counts retrieved successfully!",
-      data: leadersWithEmployees,
-      totalCallCount,
-      totalPage,
-      currentPage,
+      message: "Leaders and their employee data retrieved successfully!",
+      data: teamLeaders,
     });
   } catch (error) {
     console.error(error);
@@ -909,7 +819,6 @@ userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
     });
   }
 });
-
 
 
 userController.get("/getDepartmentDetails", async (req, res) => {
