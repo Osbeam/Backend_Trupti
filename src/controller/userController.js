@@ -654,13 +654,34 @@ userController.put("/editLogUser/:logId", auth, async (req, res) => {
 });
 
 
+// userController.get("/getTeamLeaders", auth, async (req, res) => {
+//   try {
+//     const data = await EmployeeInfo.find({Position:"TeamLeader"})
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Team Leaders list retrieved successfully!",
+//       data : data, 
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 userController.get("/getTeamLeaders", auth, async (req, res) => {
   try {
-    const data = await EmployeeInfo.find({Position:"TeamLeader"})
+    // Fetch team leaders, bosses, and managers
+    const roles = ["TeamLeader", "Boss", "Manager"];
+    const data = await EmployeeInfo.find({ Position: { $in: roles } });
+
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Team Leaders list retrieved successfully!",
-      data : data, 
+      message: "Team Leaders, Bosses, and Managers list retrieved successfully!",
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -669,6 +690,9 @@ userController.get("/getTeamLeaders", auth, async (req, res) => {
     });
   }
 });
+
+
+
 
 
 userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
