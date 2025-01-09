@@ -106,6 +106,7 @@ const employeeSchema = mongoose.Schema({
         enum: ['TeamLeader', 'Manager', 'Boss', 'None']
      },
      ManagedBy: {type:String, ref: "EmployeeInfo", default: null},
+     BranchLocation: {type:String, ref: "EmployeeInfo"}
 });
 
 employeeSchema.plugin(timestamps);
