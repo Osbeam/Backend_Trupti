@@ -105,6 +105,7 @@ const salaryIncomeSchema = mongoose.Schema({
         Settelement1Yr: { type: String }, 
         Settelement2Yr: { type: String }, 
     }],
+    // CreatedBy: { type: String, ref: 'EmployeeInfo' }
 });
 
 salaryIncomeSchema.plugin(timestamps);

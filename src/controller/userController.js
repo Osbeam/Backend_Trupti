@@ -842,6 +842,36 @@ userController.get("/getDepartmentDetails", async (req, res) => {
 });
 
 
+userController.post("/getTeamLeaderByDepartment", auth, async (req, res) => {
+  try {
+
+    console.log(req.body.departmentId)
+    const roles = ["TeamLeader"];
+    const data = await EmployeeInfo.find({ Position: { $in: roles }, Department:req.body.departmentId});
+    if(data.length==0){
+      const roles = ["Boss"];
+      const data = await EmployeeInfo.find({ Position: { $in: roles }});
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: "Team Leaders list retrieved successfully!",
+        data: data,
+      });
+      return
+    }
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Team Leaders list retrieved successfully!",
+      data: data,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 
 module.exports = userController;
