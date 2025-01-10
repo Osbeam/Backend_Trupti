@@ -61,7 +61,10 @@ const ProfessionalIncomeSchema = mongoose.Schema({
     },
     AccountNumber: { type: String },
     DateOfOpening: { type: Date },
-    BankAnalysis: { type: String },
+    BankAnalysis: [{
+        TentativeABB: { type: String }, 
+        TentativeTurnover: { type: String }, 
+    }],
     LeadId:{type: String },
     LeadDate:{type: String },
     SourcingChanel:{type: String },
