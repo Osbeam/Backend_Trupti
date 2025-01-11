@@ -105,11 +105,11 @@ const salaryIncomeSchema = mongoose.Schema({
         Settelement1Yr: { type: String }, 
         Settelement2Yr: { type: String }, 
     }],
-    UploadPhoto: { type: String },
-    UploadAadhar: { type: String },
-    UploadPan: { type: String },
-    Upload3MonthSalarySlip: { type: String },
-    UploadBankStatement: { type: String },
+    UploadPhoto: { type: [String] },
+    UploadAadhar: { type: [String] },
+    UploadPan: { type: [String] },
+    Upload3MonthSalarySlip: { type: [String] },
+    UploadBankStatement: { type: [String] },
     CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' },
 });
 

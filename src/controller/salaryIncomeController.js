@@ -13,74 +13,128 @@ const adminServices = require('../services/adminServices');
 
 
 
-// async function fetchLocations() {
-//   const apiUrl = 'https://api.data.gov.in/resource/9115b89c-7a80-4f54-9b06-21086e0f0bd7';
-//   const apiKey = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b';
-//   const format = 'json';
 
-
+// salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
 //   try {
-//     const response = await axios.get(`${apiUrl}?api-key=${apiKey}&format=${format}`);
-//     return response.data.records; // Assuming 'records' is the key containing location data
+//     const { id } = req.params;
+//     const additionalData = req.body;
+
+//     let existingData = null;
+
+//     if (id) {
+//       // Try to fetch data from Admin first
+//       existingData = await Admin.findById(id).lean();
+//       if (!existingData) {
+//         // If not found in Admin, fetch from BusinessIncome
+//         existingData = await BusinessIncome.findById(id).lean();
+//         if (!existingData) {
+//           // If not found in Admin, fetch from ProfessionalIncome
+//           existingData = await ProfessionalIncome.findById(id).lean();
+//           if (!existingData) {
+//             // If not found in Admin, fetch from LeadSchema
+//             existingData = await Lead.findById(id).lean();
+//           }
+//         }
+//       }
+//     }
+
+//     let newData = { ...additionalData };
+
+//     if (existingData) {
+//       // Combine the existing data with the additional data
+//       newData = {
+//         ...existingData,
+//         ...additionalData,
+//       };
+//     }
+
+//     // Check if a document exists in the SalaryIncome schema with the same ID
+//     let updatedSalaryIncome;
+//     if (id) {
+//       updatedSalaryIncome = await SalaryIncome.findById(id);
+//     }
+
+//     if (updatedSalaryIncome) {
+//       // Update the existing document
+//       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
+//     } else {
+//       // Create a new document
+//       newData._id = id; // Set the ID to the new document
+//       updatedSalaryIncome = new SalaryIncome(newData);
+//       await updatedSalaryIncome.save();
+//     }
+
+//     // Respond with the updated or created data
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Salary Income updated or created successfully!",
+//       data: updatedSalaryIncome,
+//     });
 //   } catch (error) {
-//     console.error('Error fetching locations:', error);
-//     return []; 
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
 //   }
-// }
+// });
 
 
 
-salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
+
+
+// Define the file fields for the schema
+const uploadFields = [
+  { name: "UploadPhoto", maxCount: 1 },
+  { name: "UploadAadhar", maxCount: 1 },
+  { name: "UploadPan", maxCount: 1 },
+  { name: "Upload3MonthSalarySlip", maxCount: 3 },  // Allow up to 3 files
+  { name: "UploadBankStatement", maxCount: 2 },
+];
+
+salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
   try {
     const { id } = req.params;
     const additionalData = req.body;
+    const files = req.files;
 
     let existingData = null;
 
     if (id) {
-      // Try to fetch data from Admin first
-      existingData = await Admin.findById(id).lean();
-      if (!existingData) {
-        // If not found in Admin, fetch from BusinessIncome
-        existingData = await BusinessIncome.findById(id).lean();
-        if (!existingData) {
-          // If not found in Admin, fetch from ProfessionalIncome
-          existingData = await ProfessionalIncome.findById(id).lean();
-          if (!existingData) {
-            // If not found in Admin, fetch from LeadSchema
-            existingData = await Lead.findById(id).lean();
-          }
-        }
-      }
+      existingData = await Admin.findById(id).lean() ||
+                     await BusinessIncome.findById(id).lean() ||
+                     await ProfessionalIncome.findById(id).lean() ||
+                     await Lead.findById(id).lean();
     }
 
     let newData = { ...additionalData };
 
-    if (existingData) {
-      // Combine the existing data with the additional data
-      newData = {
-        ...existingData,
-        ...additionalData,
-      };
+    if (files) {
+      // Map the uploaded files to the respective fields
+      Object.keys(files).forEach((key) => {
+        if (files[key] && files[key].length > 0) {
+          // Store multiple files as an array of paths for the respective field
+          newData[key] = files[key].map(file => file.path);
+        }
+      });
     }
 
-    // Check if a document exists in the SalaryIncome schema with the same ID
+    if (existingData) {
+      newData = { ...existingData, ...newData };
+    }
+
     let updatedSalaryIncome;
     if (id) {
       updatedSalaryIncome = await SalaryIncome.findById(id);
     }
 
     if (updatedSalaryIncome) {
-      // Update the existing document
       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
     } else {
-      // Create a new document
-      newData._id = id; // Set the ID to the new document
+      newData._id = id; // Set the ID if provided
       updatedSalaryIncome = new SalaryIncome(newData);
       await updatedSalaryIncome.save();
     }
 
-    // Respond with the updated or created data
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Salary Income updated or created successfully!",
@@ -93,6 +147,7 @@ salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
     });
   }
 });
+
 
 
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
@@ -178,17 +233,52 @@ salaryIncome.get('/getAllIncomeInfo', async (req, res) => {
 });
 
 
+// salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const salaryIncome = await SalaryIncome.find({CreatedBy:id});
+//     const professionalIncome = await ProfessionalIncome.find({CreatedBy:id});
+//     const businessIncome = await BusinessIncome.find({CreatedBy:id});
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Data retrieved successfully!",
+//       data: {salaryIncome, professionalIncome, businessIncome}
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const salaryIncome = await SalaryIncome.find({CreatedBy:id});
-    const professionalIncome = await ProfessionalIncome.find({CreatedBy:id});
-    const businessIncome = await BusinessIncome.find({CreatedBy:id});
+
+    // Fetch data from all collections
+    const salaryIncome = await SalaryIncome.find({ CreatedBy: id }).lean();
+    const professionalIncome = await ProfessionalIncome.find({ CreatedBy: id }).lean();
+    const businessIncome = await BusinessIncome.find({ CreatedBy: id }).lean();
+
+    let responseData = {};
+
+    // Return only the first non-empty array based on creation order
+    if (salaryIncome.length > 0) {
+      responseData = { salaryIncome };
+    } else if (professionalIncome.length > 0) {
+      responseData = { professionalIncome };
+    } else if (businessIncome.length > 0) {
+      responseData = { businessIncome };
+    }
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Data retrieved successfully!",
-      data: {salaryIncome, professionalIncome, businessIncome}
+      data: responseData
     });
   } catch (error) {
     console.log(error);

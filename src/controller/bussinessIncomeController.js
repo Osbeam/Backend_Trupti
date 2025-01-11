@@ -395,15 +395,86 @@ const omitTimestamps = (data) => {
   return rest;
 };
 
-bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
+// bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const additionalData = req.body;
+
+//     let interestedCustomerData = null;
+
+//     if (id) {
+//       // Try to fetch data from other collections
+//       interestedCustomerData = await SalaryIncome.findById(id).lean() ||
+//         await Admin.findById(id).lean() ||
+//         await ProfessionalIncome.findById(id).lean() ||
+//         await Lead.findById(id).lean();
+//     }
+
+//     let newData = { ...additionalData };
+
+//     if (interestedCustomerData) {
+//       // Merge data and exclude createdAt and updatedAt
+//       newData = {
+//         ...omitTimestamps(interestedCustomerData),
+//         ...omitTimestamps(additionalData),
+//       };
+//     }
+
+//     let updatedBussinessIncome;
+
+//     if (id) {
+//       updatedBussinessIncome = await BussinessIncome.findById(id);
+//     }
+
+//     if (updatedBussinessIncome) {
+//       // Update the document
+//       updatedBussinessIncome = await BussinessIncome.findByIdAndUpdate(
+//         id,
+//         omitTimestamps(newData), // Exclude timestamps
+//         { new: true }
+//       );
+//     } else {
+//       // Create a new document
+//       newData._id = id; // Assign the same ID if available
+//       updatedBussinessIncome = new BussinessIncome(omitTimestamps(newData));
+//       await updatedBussinessIncome.save();
+//     }
+
+//     // Respond with the updated or created data
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Business Income updated or created successfully!",
+//       data: updatedBussinessIncome,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
+
+const uploadFields = [
+  { name: "UploadPhoto", maxCount: 1 },
+  { name: "UploadAadhar", maxCount: 1 },
+  { name: "UploadPan", maxCount: 1 },
+  { name: "Upload3MonthSalarySlip", maxCount: 3 }, // Allow up to 3 files
+  { name: "UploadBankStatement", maxCount: 1 },
+];
+
+bussinessIncome.put("/updateOrCreateBussiness/:id?", imgUpload.fields(uploadFields), async (req, res) => {
   try {
     const { id } = req.params;
     const additionalData = req.body;
+    const files = req.files;
 
     let interestedCustomerData = null;
 
     if (id) {
-      // Try to fetch data from other collections
       interestedCustomerData = await SalaryIncome.findById(id).lean() ||
         await Admin.findById(id).lean() ||
         await ProfessionalIncome.findById(id).lean() ||
@@ -412,8 +483,17 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
 
     let newData = { ...additionalData };
 
+    if (files) {
+      // Map the uploaded files to the respective fields
+      Object.keys(files).forEach((key) => {
+        if (files[key] && files[key].length > 0) {
+          newData[key] = files[key].map((file) => file.path); // Store the file paths in an array
+        }
+      });
+    }
+
     if (interestedCustomerData) {
-      // Merge data and exclude createdAt and updatedAt
+      // Merge data and exclude timestamps
       newData = {
         ...omitTimestamps(interestedCustomerData),
         ...omitTimestamps(additionalData),
@@ -453,7 +533,6 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", async (req, res) => {
     });
   }
 });
-
 
 
 bussinessIncome.get("/getAllBusinessIncome", async (req, res) => {
