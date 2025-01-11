@@ -178,6 +178,27 @@ salaryIncome.get('/getAllIncomeInfo', async (req, res) => {
 });
 
 
+salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const salaryIncome = await SalaryIncome.find({CreatedBy:id});
+    const professionalIncome = await ProfessionalIncome.find({CreatedBy:id});
+    const businessIncome = await BusinessIncome.find({CreatedBy:id});
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Data retrieved successfully!",
+      data: {salaryIncome, professionalIncome, businessIncome}
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 
 module.exports = salaryIncome;

@@ -60,7 +60,7 @@ const ProfessionalIncomeSchema = mongoose.Schema({
         enum: ['Yes', 'No']  
     },
     AccountNumber: { type: String },
-    DateOfOpening: { type: Date },
+    DateOfOpening: { type: String },
     BankAnalysis: [{
         TentativeABB: { type: String }, 
         TentativeTurnover: { type: String }, 
@@ -124,6 +124,12 @@ const ProfessionalIncomeSchema = mongoose.Schema({
     }],
     LoanEligibility:{type: String },
     LoanStage:{type: String },
+    UploadPhoto: { type: String },
+    UploadAadhar: { type: String },
+    UploadPan: { type: String },
+    Upload2YearITR: { type: String },
+    UploadBankStatement: { type: String },
+    CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' },
 });
 
 ProfessionalIncomeSchema.plugin(timestamps);

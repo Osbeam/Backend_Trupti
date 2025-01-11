@@ -122,6 +122,12 @@ const bussinessIncomeSchema = mongoose.Schema({
     }],
     LoanEligibility:{type: String },
     LoanStage:{type: String },
+    UploadPhoto: { type: String },
+    UploadAadhar: { type: String },
+    UploadPan: { type: String },
+    Upload2YearITR: { type: String },
+    UploadBankStatement: { type: String },
+    CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' }
 });
 
 bussinessIncomeSchema.plugin(timestamps);
