@@ -320,6 +320,11 @@ const City = [
 ];
 
 
+const omitTimestamps = (data) => {
+  const { createdAt, updatedAt, ...rest } = data;
+  return rest;
+};
+
 // professionalIncome.put("/updateOrCreateProfession/:id?", async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -387,10 +392,6 @@ const City = [
 //     });
 //   }
 // });
-
-
-
-
 
 
 
@@ -476,8 +477,6 @@ professionalIncome.put("/updateOrCreateProfession/:id?", imgUpload.fields(upload
     });
   }
 });
-
-
 
 
 professionalIncome.put("/EditProfessionalIncomesData", async (req, res) => {

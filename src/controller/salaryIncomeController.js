@@ -262,5 +262,102 @@ salaryIncome.get('/getIncomeInfoByUser/:id', async (req, res) => {
 });
 
 
+// salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
+//   try {
+//     const customerId = req.params.customerId;
+
+//     if (!customerId) {
+//       return sendResponse(res, 400, "Failed", {
+//         message: "userId parameter is required",
+//       });
+//     }
+
+//     const salaryIncomes = await SalaryIncome.find({ _id: customerId }).lean();
+//     const businessIncomes = await BusinessIncome.find({ _id: customerId }).lean();
+//     const professionalIncomes = await ProfessionalIncome.find({ _id: customerId }).lean();
+
+//     const userIncomes = {
+//       salaryIncomes,
+//       businessIncomes,
+//       professionalIncomes,
+//     };
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Customer income retrieved successfully!",
+//       data: userIncomes,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
+salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
+  try {
+    const customerId = req.params.customerId;
+
+    if (!customerId) {
+      return sendResponse(res, 400, "Failed", {
+        message: "customerId parameter is required",
+      });
+    }
+
+    // Query each collection for documents with the given customerId
+    const salaryIncomePromise = SalaryIncome.find({ _id: customerId }).lean();
+    const businessIncomePromise = BusinessIncome.find({ _id: customerId }).lean();
+    const professionalIncomePromise = ProfessionalIncome.find({ _id: customerId }).lean();
+
+    // Await all promises simultaneously
+    const [salaryIncomes, businessIncomes, professionalIncomes] = await Promise.all([
+      salaryIncomePromise,
+      businessIncomePromise,
+      professionalIncomePromise,
+    ]);
+
+    // Determine the latest updatedAt for each category, defaulting to a minimal date if no documents are found
+    const lastUpdatedTimes = [
+      { type: 'salaryIncomes', updatedAt: salaryIncomes.length ? salaryIncomes[salaryIncomes.length - 1].updatedAt : new Date(0) },
+      { type: 'businessIncomes', updatedAt: businessIncomes.length ? businessIncomes[businessIncomes.length - 1].updatedAt : new Date(0) },
+      { type: 'professionalIncomes', updatedAt: professionalIncomes.length ? professionalIncomes[professionalIncomes.length - 1].updatedAt : new Date(0) }
+    ];
+
+    // Sort the categories by updatedAt in ascending order (earliest first)
+    lastUpdatedTimes.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+
+    // Prepare the response data, ordered by the sorted updatedAt times
+    const userIncomes = {};
+    lastUpdatedTimes.forEach(category => {
+      if (category.type === 'salaryIncomes' && salaryIncomes.length) {
+        userIncomes.salaryIncomes = salaryIncomes;
+      }
+      if (category.type === 'businessIncomes' && businessIncomes.length) {
+        userIncomes.businessIncomes = businessIncomes;
+      }
+      if (category.type === 'professionalIncomes' && professionalIncomes.length) {
+        userIncomes.professionalIncomes = professionalIncomes;
+      }
+    });
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "Customer income retrieved successfully!",
+      data: userIncomes,
+    });
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+
 
 module.exports = salaryIncome;

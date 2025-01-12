@@ -626,11 +626,13 @@ bussinessIncome.get("/GetUserIncomes/:userId", async (req, res) => {
 
     const salaryIncomes = await SalaryIncome.find({ _id: userId }).lean();
     const businessIncomes = await BussinessIncome.find({ _id: userId }).lean();
+    const professionalIncomes = await ProfessionalIncome.find({ _id: userId }).lean();
 
     const userIncomes = {
       userId,
       salaryIncomes,
       businessIncomes,
+      professionalIncomes,
     };
 
     sendResponse(res, 200, "Success", {
