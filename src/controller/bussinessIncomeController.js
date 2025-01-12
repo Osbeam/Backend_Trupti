@@ -462,7 +462,7 @@ const uploadFields = [
   { name: "UploadPhoto", maxCount: 1 },
   { name: "UploadAadhar", maxCount: 1 },
   { name: "UploadPan", maxCount: 1 },
-  { name: "Upload3MonthSalarySlip", maxCount: 3 }, // Allow up to 3 files
+  { name: "Upload2YearITR", maxCount: 3 }, // Allow up to 3 files
   { name: "UploadBankStatement", maxCount: 1 },
 ];
 

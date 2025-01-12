@@ -149,7 +149,6 @@ salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), a
 });
 
 
-
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
   try {
     // Extract pagination parameters from query
@@ -233,47 +232,20 @@ salaryIncome.get('/getAllIncomeInfo', async (req, res) => {
 });
 
 
-// salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const salaryIncome = await SalaryIncome.find({CreatedBy:id});
-//     const professionalIncome = await ProfessionalIncome.find({CreatedBy:id});
-//     const businessIncome = await BusinessIncome.find({CreatedBy:id});
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Data retrieved successfully!",
-//       data: {salaryIncome, professionalIncome, businessIncome}
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
+salaryIncome.get('/getIncomeInfoByUser/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Fetch data from all collections
-    const salaryIncome = await SalaryIncome.find({ CreatedBy: id }).lean();
-    const professionalIncome = await ProfessionalIncome.find({ CreatedBy: id }).lean();
-    const businessIncome = await BusinessIncome.find({ CreatedBy: id }).lean();
+    // Fetch the data from each collection
+    const salaryIncome = await SalaryIncome.find({ CreatedBy: id });
+    const professionalIncome = await ProfessionalIncome.find({ CreatedBy: id });
+    const businessIncome = await BusinessIncome.find({ CreatedBy: id });
 
-    let responseData = {};
-
-    // Return only the first non-empty array based on creation order
-    if (salaryIncome.length > 0) {
-      responseData = { salaryIncome };
-    } else if (professionalIncome.length > 0) {
-      responseData = { professionalIncome };
-    } else if (businessIncome.length > 0) {
-      responseData = { businessIncome };
-    }
+    // Build the response data, excluding empty arrays
+    const responseData = {};
+    if (salaryIncome.length > 0) responseData.salaryIncome = salaryIncome;
+    if (professionalIncome.length > 0) responseData.professionalIncome = professionalIncome;
+    if (businessIncome.length > 0) responseData.businessIncome = businessIncome;
 
     sendResponse(res, 200, "Success", {
       success: true,
@@ -283,11 +255,11 @@ salaryIncome.get('/getIncomeInfo/:id', async (req, res) => {
   } catch (error) {
     console.log(error);
     sendResponse(res, 500, "Failed", {
+      success: false,
       message: error.message || "Internal server error",
     });
   }
 });
-
 
 
 
