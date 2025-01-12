@@ -130,6 +130,14 @@ const ProfessionalIncomeSchema = mongoose.Schema({
     Upload2YearITR: { type: [String] },
     UploadBankStatement: { type: [String] },
     CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' },
+    AnotherSourceOfIncome:{
+        type: [String],
+        enum: ['Yes', 'No']
+    },
+    OtherSourceOfIncome:{
+        type: [String],
+        enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome', 'Other']
+    },
 });
 
 ProfessionalIncomeSchema.plugin(timestamps);
