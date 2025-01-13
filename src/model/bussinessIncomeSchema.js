@@ -125,8 +125,19 @@ const bussinessIncomeSchema = mongoose.Schema({
     UploadPhoto: { type: [String] },
     UploadAadhar: { type: [String] },
     UploadPan: { type: [String] },
-    Upload2YearITR: { type: [String] },
-    UploadBankStatement: { type: [String] },
+    UploadBankStatement6_12: { type: [String] },
+    CurrentAddressProof : { type: [String] }, 
+    PermanentAddressProof : { type: [String] }, 
+    RelationshipProof : { type: [String] }, 
+    BusinessRegistrationDocument  : { type: [String] }, 
+    BusinessVintageProof  : { type: [String] }, 
+    ITR1styear  : { type: [String] }, 
+    ITR2styear  : { type: [String] }, 
+    ITR3styear  : { type: [String] }, 
+    GstCertificate   : { type: [String] }, 
+    GSTR1_12Months   : { type: [String] }, 
+    GSTR3B12Months   : { type: [String] }, 
+    OfficeSetupPhoto   : { type: [String] }, 
     CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' }
 });
 

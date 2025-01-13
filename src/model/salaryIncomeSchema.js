@@ -109,8 +109,22 @@ const salaryIncomeSchema = mongoose.Schema({
     UploadAadhar: { type: [String] },
     UploadPan: { type: [String] },
     Upload3MonthSalarySlip: { type: [String] },
-    UploadBankStatement: { type: [String] },
+    UploadBankStatement3_6_12: { type: [String] },
+    AppointmentLetter : { type: [String] }, 
+    CompanyIdCard : { type: [String] }, 
+    SalarySlip1 : { type: [String] }, 
+    SalarySlip2 : { type: [String] }, 
+    SalarySlip3 : { type: [String] }, 
+    AppraisalLetter : { type: [String] }, 
+    PreviousCompanyRelievingLetter : { type: [String] }, 
+    AppraisalLetter : { type: [String] }, 
+    Form16_1 : { type: [String] }, 
+    Form16_2 : { type: [String] }, 
+    CurrentAddressProof : { type: [String] }, 
+    PermanentAddressProof : { type: [String] }, 
+    RelationshipProof : { type: [String] }, 
     CreatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeInfo' },
+
 });
 
 salaryIncomeSchema.plugin(timestamps);

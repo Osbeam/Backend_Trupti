@@ -22,6 +22,15 @@ const propertySchema = mongoose.Schema({
     SalesExecutive: { type: String },
     Priority: { type: String },
     PaymentType: { type: String },
+    SaleDeed: { type: [String] },
+    ChainAgreement : { type: [String] },
+    MutationOrExtract7_12 : { type: [String] },
+    Parcha: { type: [String] },
+    Khajana_PropertyTax: { type: [String] },
+    SanctionPlan: { type: [String] },
+    ElectricityBill: { type: [String] },
+    Quotation: { type: [String] },
+    DraftAgreement: { type: [String] }
 });
 
 propertySchema.plugin(timestamps);
