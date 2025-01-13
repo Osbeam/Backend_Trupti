@@ -333,7 +333,7 @@ const uploadFields = [
   { name: "UploadPhoto", maxCount: 1 },
   { name: "UploadAadhar", maxCount: 1 },
   { name: "UploadPan", maxCount: 1 },
-  { name: "Upload2YearITR", maxCount: 3 }, // Allow up to 3 files
+  { name: "UploadBankStatement6_12", maxCount: 3 },
   { name: "CurrentAddressProof", maxCount: 3 }, // Allow up to 3 files
   { name: "PermanentAddressProof", maxCount: 3 }, // Allow up to 3 files
   { name: "RelationshipProof", maxCount: 3 }, // Allow up to 3 files
@@ -342,10 +342,10 @@ const uploadFields = [
   { name: "ITR1styear", maxCount: 3 }, // Allow up to 3 files
   { name: "ITR2styear", maxCount: 3 }, // Allow up to 3 files
   { name: "ITR3styear", maxCount: 3 }, // Allow up to 3 files
+  { name: "GstCertificate", maxCount: 3 }, // Allow up to 3 files
   { name: "GSTR1_12Months", maxCount: 3 }, // Allow up to 3 files
   { name: "GSTR3B12Months", maxCount: 3 }, // Allow up to 3 files
   { name: "OfficeSetupPhoto", maxCount: 3 }, // Allow up to 3 files
-  { name: "UploadBankStatement6_12", maxCount: 3 }
 ];
 
 

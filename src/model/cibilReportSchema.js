@@ -7,8 +7,7 @@ const cibilReportSchema = mongoose.Schema({
     ListOfDocuments : {type: [String]},
     SanctionLette : {type: [String]},
     ForeclosureLetter : {type: [String]},
-    NOC : {type: [String]},
-    
+    NOC : {type: [String]}
 });
 
 cibilReportSchema.plugin(timestamps);

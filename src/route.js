@@ -15,6 +15,7 @@ const loanFormController = require("./controller/loanFormController");
 const propertyController = require("./controller/propertyController");
 const reportController = require("./controller/reportController");
 const branchController = require("./controller/branchController");
+const cibilReportController = require("./controller/cibilReportController");
 
 router.use("/user", userController);
 router.use("/department", departmentcontroller);
@@ -29,6 +30,7 @@ router.use("/loanForm", loanFormController);
 router.use("/propertyForm", propertyController);
 router.use("/report", reportController);
 router.use("/branch", branchController);
+router.use("/cibilReport", cibilReportController);
 
 
 
