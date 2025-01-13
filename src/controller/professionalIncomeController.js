@@ -325,83 +325,27 @@ const omitTimestamps = (data) => {
   return rest;
 };
 
-// professionalIncome.put("/updateOrCreateProfession/:id?", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const additionalData = req.body;
-
-//     let interestedCustomerData = null;
-
-//     if (id) {
-//       // Try to fetch data from SalaryIncome first
-//       interestedCustomerData = await Admin.findById(id).lean();
-//       if (!interestedCustomerData) {
-//         // If not found in SalaryIncome, fetch from Admin
-//         interestedCustomerData = await SalaryIncome.findById(id).lean();
-//         if (!interestedCustomerData) {
-//           // If not found in Admin, fetch from BusinessIncome
-//           interestedCustomerData = await BusinessIncome.findById(id).lean();
-//           if (!interestedCustomerData) {
-//             // If not found in Admin, fetch from LeadSchema
-//             interestedCustomerData = await Lead.findById(id).lean();
-//           }
-//         }
-//       }
-//     }
-
-//     let newData = { ...additionalData };
-
-//     if (interestedCustomerData) {
-//       // Combine the interested customer data with the additional data
-//       newData = {
-//         ...interestedCustomerData,
-//         ...additionalData,
-//       };
-//     }
-
-//     // Check if a document exists in the ProfessionalIncome schema with the same ID
-//     let updatedProfessionalIncome;
-//     if (id) {
-//       updatedProfessionalIncome = await ProfessionalIncome.findById(id);
-//     }
-
-//     if (updatedProfessionalIncome) {
-//       // Update the existing document
-//       updatedProfessionalIncome = await ProfessionalIncome.findByIdAndUpdate(
-//         id,
-//         newData,
-//         { new: true }
-//       );
-//     } else {
-//       // Create a new document
-//       newData._id = id; // Set the ID to the new document
-//       updatedProfessionalIncome = new ProfessionalIncome(newData);
-//       await updatedProfessionalIncome.save();
-//     }
-
-//     // Respond with the updated or created data
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Professional Income updated or created successfully!",
-//       data: updatedProfessionalIncome,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
 
 
 
 const uploadFields = [
-  { name: "UploadPhoto", maxCount: 1 },
-  { name: "UploadAadhar", maxCount: 1 },
-  { name: "UploadPan", maxCount: 1 },
+  { name: "UploadPhoto", maxCount: 3 },
+  { name: "UploadAadhar", maxCount: 3 },
+  { name: "UploadPan", maxCount: 3 },
   { name: "Upload2YearITR", maxCount: 3 }, // Allow up to 3 files
-  { name: "UploadBankStatement", maxCount: 1 },
+  { name: "UploadBankStatement", maxCount: 3 },
+  { name: "CurrentAddressProof", maxCount: 3 },
+  { name: "PermanentAddressProof", maxCount: 3 },
+  { name: "RelationshipProof", maxCount: 3 },
+  { name: "BusinessRegistrationDocument", maxCount: 3 },
+  { name: "BusinessVintageProof", maxCount: 3 },
+  { name: "ITR1styear", maxCount: 3 },
+  { name: "ITR2styear", maxCount: 3 },
+  { name: "ITR3styear", maxCount: 3 },
+  { name: "GstCertificate", maxCount: 3 },
+  { name: "GSTR1_12Months", maxCount: 3 },
+  { name: "GSTR3B12Months", maxCount: 3 },
+  { name: "OfficeSetupPhoto", maxCount: 3 }
 ];
 
 professionalIncome.put("/updateOrCreateProfession/:id?", imgUpload.fields(uploadFields), async (req, res) => {

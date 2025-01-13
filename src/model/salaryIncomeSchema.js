@@ -117,7 +117,6 @@ const salaryIncomeSchema = mongoose.Schema({
     SalarySlip3 : { type: [String] }, 
     AppraisalLetter : { type: [String] }, 
     PreviousCompanyRelievingLetter : { type: [String] }, 
-    AppraisalLetter : { type: [String] }, 
     Form16_1 : { type: [String] }, 
     Form16_2 : { type: [String] }, 
     CurrentAddressProof : { type: [String] }, 

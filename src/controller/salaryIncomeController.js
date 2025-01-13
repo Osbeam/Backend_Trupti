@@ -14,73 +14,6 @@ const adminServices = require('../services/adminServices');
 
 
 
-// salaryIncome.put("/updateOrCreateSalary/:id?", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const additionalData = req.body;
-
-//     let existingData = null;
-
-//     if (id) {
-//       // Try to fetch data from Admin first
-//       existingData = await Admin.findById(id).lean();
-//       if (!existingData) {
-//         // If not found in Admin, fetch from BusinessIncome
-//         existingData = await BusinessIncome.findById(id).lean();
-//         if (!existingData) {
-//           // If not found in Admin, fetch from ProfessionalIncome
-//           existingData = await ProfessionalIncome.findById(id).lean();
-//           if (!existingData) {
-//             // If not found in Admin, fetch from LeadSchema
-//             existingData = await Lead.findById(id).lean();
-//           }
-//         }
-//       }
-//     }
-
-//     let newData = { ...additionalData };
-
-//     if (existingData) {
-//       // Combine the existing data with the additional data
-//       newData = {
-//         ...existingData,
-//         ...additionalData,
-//       };
-//     }
-
-//     // Check if a document exists in the SalaryIncome schema with the same ID
-//     let updatedSalaryIncome;
-//     if (id) {
-//       updatedSalaryIncome = await SalaryIncome.findById(id);
-//     }
-
-//     if (updatedSalaryIncome) {
-//       // Update the existing document
-//       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
-//     } else {
-//       // Create a new document
-//       newData._id = id; // Set the ID to the new document
-//       updatedSalaryIncome = new SalaryIncome(newData);
-//       await updatedSalaryIncome.save();
-//     }
-
-//     // Respond with the updated or created data
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Salary Income updated or created successfully!",
-//       data: updatedSalaryIncome,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
-
-
 
 // Define the file fields for the schema
 const uploadFields = [
@@ -88,8 +21,21 @@ const uploadFields = [
   { name: "UploadAadhar", maxCount: 1 },
   { name: "UploadPan", maxCount: 1 },
   { name: "Upload3MonthSalarySlip", maxCount: 3 },  // Allow up to 3 files
-  { name: "UploadBankStatement", maxCount: 2 },
+  { name: "UploadBankStatement3_6_12", maxCount: 3 },  // Allow up to 3 files
+  { name: "AppointmentLetter", maxCount: 3 },  // Allow up to 3 files
+  { name: "CompanyIdCard", maxCount: 3 },  // Allow up to 3 files
+  { name: "SalarySlip1", maxCount: 3 },  // Allow up to 3 files
+  { name: "SalarySlip2", maxCount: 3 },  // Allow up to 3 files
+  { name: "SalarySlip3", maxCount: 3 },  // Allow up to 3 files
+  { name: "AppraisalLetter", maxCount: 3 },  // Allow up to 3 files
+  { name: "PreviousCompanyRelievingLetter", maxCount: 3 },  // Allow up to 3 files
+  { name: "Form16_1", maxCount: 3 },  // Allow up to 3 files
+  { name: "Form16_2", maxCount: 3 },  // Allow up to 3 files
+  { name: "CurrentAddressProof", maxCount: 3 },  // Allow up to 3 files
+  { name: "PermanentAddressProof", maxCount: 3 },  // Allow up to 3 files
+  { name: "RelationshipProof", maxCount: 2 },
 ];
+
 
 salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
   try {
@@ -260,42 +206,6 @@ salaryIncome.get('/getIncomeInfoByUser/:id', async (req, res) => {
     });
   }
 });
-
-
-// salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
-//   try {
-//     const customerId = req.params.customerId;
-
-//     if (!customerId) {
-//       return sendResponse(res, 400, "Failed", {
-//         message: "userId parameter is required",
-//       });
-//     }
-
-//     const salaryIncomes = await SalaryIncome.find({ _id: customerId }).lean();
-//     const businessIncomes = await BusinessIncome.find({ _id: customerId }).lean();
-//     const professionalIncomes = await ProfessionalIncome.find({ _id: customerId }).lean();
-
-//     const userIncomes = {
-//       salaryIncomes,
-//       businessIncomes,
-//       professionalIncomes,
-//     };
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Customer income retrieved successfully!",
-//       data: userIncomes,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
 
 
 salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
