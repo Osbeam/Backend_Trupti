@@ -13,7 +13,10 @@ const adminServices = require('../services/adminServices');
 
 
 
-
+const omitTimestamps = (data) => {
+  const { createdAt, updatedAt, ...rest } = data;
+  return rest;
+};
 
 // Define the file fields for the schema
 const uploadFields = [
@@ -35,6 +38,67 @@ const uploadFields = [
   { name: "PermanentAddressProof", maxCount: 3 },  // Allow up to 3 files
   { name: "RelationshipProof", maxCount: 2 },
 ];
+
+
+// salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const additionalData = req.body;
+//     const files = req.files;
+
+//     let existingData = null;
+
+//     if (id) {
+//       existingData = await Admin.findById(id).lean() ||
+//                      await BusinessIncome.findById(id).lean() ||
+//                      await ProfessionalIncome.findById(id).lean() ||
+//                      await Lead.findById(id).lean();
+//     }
+
+//     let newData = { ...additionalData };
+
+//     if (files) {
+//       // Map the uploaded files to the respective fields
+//       Object.keys(files).forEach((key) => {
+//         if (files[key] && files[key].length > 0) {
+//           // Store multiple files as an array of paths for the respective field
+//           newData[key] = files[key].map(file => file.path);
+//         }
+//       });
+//     }
+
+//     if (existingData) {
+//       newData = { ...existingData, ...newData };
+//     }
+
+//     let updatedSalaryIncome;
+//     if (id) {
+//       updatedSalaryIncome = await SalaryIncome.findById(id);
+//     }
+
+//     if (updatedSalaryIncome) {
+//       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
+//     } else {
+//       newData._id = id; // Set the ID if provided
+//       updatedSalaryIncome = new SalaryIncome(newData);
+//       await updatedSalaryIncome.save();
+//     }
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Salary Income updated or created successfully!",
+//       data: updatedSalaryIncome,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
 
 
 salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
@@ -65,7 +129,11 @@ salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), a
     }
 
     if (existingData) {
-      newData = { ...existingData, ...newData };
+      // Merge data and exclude timestamps
+      newData = {
+        ...omitTimestamps(existingData),
+        ...omitTimestamps(newData),
+      };
     }
 
     let updatedSalaryIncome;
@@ -74,10 +142,12 @@ salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), a
     }
 
     if (updatedSalaryIncome) {
-      updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
+      // Update the document
+      updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, omitTimestamps(newData), { new: true });
     } else {
+      // Create a new document
       newData._id = id; // Set the ID if provided
-      updatedSalaryIncome = new SalaryIncome(newData);
+      updatedSalaryIncome = new SalaryIncome(omitTimestamps(newData));
       await updatedSalaryIncome.save();
     }
 
@@ -93,6 +163,12 @@ salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), a
     });
   }
 });
+
+
+
+
+
+
 
 
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
