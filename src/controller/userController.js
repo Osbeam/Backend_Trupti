@@ -52,60 +52,6 @@ const uploadimg = imgUpload.fields([
 ]);
 
 
-// userController.post('/employeeInfo', uploadimg, async (req, res) => {
-//   try {
-//     // Check if the email or mobile number already exists in the database
-//     const existingEmployee = await EmployeeInfo.findOne({
-//       $or: [{ EmailId: req.body.EmailId }, { MobileNumber: req.body.MobileNumber }]
-//     });
-
-//     if (existingEmployee) {
-//       // If employee already exists with the same email or mobile number, send a response indicating the conflict
-//       return res.status(409).send({
-//         success: false,
-//         message: "Email or mobile number already exists"
-//       });
-//     }
-
-//     // Prepare employee data
-//     const employeeData = { ...req.body };
-
-//     // Generate Employee ID
-//     const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
-//     employeeData.EmployeeID = employeeID;
-//     console.log(`Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`);
-    
-
-//     // Add the document paths to the employee data if files were uploaded
-//     if (req.files) {
-//       if (req.files.PanCard) employeeData.PanCard = req.files.PanCard[0].path;
-//       if (req.files.AadharCard) employeeData.AadharCard = req.files.AadharCard[0].path;
-//       if (req.files.Photo) employeeData.Photo = req.files.Photo[0].path;
-//       if (req.files.AddressProof) employeeData.AddressProof = req.files.AddressProof[0].path;
-//       if (req.files.HighestQuaCertificate) employeeData.HighestQuaCertificate = req.files.HighestQuaCertificate[0].path;
-//       if (req.files.LastComRellievingLetter) employeeData.LastComRellievingLetter = req.files.LastComRellievingLetter[0].path;
-//       if (req.files.BankDetails) employeeData.BankDetails = req.files.BankDetails[0].path;
-//     }
-
-//     // Create a new employee record
-//     const employeeCreated = new EmployeeInfo(employeeData);
-//     await employeeCreated.save();
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Employee Registered successfully!",
-//       employeeData: employeeCreated
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({
-//       success: false,
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
-
 
 userController.post('/employeeInfo', uploadimg, async (req, res) => {
   try {
@@ -251,28 +197,6 @@ userController.put("/updateEmployeeData", async (req, res) => {
     });
   }
 });
-
-
-// userController.get("/getEmployee", auth, async (req, res) => {
-//   try {
-//     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-//     const pageSize = parseInt(req.query.pageSize) || 10; 
-//     const data = await userServices.getEmployee(currentPage, pageSize);
-//     const userCount = await EmployeeInfo.countDocuments();
-//     const totalPage = Math.ceil(userCount/10);
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "All Employee list retrieved successfully!",
-//       data: data, userCount, totalPage, currentPage
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
-
 
 
 userController.get("/getEmployee", auth, async (req, res) => {

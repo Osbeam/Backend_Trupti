@@ -99,8 +99,6 @@ const uploadFields = [
 
 
 
-
-
 salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
   try {
     const { id } = req.params;
@@ -163,12 +161,6 @@ salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), a
     });
   }
 });
-
-
-
-
-
-
 
 
 salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
