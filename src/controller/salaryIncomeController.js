@@ -293,7 +293,6 @@ salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
 
 
 salaryIncome.put('/updateIncome/:id', imgUpload.fields([
-  // Array for file fields (common fields across different income types)
   { name: "UploadPhoto", maxCount: 1 },
   { name: "UploadAadhar", maxCount: 1 },
   { name: "UploadPan", maxCount: 1 },
@@ -323,24 +322,38 @@ salaryIncome.put('/updateIncome/:id', imgUpload.fields([
   { name: "GSTR3B12Months", maxCount: 3 },
   { name: "OfficeSetupPhoto", maxCount: 3 }
 ]), async (req, res) => {
-  const { id } = req.params; // Document ID to search
+  const { id } = req.params; // Document ID from URL
+  const { IncomeType } = req.body; // IncomeType from request body
   const updateData = req.body; // Data to update from form-data
   const files = req.files; // All uploaded files
 
+  // Validate the presence of incomeType and id
+  if (!IncomeType) {
+    return sendResponse(res, 400, 'Failed', {
+      success: false,
+      message: 'IncomeType must be provided.',
+    });
+  }
+
   try {
-    // Define the schemas and their image field names
+    // Define the schemas and their income types
     const schemas = [
-      { model: SalaryIncome, incomeType: 'SalaryIncome' },
-      { model: ProfessionalIncome, incomeType: 'ProfessionalIncome' },
-      { model: BusinessIncome, incomeType: 'BusinessIncome' }
+      { model: SalaryIncome, IncomeType: 'SalaryIncome' },
+      { model: ProfessionalIncome, IncomeType: 'ProfessionalIncome' },
+      { model: BusinessIncome, IncomeType: 'BusinessIncome' }
     ];
 
     let updatedDocument = null;
 
     // Loop through schemas to find and update the document
-    for (const { model, incomeType } of schemas) {
+    for (const { model, IncomeType: schemaIncomeType } of schemas) {
+      // Check if the incomeType matches
+      if (IncomeType !== schemaIncomeType) {
+        continue; // Skip if incomeType doesn't match the schema
+      }
+
       // Find document by ID and IncomeType
-      const existingDocument = await model.findOne({ _id: id, IncomeType: incomeType });
+      const existingDocument = await model.findOne({ _id: id, IncomeType: schemaIncomeType });
 
       if (existingDocument) {
         // Dynamically iterate over each file field name
@@ -361,7 +374,7 @@ salaryIncome.put('/updateIncome/:id', imgUpload.fields([
     if (!updatedDocument) {
       return sendResponse(res, 404, 'Failed', {
         success: false,
-        message: `No document found with ID: ${id}`,
+        message: `No document found with ID: ${id} and IncomeType: ${IncomeType}`,
       });
     }
 
