@@ -63,7 +63,7 @@ const bussinessIncomeSchema = mongoose.Schema({
         type: [String],
         enum: ['Yes', 'No']  
     },
-    AnotherSourceOfIncome:{
+      AnotherSourceOfIncome:{
         type: [String],
         enum: ['Yes', 'No']
     },

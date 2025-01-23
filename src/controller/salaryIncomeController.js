@@ -6,8 +6,8 @@ require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
 const imgUpload = require("../utils/imageUpload");
 const SalaryIncome = require('../model/salaryIncomeSchema'); 
 const ProfessionalIncome = require('../model/professionalIncomeSchema'); 
-const Lead = require('../model/leadSchema'); 
 const BusinessIncome = require('../model/bussinessIncomeSchema'); 
+const Lead = require('../model/leadSchema'); 
 const Admin = require('../model/adminSchema'); 
 const adminServices = require('../services/adminServices'); 
 
@@ -38,64 +38,6 @@ const uploadFields = [
   { name: "PermanentAddressProof", maxCount: 3 },  // Allow up to 3 files
   { name: "RelationshipProof", maxCount: 2 },
 ];
-
-
-// salaryIncome.put("/updateOrCreateSalary/:id?", imgUpload.fields(uploadFields), async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const additionalData = req.body;
-//     const files = req.files;
-
-//     let existingData = null;
-
-//     if (id) {
-//       existingData = await Admin.findById(id).lean() ||
-//                      await BusinessIncome.findById(id).lean() ||
-//                      await ProfessionalIncome.findById(id).lean() ||
-//                      await Lead.findById(id).lean();
-//     }
-
-//     let newData = { ...additionalData };
-
-//     if (files) {
-//       // Map the uploaded files to the respective fields
-//       Object.keys(files).forEach((key) => {
-//         if (files[key] && files[key].length > 0) {
-//           // Store multiple files as an array of paths for the respective field
-//           newData[key] = files[key].map(file => file.path);
-//         }
-//       });
-//     }
-
-//     if (existingData) {
-//       newData = { ...existingData, ...newData };
-//     }
-
-//     let updatedSalaryIncome;
-//     if (id) {
-//       updatedSalaryIncome = await SalaryIncome.findById(id);
-//     }
-
-//     if (updatedSalaryIncome) {
-//       updatedSalaryIncome = await SalaryIncome.findByIdAndUpdate(id, newData, { new: true });
-//     } else {
-//       newData._id = id; // Set the ID if provided
-//       updatedSalaryIncome = new SalaryIncome(newData);
-//       await updatedSalaryIncome.save();
-//     }
-
-//     sendResponse(res, 200, "Success", {
-//       success: true,
-//       message: "Salary Income updated or created successfully!",
-//       data: updatedSalaryIncome,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     sendResponse(res, 500, "Failed", {
-//       message: error.message || "Internal server error",
-//     });
-//   }
-// });
 
 
 
@@ -335,6 +277,96 @@ salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
   }
 });
 
+
+
+salaryIncome.put('/updateIncome/:id', imgUpload.fields([
+  // Array for file fields (common fields across different income types)
+  { name: "UploadPhoto", maxCount: 1 },
+  { name: "UploadAadhar", maxCount: 1 },
+  { name: "UploadPan", maxCount: 1 },
+  { name: "Upload3MonthSalarySlip", maxCount: 3 },
+  { name: "UploadBankStatement3_6_12", maxCount: 3 },
+  { name: "AppointmentLetter", maxCount: 3 },
+  { name: "CompanyIdCard", maxCount: 3 },
+  { name: "SalarySlip1", maxCount: 3 },
+  { name: "SalarySlip2", maxCount: 3 },
+  { name: "SalarySlip3", maxCount: 3 },
+  { name: "AppraisalLetter", maxCount: 3 },
+  { name: "PreviousCompanyRelievingLetter", maxCount: 3 },
+  { name: "Form16_1", maxCount: 3 },
+  { name: "Form16_2", maxCount: 3 },
+  { name: "CurrentAddressProof", maxCount: 3 },
+  { name: "PermanentAddressProof", maxCount: 3 },
+  { name: "RelationshipProof", maxCount: 2 },
+
+  // Business income specific fields
+  { name: "BusinessRegistrationDocument", maxCount: 3 },
+  { name: "BusinessVintageProof", maxCount: 3 },
+  { name: "ITR1styear", maxCount: 3 },
+  { name: "ITR2styear", maxCount: 3 },
+  { name: "ITR3styear", maxCount: 3 },
+  { name: "GstCertificate", maxCount: 3 },
+  { name: "GSTR1_12Months", maxCount: 3 },
+  { name: "GSTR3B12Months", maxCount: 3 },
+  { name: "OfficeSetupPhoto", maxCount: 3 }
+]), async (req, res) => {
+  const { id } = req.params; // Document ID to search
+  const updateData = req.body; // Data to update from form-data
+  const files = req.files; // All uploaded files
+
+  try {
+    // Define the schemas and their image field names
+    const schemas = [
+      { model: SalaryIncome, incomeType: 'SalaryIncome' },
+      { model: ProfessionalIncome, incomeType: 'ProfessionalIncome' },
+      { model: BusinessIncome, incomeType: 'BusinessIncome' }
+    ];
+
+    let updatedDocument = null;
+
+    // Loop through schemas to find and update the document
+    for (const { model, incomeType } of schemas) {
+      // Find document by ID and IncomeType
+      const existingDocument = await model.findOne({ _id: id, IncomeType: incomeType });
+
+      if (existingDocument) {
+        // Dynamically iterate over each file field name
+        for (const field of Object.keys(files)) {
+          // If files for this field are present, map them to the corresponding field in the document
+          if (files[field]) {
+            updateData[field] = files[field].map(file => file.path);
+          }
+        }
+
+        // Update the document with the new data
+        updatedDocument = await model.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+        break; // Exit loop after updating the first matching document
+      }
+    }
+
+    // If no document is found, return 404
+    if (!updatedDocument) {
+      return sendResponse(res, 404, 'Failed', {
+        success: false,
+        message: `No document found with ID: ${id}`,
+      });
+    }
+
+    // Return success response with updated document
+    return sendResponse(res, 200, 'Success', {
+      success: true,
+      message: 'Document updated successfully!',
+      data: updatedDocument,
+    });
+  } catch (error) {
+    // Handle errors
+    return sendResponse(res, 500, 'Failed', {
+      success: false,
+      message: 'An error occurred while updating the document.',
+      error: error.message,
+    });
+  }
+});
 
 
 
