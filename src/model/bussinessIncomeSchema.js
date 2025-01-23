@@ -63,6 +63,14 @@ const bussinessIncomeSchema = mongoose.Schema({
         type: [String],
         enum: ['Yes', 'No']  
     },
+    AnotherSourceOfIncome:{
+        type: [String],
+        enum: ['Yes', 'No']
+    },
+    OtherSourceOfIncome:{
+        type: [String],
+        enum: ['BusinessIncome', 'ProfessionalIncome', 'SalaryIncome', 'Other']
+    },
     LeadId:{type: String },
     LeadDate:{type: String },
     SourcingChanel:{type: String },
