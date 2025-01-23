@@ -14,6 +14,11 @@ exports.updateSalaryIncome = async (id, updatedData) => {
 
 
 
-exports.updateData = async (filter, update)=> {
-  return await SalaryIncome.updateOne(filter, update, { new: true });
+// exports.updateData = async (filter, update)=> {
+//   return await SalaryIncome.updateOne(filter, update, { new: true });
+// };
+
+
+exports.updateData = async (filter, update) => {
+  return await SalaryIncome.updateOne(filter, { $set: update }, { new: true });
 };

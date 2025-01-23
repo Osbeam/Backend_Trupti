@@ -143,9 +143,23 @@ salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
 });
 
 
-salaryIncome.put("/EditSalaryData", async (req, res) => {
+salaryIncome.put("/EditSalaryData", imgUpload.fields(uploadFields), async (req, res) => {
   try {
-    const data = await salaryServices.updateData({ _id: req.body._id }, req.body);
+    const { _id, ...updateData } = req.body;  // Extract _id from body to use for filtering
+
+    // Handle file uploads - If files are uploaded, map them to fields in updateData
+    const files = req.files;  // Get the uploaded files
+
+    if (files) {
+      // Loop through the files and add them to the updateData object
+      for (let uploadFields in files) {
+        updateData[uploadFields] = files[uploadFields].map(file => file.path);  // Storing file paths
+      }
+    }
+
+    // Call the service method to update the data
+    const data = await salaryServices.updateData({ _id }, updateData);
+
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Salary Updated successfully!",
@@ -276,7 +290,6 @@ salaryIncome.get("/GetCustomerIncome/:customerId", async (req, res) => {
     });
   }
 });
-
 
 
 salaryIncome.put('/updateIncome/:id', imgUpload.fields([
