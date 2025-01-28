@@ -298,6 +298,7 @@ salaryIncome.put('/updateIncome/:id', imgUpload.fields([
   { name: "UploadPan", maxCount: 1 },
   { name: "Upload3MonthSalarySlip", maxCount: 3 },
   { name: "UploadBankStatement3_6_12", maxCount: 3 },
+  { name: "UploadBankStatement6_12", maxCount: 3 },
   { name: "AppointmentLetter", maxCount: 3 },
   { name: "CompanyIdCard", maxCount: 3 },
   { name: "SalarySlip1", maxCount: 3 },
