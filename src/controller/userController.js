@@ -281,21 +281,70 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
 });
 
 
+// userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async (req, res) => {
+//   try {
+//     // Process uploaded images and build the photoArray
+//     const photoArray = req.files.map((file) => file.path);
+
+//     const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
+//     const currentTime = new Date();
+//     console.log("Local Time: ", localTime);
+
+//     // Create a new log entry in the database
+//     const userLogData = {
+//       userId: req.params.userId, // Retrieve userId from URL parameter
+//       inTimeImage: photoArray[0], // Assuming the first image is the source image
+//       // inTime: new Date(),
+//       inTime: localTime,
+//       locationStatus 
+//     };
+
+//     const logCreated = await LogUser.create(userLogData);
+
+//     // Fetch user data dynamically based on userId
+//     const userData = await EmployeeInfo.findById(req.params.userId); // Use the userId from URL parameter
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "User checkin successfully",
+//       user: logCreated
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     sendResponse(res, 500, "Failed", {
+//       success: false,
+//       message: error.message || "Internal server error"
+//     });
+//   }
+// });
+
+
+
+
 userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async (req, res) => {
   try {
     // Process uploaded images and build the photoArray
     const photoArray = req.files.map((file) => file.path);
 
     const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
-    const currentTime = new Date();
     console.log("Local Time: ", localTime);
+
+    // Extract locationStatus from req.body (make sure it's sent in the request)
+    const { locationStatus } = req.body; 
+
+    if (!locationStatus) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "locationStatus is required"
+      });
+    }
 
     // Create a new log entry in the database
     const userLogData = {
       userId: req.params.userId, // Retrieve userId from URL parameter
       inTimeImage: photoArray[0], // Assuming the first image is the source image
-      // inTime: new Date(),
       inTime: localTime,
+      locationStatus // Now correctly defined
     };
 
     const logCreated = await LogUser.create(userLogData);
@@ -305,7 +354,7 @@ userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async
 
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "User checkin successfully",
+      message: "User check-in successfully",
       user: logCreated
     });
   } catch (error) {

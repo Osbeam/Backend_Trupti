@@ -8,6 +8,7 @@ const logUserSchema = mongoose.Schema({
     inTime: { type: String },
     outTime: { type: String },
     totalHours: { type: String },
+    locationStatus: { type: String },
     approved: {type: Boolean, default: false},
     isPresent: {type: Boolean, default: false},
     isHrApproved: {type: Boolean, default: false},
