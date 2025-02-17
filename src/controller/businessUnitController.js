@@ -192,6 +192,7 @@ businessUnitController.post('/create', async (req, res) => {
         const businessUnitCreated = await BusinessUnit.create(businessData);
 
         sendResponse(res, 200, "Success", {
+        
             success: true,
             message: "Business Unit created successfully!",
             businessData: businessUnitCreated
