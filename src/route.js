@@ -17,6 +17,7 @@ const reportController = require("./controller/reportController");
 const branchController = require("./controller/branchController");
 const businessUnitController = require("./controller/businessUnitController");
 const cibilReportController = require("./controller/cibilReportController");
+const callingDataController = require("./controller/callingDataController");
 
 router.use("/user", userController);
 router.use("/department", departmentcontroller);
@@ -33,6 +34,7 @@ router.use("/report", reportController);
 router.use("/branch", branchController);
 router.use("/businessUnit", businessUnitController);
 router.use("/cibilReport", cibilReportController);
+router.use("/cpCalling", callingDataController);
 
 
 

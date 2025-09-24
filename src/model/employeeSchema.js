@@ -104,7 +104,7 @@ const employeeSchema = mongoose.Schema({
     SalaryMonth: { type: Date },
     Role: {
         type: [String],
-        enum: ['Admin', 'HR', 'Other', 'TeleCalling']
+        enum: ['Admin', 'HR', 'Other', 'TeleCalling', 'ChannelPartner']
     },
     Position: { 
         type: [String],

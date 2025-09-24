@@ -10,61 +10,70 @@ const Admin = require("../model/adminSchema");
 const EmployeeInfo = require("../model/employeeSchema");
 const { sendResponse } = require("../utils/common");
 require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
-const imgUpload = require("../utils/imageUpload")
-const jwt = require('jsonwebtoken');
-const moment = require('moment-timezone'); 
-const auth = require('../utils/auth');
-
-
-
+const imgUpload = require("../utils/imageUpload");
+const jwt = require("jsonwebtoken");
+const moment = require("moment-timezone");
+const auth = require("../utils/auth");
+const cron = require("../utils/autoCheckout");
 
 const setemployeeID = (number) => {
   let code = number.toString(); // Convert the number to a string
   while (code.length < 3) {
-    code = '0' + code; // Prepend '0' until the string is at least 3 characters long
+    code = "0" + code; // Prepend '0' until the string is at least 3 characters long
   }
   // console.log(number)
   return code;
 };
 
-
 // Function to generate a random employee ID consisting of only numbers
-async function generateEmployeeID(departmentId, subDepartmentId, designationId)  {
-  console.log("hello", departmentId)
-  let employeeID = ''
-  let employeeNumber = await EmployeeInfo.countDocuments({Department:departmentId, SubDepartment:subDepartmentId, Designation:designationId});
-  let departmentCode = await Department.findOne({_id:departmentId})
-  let subdepartmentCode = await SubDepartment.findOne({_id:subDepartmentId})
-  let designationCode = await Designation.findOne({_id:designationId})
-   employeeID = departmentCode.code+subdepartmentCode.code+designationCode.code+setemployeeID(++employeeNumber)
-   return  employeeID;
+async function generateEmployeeID(
+  departmentId,
+  subDepartmentId,
+  designationId
+) {
+  console.log("hello", departmentId);
+  let employeeID = "";
+  let employeeNumber = await EmployeeInfo.countDocuments({
+    Department: departmentId,
+    SubDepartment: subDepartmentId,
+    Designation: designationId,
+  });
+  let departmentCode = await Department.findOne({ _id: departmentId });
+  let subdepartmentCode = await SubDepartment.findOne({ _id: subDepartmentId });
+  let designationCode = await Designation.findOne({ _id: designationId });
+  employeeID =
+    departmentCode.code +
+    subdepartmentCode.code +
+    designationCode.code +
+    setemployeeID(++employeeNumber);
+  return employeeID;
 }
 
-
 const uploadimg = imgUpload.fields([
-  { name: 'PanCard', maxCount: 1 },
-  { name: 'AadharCard', maxCount: 1 },
-  { name: 'Photo', maxCount: 1 },
-  { name: 'AddressProof', maxCount: 1 },
-  { name: 'HighestQuaCertificate', maxCount: 1 },
-  { name: 'LastComRellievingLetter', maxCount: 1 },
-  { name: 'BankDetails', maxCount: 1 }
+  { name: "PanCard", maxCount: 1 },
+  { name: "AadharCard", maxCount: 1 },
+  { name: "Photo", maxCount: 1 },
+  { name: "AddressProof", maxCount: 1 },
+  { name: "HighestQuaCertificate", maxCount: 1 },
+  { name: "LastComRellievingLetter", maxCount: 1 },
+  { name: "BankDetails", maxCount: 1 },
 ]);
 
-
-
-userController.post('/employeeInfo', uploadimg, async (req, res) => {
+userController.post("/employeeInfo", uploadimg, async (req, res) => {
   try {
     // Check if the email or mobile number already exists in the database
     const existingEmployee = await EmployeeInfo.findOne({
-      $or: [{ EmailId: req.body.EmailId }, { MobileNumber: req.body.MobileNumber }]
+      $or: [
+        { EmailId: req.body.EmailId },
+        { MobileNumber: req.body.MobileNumber },
+      ],
     });
 
     if (existingEmployee) {
       // If employee already exists with the same email or mobile number, send a response indicating the conflict
       return res.status(409).send({
         success: false,
-        message: "Email or mobile number already exists"
+        message: "Email or mobile number already exists",
       });
     }
 
@@ -72,19 +81,32 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
     const employeeData = { ...req.body };
 
     // Generate Employee ID
-    const employeeID = await generateEmployeeID(req.body.Department, req.body.SubDepartment, req.body.Designation);
+    const employeeID = await generateEmployeeID(
+      req.body.Department,
+      req.body.SubDepartment,
+      req.body.Designation
+    );
     employeeData.EmployeeID = employeeID;
-    console.log(`Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`);
+    console.log(
+      `Generated EmployeeID: ${employeeID} for employee: ${req.body.FirstName} ${req.body.LastName}`
+    );
 
     // Add the document paths to the employee data if files were uploaded
     if (req.files) {
       if (req.files.PanCard) employeeData.PanCard = req.files.PanCard[0].path;
-      if (req.files.AadharCard) employeeData.AadharCard = req.files.AadharCard[0].path;
+      if (req.files.AadharCard)
+        employeeData.AadharCard = req.files.AadharCard[0].path;
       if (req.files.Photo) employeeData.Photo = req.files.Photo[0].path;
-      if (req.files.AddressProof) employeeData.AddressProof = req.files.AddressProof[0].path;
-      if (req.files.HighestQuaCertificate) employeeData.HighestQuaCertificate = req.files.HighestQuaCertificate[0].path;
-      if (req.files.LastComRellievingLetter) employeeData.LastComRellievingLetter = req.files.LastComRellievingLetter[0].path;
-      if (req.files.BankDetails) employeeData.BankDetails = req.files.BankDetails[0].path;
+      if (req.files.AddressProof)
+        employeeData.AddressProof = req.files.AddressProof[0].path;
+      if (req.files.HighestQuaCertificate)
+        employeeData.HighestQuaCertificate =
+          req.files.HighestQuaCertificate[0].path;
+      if (req.files.LastComRellievingLetter)
+        employeeData.LastComRellievingLetter =
+          req.files.LastComRellievingLetter[0].path;
+      if (req.files.BankDetails)
+        employeeData.BankDetails = req.files.BankDetails[0].path;
     }
 
     // Create a new employee record
@@ -93,15 +115,15 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
 
     // Populate related fields (Department, SubDepartment, Designation, and ManagedBy)
     const populatedEmployee = await EmployeeInfo.findById(employeeCreated._id)
-      .populate('Department', 'name')       // Assuming 'name' is the field in the Department model
-      .populate('SubDepartment', 'name')    // Assuming 'name' is the field in the SubDepartment model
-      .populate('Designation', 'name')      // Assuming 'name' is the field in the Designation model
-      .populate('ManagedBy', 'FirstName LastName');       // Populating manager's name
+      .populate("Department", "name") // Assuming 'name' is the field in the Department model
+      .populate("SubDepartment", "name") // Assuming 'name' is the field in the SubDepartment model
+      .populate("Designation", "name") // Assuming 'name' is the field in the Designation model
+      .populate("ManagedBy", "FirstName LastName"); // Populating manager's name
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Employee Registered successfully!",
-      employeeData: populatedEmployee
+      employeeData: populatedEmployee,
     });
   } catch (error) {
     console.log(error);
@@ -112,11 +134,13 @@ userController.post('/employeeInfo', uploadimg, async (req, res) => {
   }
 });
 
-
-userController.post("/EmployeeInfoLogin",  async (req, res) => {
+userController.post("/EmployeeInfoLogin", async (req, res) => {
   try {
     const { EmailId, Password } = req.body;
-    const loggedUser = await userServices.EmployeeHrLogin({ EmailId, Password });
+    const loggedUser = await userServices.EmployeeHrLogin({
+      EmailId,
+      Password,
+    });
 
     if (!loggedUser) {
       return sendResponse(res, 401, "Unauthorized", {
@@ -130,7 +154,7 @@ userController.post("/EmployeeInfoLogin",  async (req, res) => {
 
     // Check if the user has the role "Admin" or "HR"
     const validRoles = ["Admin", "HR"];
-    if (!loggedUser.Role.some(role => validRoles.includes(role))) {
+    if (!loggedUser.Role.some((role) => validRoles.includes(role))) {
       return sendResponse(res, 403, "Forbidden", {
         success: false,
         message: "Access denied. Only Admin and HR can login.",
@@ -152,11 +176,13 @@ userController.post("/EmployeeInfoLogin",  async (req, res) => {
   }
 });
 
-
 userController.post("/AllEmployeeLogin", async (req, res) => {
   try {
     const { EmployeeID, Password } = req.body;
-    const loggedUser = await userServices.EmployeeLogin({ EmployeeID, Password });
+    const loggedUser = await userServices.EmployeeLogin({
+      EmployeeID,
+      Password,
+    });
 
     if (!loggedUser) {
       return sendResponse(res, 401, "Unauthorized", {
@@ -181,14 +207,13 @@ userController.post("/AllEmployeeLogin", async (req, res) => {
   }
 });
 
-
 userController.put("/updateEmployeeData", async (req, res) => {
   try {
     const data = await userServices.updateData({ _id: req.body._id }, req.body);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "User Updated successfully!",
-      data: data
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -198,17 +223,21 @@ userController.put("/updateEmployeeData", async (req, res) => {
   }
 });
 
-
 userController.get("/getEmployee", auth, async (req, res) => {
   try {
     const currentPage = parseInt(req.query.currentPage) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const pageSize = parseInt(req.query.pageSize) || 10;
 
     // Extract filters from query parameters
     const { name, role, employeeId, designation } = req.query;
 
     // Pass filters to the service function
-    const data = await userServices.getEmployee(currentPage, pageSize, { name, role, employeeId, designation });
+    const data = await userServices.getEmployee(currentPage, pageSize, {
+      name,
+      role,
+      employeeId,
+      designation,
+    });
 
     sendResponse(res, 200, "Success", {
       success: true,
@@ -216,7 +245,7 @@ userController.get("/getEmployee", auth, async (req, res) => {
       data: data.employees,
       userCount: data.userCount,
       totalPage: data.totalPage,
-      currentPage: data.currentPage
+      currentPage: data.currentPage,
     });
   } catch (error) {
     console.log(error);
@@ -225,7 +254,6 @@ userController.get("/getEmployee", auth, async (req, res) => {
     });
   }
 });
-
 
 userController.get("/getAllEmployee", auth, async (req, res) => {
   try {
@@ -234,7 +262,7 @@ userController.get("/getAllEmployee", auth, async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Employee list retrieved successfully!",
-      data: data
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -243,7 +271,6 @@ userController.get("/getAllEmployee", auth, async (req, res) => {
     });
   }
 });
-
 
 userController.get("/getEmployeeNames", auth, async (req, res) => {
   try {
@@ -251,7 +278,7 @@ userController.get("/getEmployeeNames", auth, async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Employee list retrieved successfully!",
-      data: data
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -260,7 +287,6 @@ userController.get("/getEmployeeNames", auth, async (req, res) => {
     });
   }
 });
-
 
 userController.get("/getEmployeebyId/:userId", async (req, res) => {
   try {
@@ -270,7 +296,7 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: "User retrieved successfully!",
-      data
+      data,
     });
   } catch (error) {
     console.log(error);
@@ -279,7 +305,6 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
     });
   }
 });
-
 
 // userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async (req, res) => {
 //   try {
@@ -296,7 +321,7 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
 //       inTimeImage: photoArray[0], // Assuming the first image is the source image
 //       // inTime: new Date(),
 //       inTime: localTime,
-//       locationStatus 
+//       locationStatus
 //     };
 
 //     const logCreated = await LogUser.create(userLogData);
@@ -318,136 +343,216 @@ userController.get("/getEmployeebyId/:userId", async (req, res) => {
 //   }
 // });
 
+userController.post(
+  "/inTime/:userId",
+  imgUpload.array("inTimeImage", 10),
+  async (req, res) => {
+    try {
+      // Process uploaded images and build the photoArray
+      const photoArray = req.files.map((file) => file.path);
 
+      const localTime = moment()
+        .tz("Asia/Kolkata")
+        .format("YYYY-MM-DD HH:mm:ss");
+      console.log("Local Time: ", localTime);
 
+      // Extract locationStatus from req.body (make sure it's sent in the request)
+      const { locationStatus } = req.body;
 
-userController.post("/inTime/:userId", imgUpload.array("inTimeImage", 10), async (req, res) => {
-  try {
-    // Process uploaded images and build the photoArray
-    const photoArray = req.files.map((file) => file.path);
+      if (!locationStatus) {
+        return sendResponse(res, 400, "Failed", {
+          success: false,
+          message: "locationStatus is required",
+        });
+      }
 
-    const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
-    console.log("Local Time: ", localTime);
+      // Create a new log entry in the database
+      const userLogData = {
+        userId: req.params.userId, // Retrieve userId from URL parameter
+        inTimeImage: photoArray[0], // Assuming the first image is the source image
+        inTime: localTime,
+        locationStatus, // Now correctly defined
+      };
 
-    // Extract locationStatus from req.body (make sure it's sent in the request)
-    const { locationStatus } = req.body; 
+      const logCreated = await LogUser.create(userLogData);
 
-    if (!locationStatus) {
-      return sendResponse(res, 400, "Failed", {
+      // Fetch user data dynamically based on userId
+      const userData = await EmployeeInfo.findById(req.params.userId); // Use the userId from URL parameter
+
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: "User check-in successfully",
+        user: logCreated,
+      });
+    } catch (error) {
+      console.error(error);
+      sendResponse(res, 500, "Failed", {
         success: false,
-        message: "locationStatus is required"
+        message: error.message || "Internal server error",
       });
     }
-
-    // Create a new log entry in the database
-    const userLogData = {
-      userId: req.params.userId, // Retrieve userId from URL parameter
-      inTimeImage: photoArray[0], // Assuming the first image is the source image
-      inTime: localTime,
-      locationStatus // Now correctly defined
-    };
-
-    const logCreated = await LogUser.create(userLogData);
-
-    // Fetch user data dynamically based on userId
-    const userData = await EmployeeInfo.findById(req.params.userId); // Use the userId from URL parameter
-
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "User check-in successfully",
-      user: logCreated
-    });
-  } catch (error) {
-    console.error(error);
-    sendResponse(res, 500, "Failed", {
-      success: false,
-      message: error.message || "Internal server error"
-    });
   }
-});
+);
 
+userController.put(
+  "/editInTime/:logId",
+  auth,
+  imgUpload.array("inTimeImage", 10),
+  async (req, res) => {
+    try {
+      const logId = req.params.logId;
+      const { inTime, outTime } = req.body;
 
-userController.put("/editInTime/:logId", auth, imgUpload.array("inTimeImage", 10), async (req, res) => {
-  try {
-    const logId = req.params.logId;
-    const { inTime, outTime } = req.body;
+      // Find the log entry in the database based on logId
+      const existingLog = await LogUser.findById(logId);
 
-    // Find the log entry in the database based on logId
-    const existingLog = await LogUser.findById(logId);
+      if (!existingLog) {
+        return sendResponse(res, 404, "Not Found", {
+          success: false,
+          message: "Log entry not found",
+        });
+      }
 
-    if (!existingLog) {
-      return sendResponse(res, 404, "Not Found", {
+      // Update log data with new inTime and outTime
+      existingLog.inTime = String(inTime);
+      existingLog.outTime = String(outTime);
+
+      // Parse the times into Moment objects
+      const checkInMoment = moment(inTime);
+      const checkOutMoment = moment(outTime);
+
+      // Calculate the difference in time
+      const totalHours = moment.duration(checkOutMoment.diff(checkInMoment));
+
+      // Format totalHours
+      const hours = Math.floor(totalHours.asHours());
+      const minutes = Math.floor(totalHours.asMinutes()) % 60;
+      const formattedTotalHours = `${hours}hr ${minutes}min`;
+
+      // Add formatted total hours to log data
+      existingLog.totalHours = formattedTotalHours;
+
+      await existingLog.save();
+
+      sendResponse(res, 200, "Success", {
+        success: true,
+        message: "In-time document updated successfully",
+        log: existingLog,
+      });
+    } catch (error) {
+      console.error(error);
+      sendResponse(res, 500, "Failed", {
         success: false,
-        message: "Log entry not found"
+        message: error.message || "Internal server error",
       });
     }
-
-    // Update log data with new inTime and outTime
-    existingLog.inTime = String(inTime);
-    existingLog.outTime = String(outTime);
-
-    // Parse the times into Moment objects
-    const checkInMoment = moment(inTime);
-    const checkOutMoment = moment(outTime);
-
-    // Calculate the difference in time
-    const totalHours = moment.duration(checkOutMoment.diff(checkInMoment));
-
-    // Format totalHours
-    const hours = Math.floor(totalHours.asHours());
-    const minutes = Math.floor(totalHours.asMinutes()) % 60;
-    const formattedTotalHours = `${hours}hr ${minutes}min`;
-
-    // Add formatted total hours to log data
-    existingLog.totalHours = formattedTotalHours;
-
-    await existingLog.save();
-
-    sendResponse(res, 200, "Success", {
-      success: true,
-      message: "In-time document updated successfully",
-      log: existingLog,
-    });
-  } catch (error) {
-    console.error(error);
-    sendResponse(res, 500, "Failed", {
-      success: false,
-      message: error.message || "Internal server error"
-    });
   }
-});
+);
 
+// userController.put("/outTime", async (req, res) => {
+//   try {
+//     // Retrieve inTime from the database
+//     const inTimeData = await userServices.getInTimeById({ _id: req.body.logId });
+//     const inTime = inTimeData.inTime;
+
+//     const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
+//     const currentTime = new Date();
+//     console.log("Local Time: ", localTime);
+
+//     const userLogData = {
+//       outTime: localTime,
+//       totalHours: req.body.totalHours
+//     };
+
+//     // Update user log data in the database
+//     const outTimeCreated = await userServices.logUserUpdate(req.body.logId, userLogData);
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Out Time created successfully",
+//       logData: outTimeCreated
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json
+//     ({ error: "Failed", message: error.message || "Internal server error" });
+//   }
+// });
 
 userController.put("/outTime", async (req, res) => {
   try {
-    // Retrieve inTime from the database
-    const inTimeData = await userServices.getInTimeById({ _id: req.body.logId });
-    const inTime = inTimeData.inTime;
+    const logId = req.body.logId;
 
-    const localTime = moment().tz("Asia/Kolkata").format('YYYY-MM-DD HH:mm:ss');
-    const currentTime = new Date();
-    console.log("Local Time: ", localTime);
+    // Step 1: Get log entry
+    const inTimeData = await userServices.getInTimeById({ _id: logId });
 
+    if (!inTimeData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "Log entry not found",
+      });
+    }
+
+    // Step 2: Parse inTime to Date
+    const inTime = moment.tz(
+      inTimeData.inTime,
+      "YYYY-MM-DD HH:mm:ss",
+      "Asia/Kolkata"
+    );
+
+    // Step 3: Check if already checked out
+    if (inTimeData.outTime) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "User already checked out",
+      });
+    }
+
+    // Step 4: Current time
+    const currentTime = moment().tz("Asia/Kolkata");
+
+    // Step 5: Difference in hours
+    const hoursDiff = currentTime.diff(inTime, "hours", true); // true = float
+
+    let outTime;
+    if (hoursDiff >= 9) {
+      // Auto checkout after 9 hours
+      outTime = inTime.clone().add(9, "hours");
+    } else {
+      // Manual checkout request or not enough time passed
+      if (!req.body.totalHours) {
+        return sendResponse(res, 400, "Failed", {
+          success: false,
+          message: `User hasn't completed 9 hours yet. Manual checkout not allowed now.`,
+        });
+      }
+      outTime = currentTime;
+    }
+
+    const totalDuration = moment.duration(moment(outTime).diff(inTime));
+    const totalHours = `${Math.floor(
+      totalDuration.asHours()
+    )}h ${totalDuration.minutes()}m`;
 
     const userLogData = {
-      outTime: localTime,
-      totalHours: req.body.totalHours
+      outTime: outTime.format("YYYY-MM-DD HH:mm:ss"),
+      totalHours: totalHours,
     };
 
-    // Update user log data in the database
-    const outTimeCreated = await userServices.logUserUpdate(req.body.logId, userLogData);
+    const updatedLog = await userServices.logUserUpdate(logId, userLogData);
+
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Out Time created successfully",
-      logData: outTimeCreated
+      message: "Out Time recorded successfully",
+      logData: updatedLog,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json
-    ({ error: "Failed", message: error.message || "Internal server error" });
+    sendResponse(res, 500, "Failed", {
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 });
-
 
 userController.get("/getLogUserbyid", async (req, res) => {
   try {
@@ -467,7 +572,7 @@ userController.get("/getLogUserbyid", async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Users Log list retrieved successfully!",
-      data: data
+      data: data,
     });
   } catch (error) {
     console.log(error);
@@ -477,11 +582,10 @@ userController.get("/getLogUserbyid", async (req, res) => {
   }
 });
 
-
 userController.get("/getApprovedLogUsers", auth, async (req, res) => {
   try {
     const { approved, startDate, endDate, currentPage, pageSize } = req.query;
-    const query = { approved: approved === 'true' }; // Convert approved to boolean
+    const query = { approved: approved === "true" }; // Convert approved to boolean
 
     // Apply date filters if provided
     if (startDate) {
@@ -508,10 +612,10 @@ userController.get("/getApprovedLogUsers", auth, async (req, res) => {
       { $match: query },
       {
         $group: {
-          _id: "$userId"
-        }
+          _id: "$userId",
+        },
       },
-      { $count: "totalUsers" }
+      { $count: "totalUsers" },
     ];
 
     const totalCountResult = await LogUser.aggregate(totalCountPipeline).exec();
@@ -527,7 +631,7 @@ userController.get("/getApprovedLogUsers", auth, async (req, res) => {
       currentPage: page,
       pageSize: size,
       totalPages: totalPages,
-      totalDocuments: totalCount
+      totalDocuments: totalCount,
     });
   } catch (error) {
     console.log(error);
@@ -537,18 +641,20 @@ userController.get("/getApprovedLogUsers", auth, async (req, res) => {
   }
 });
 
-
-userController.get("/getLogUsers", auth,   async (req, res) => {
+userController.get("/getLogUsers", auth, async (req, res) => {
   try {
-    const currentPage = parseInt(req.query.currentPage) || 1; 
-    const pageSize = parseInt(req.query.pageSize) || 10; 
+    const currentPage = parseInt(req.query.currentPage) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
     const data = await userServices.getAllLogUser(currentPage, pageSize);
     const userCount = await LogUser.countDocuments({ approved: false });
-    const totalPage = Math.ceil(userCount/10);
+    const totalPage = Math.ceil(userCount / 10);
     sendResponse(res, 200, "Success", {
       success: true,
       message: "All Users Log list retrieved successfully!",
-      data : data, userCount, totalPage, currentPage
+      data: data,
+      userCount,
+      totalPage,
+      currentPage,
     });
   } catch (error) {
     console.log(error);
@@ -558,19 +664,17 @@ userController.get("/getLogUsers", auth,   async (req, res) => {
   }
 });
 
-
-userController.delete("/deleteLog/:logId", auth,  async (req, res) => {
+userController.delete("/deleteLog/:logId", auth, async (req, res) => {
   try {
     const logId = req.params.logId;
 
     // Find the log entry in the database based on logId
     const logToDelete = await LogUser.findById(logId);
 
-
     if (!logToDelete) {
       return sendResponse(res, 404, "Not Found", {
         success: false,
-        message: "Log entry not found"
+        message: "Log entry not found",
       });
     }
 
@@ -579,17 +683,16 @@ userController.delete("/deleteLog/:logId", auth,  async (req, res) => {
 
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Log entry deleted successfully"
+      message: "Log entry deleted successfully",
     });
   } catch (error) {
     console.error(error);
     sendResponse(res, 500, "Failed", {
       success: false,
-      message: error.message || "Internal server error"
+      message: error.message || "Internal server error",
     });
   }
 });
-
 
 userController.put("/editLogUser/:logId", auth, async (req, res) => {
   try {
@@ -602,7 +705,7 @@ userController.put("/editLogUser/:logId", auth, async (req, res) => {
     if (!existingLog) {
       return sendResponse(res, 404, "Not Found", {
         success: false,
-        message: "Log entry not found"
+        message: "Log entry not found",
       });
     }
 
@@ -615,17 +718,16 @@ userController.put("/editLogUser/:logId", auth, async (req, res) => {
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Log entry updated successfully",
-      log: existingLog
+      log: existingLog,
     });
   } catch (error) {
     console.error(error);
     sendResponse(res, 500, "Failed", {
       success: false,
-      message: error.message || "Internal server error"
+      message: error.message || "Internal server error",
     });
   }
 });
-
 
 userController.get("/getTeamLeaders", auth, async (req, res) => {
   try {
@@ -635,7 +737,8 @@ userController.get("/getTeamLeaders", auth, async (req, res) => {
 
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Team Leaders, Bosses, and Managers list retrieved successfully!",
+      message:
+        "Team Leaders, Bosses, and Managers list retrieved successfully!",
       data: data,
     });
   } catch (error) {
@@ -645,7 +748,6 @@ userController.get("/getTeamLeaders", auth, async (req, res) => {
     });
   }
 });
-
 
 userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
   try {
@@ -663,8 +765,7 @@ userController.get("/getFollowers/:leaderId", auth, async (req, res) => {
   }
 });
 
-
-userController.get('/generateSalarySlip/:userId', async (req, res) => {
+userController.get("/generateSalarySlip/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
 
@@ -677,20 +778,19 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
     }
 
     // Calculate total income and deductions
-    const totalIncome = parseFloat(employee.BasicSalary || 0) +
+    const totalIncome =
+      parseFloat(employee.BasicSalary || 0) +
       parseFloat(employee.FixedAllowance || 0) +
       parseFloat(employee.MedicalAllowance || 0) +
       parseFloat(employee.Reimbursment || 0) +
       parseFloat(employee.SpecialAllowance || 0) +
       parseFloat(employee.VeriableAllowance || 0);
 
-    const totalDeductions = parseFloat(employee.PF || 0) +
-      parseFloat(employee.PT || 0); 
+    const totalDeductions =
+      parseFloat(employee.PF || 0) + parseFloat(employee.PT || 0);
 
-    
     const netSalary = totalIncome - totalDeductions;
 
-  
     const salarySlip = {
       EmployeeName: `${employee.FirstName} ${employee.LastName}`,
       EmployeeCode: employee.EmployeeID,
@@ -731,21 +831,28 @@ userController.get('/generateSalarySlip/:userId', async (req, res) => {
   }
 });
 
-
 userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
   try {
     // Fetch all team leaders
-    const teamLeaders = await EmployeeInfo.find({ Position: "TeamLeader" }).lean().select("EmployeeID FirstName LastName Position");;
+    const teamLeaders = await EmployeeInfo.find({ Position: "TeamLeader" })
+      .lean()
+      .select("EmployeeID FirstName LastName Position");
 
     // Add managed employees and their call details for each team leader
     await Promise.all(
       teamLeaders.map(async (leader) => {
-        const managedEmployees = await EmployeeInfo.find({ ManagedBy: leader._id }).lean().select("EmployeeID FirstName LastName Position");
+        const managedEmployees = await EmployeeInfo.find({
+          ManagedBy: leader._id,
+        })
+          .lean()
+          .select("EmployeeID FirstName LastName Position");
 
         // Add call details for each employee
         await Promise.all(
           managedEmployees.map(async (employee) => {
-            const callDetails = await Admin.find({ AssignedTo: employee._id }).lean();
+            const callDetails = await Admin.find({
+              AssignedTo: employee._id,
+            }).lean();
 
             // Initialize status counts
             const statusCounts = {
@@ -796,40 +903,39 @@ userController.get("/getLeaderEmployeeData", auth, async (req, res) => {
   }
 });
 
-
 userController.get("/getDepartmentDetails", async (req, res) => {
-    try {
-
-        const data = await userServices.getAllDepartments();
-        sendResponse(res, 200, "Success", {
-            success: true,
-            message: "All Department list retrieved successfully!",
-            data: data
-        });
-    } catch (error) {
-        console.log(error);
-        sendResponse(res, 500, "Failed", {
-            message: error.message || "Internal server error",
-        });
-    }
+  try {
+    const data = await userServices.getAllDepartments();
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "All Department list retrieved successfully!",
+      data: data,
+    });
+  } catch (error) {
+    console.log(error);
+    sendResponse(res, 500, "Failed", {
+      message: error.message || "Internal server error",
+    });
+  }
 });
-
 
 userController.post("/getTeamLeaderByDepartment", auth, async (req, res) => {
   try {
-
-    console.log(req.body.departmentId)
+    console.log(req.body.departmentId);
     const roles = ["TeamLeader"];
-    const data = await EmployeeInfo.find({ Position: { $in: roles }, Department:req.body.departmentId});
-    if(data.length==0){
+    const data = await EmployeeInfo.find({
+      Position: { $in: roles },
+      Department: req.body.departmentId,
+    });
+    if (data.length == 0) {
       const roles = ["Boss"];
-      const data = await EmployeeInfo.find({ Position: { $in: roles }});
+      const data = await EmployeeInfo.find({ Position: { $in: roles } });
       sendResponse(res, 200, "Success", {
         success: true,
         message: "Team Leaders list retrieved successfully!",
         data: data,
       });
-      return
+      return;
     }
     sendResponse(res, 200, "Success", {
       success: true,
@@ -843,8 +949,5 @@ userController.post("/getTeamLeaderByDepartment", auth, async (req, res) => {
     });
   }
 });
-
-
-
 
 module.exports = userController;
