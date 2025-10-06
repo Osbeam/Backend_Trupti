@@ -357,7 +357,7 @@ userController.post(
       console.log("Local Time: ", localTime);
 
       // Extract locationStatus from req.body (make sure it's sent in the request)
-      const { locationStatus } = req.body;
+      const { locationStatus, latitude, longitude } = req.body;
 
       if (!locationStatus) {
         return sendResponse(res, 400, "Failed", {
@@ -371,7 +371,9 @@ userController.post(
         userId: req.params.userId, // Retrieve userId from URL parameter
         inTimeImage: photoArray[0], // Assuming the first image is the source image
         inTime: localTime,
-        locationStatus, // Now correctly defined
+        locationStatus, 
+        latitude,
+        longitude,
       };
 
       const logCreated = await LogUser.create(userLogData);

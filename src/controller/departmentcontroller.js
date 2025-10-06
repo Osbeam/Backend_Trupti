@@ -70,8 +70,8 @@ departmentController.post('/createSubDepartments', async (req, res) => {
 
 departmentController.get("/getSubDepartments/:id", async (req, res) => {
     try {
-
         const data = await departmentServices.getAllSubDepartments(req.params.id);
+
         sendResponse(res, 200, "Success", {
             success: true,
             message: "All SubDepartment list retrieved successfully!",
@@ -80,6 +80,7 @@ departmentController.get("/getSubDepartments/:id", async (req, res) => {
     } catch (error) {
         console.log(error);
         sendResponse(res, 500, "Failed", {
+            success: false,
             message: error.message || "Internal server error",
         });
     }

@@ -18,13 +18,18 @@ const messageSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  messae: { 
+    type: String, 
+    required: true 
+  },
   fileUrl: { 
     type: String,
     required: false 
   },
   readBy: [{ 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'EmployeeInfo' 
+    degfault:false,
+    ref: 'EmployeeInfo'
   }], 
 }, { timestamps: true });
 
