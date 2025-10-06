@@ -1,38 +1,42 @@
-const cron = require('node-cron');
-const moment = require('moment-timezone');
-const LogUser = require('../model/loguserSchema'); // adjust the path as needed
+const cron = require("node-cron");
+const moment = require("moment-timezone");
+const LogUser = require("../model/loguserSchema"); // Adjust path
 
-// Run every 10 minutes
-cron.schedule('*/10 * * * *', async () => {
+
+
+// Runs every 5 minutes
+cron.schedule("*/5 * * * *", async () => {
   try {
-    console.log("Running auto-checkout job...");
+    console.log("Running auto checkout cron job...");
 
-    // Get current time in Asia/Kolkata timezone
-    const currentTime = moment().tz("Asia/Kolkata");
-
-    // Find users with inTime set and no outTime
-    const pendingLogs = await LogUser.find({
-      inTime: { $ne: null },
-      outTime: null
+    // Find users who have checked in but not checked out
+    const pendingCheckouts = await LogUser.find({
+      outTime: null,
     });
+    console.log(LogUser, "hello")
+    
+    for (const log of pendingCheckouts) {
+      const inTime = moment.tz(log.inTime, "YYYY-MM-DD HH:mm:ss", "Asia/Kolkata");
+      const currentTime = moment().tz("Asia/Kolkata");
 
-    for (const log of pendingLogs) {
-      const inTimeMoment = moment.tz(log.inTime, "YYYY-MM-DD HH:mm:ss", "Asia/Kolkata");
+      const hoursDiff = currentTime.diff(inTime, "hours", true);
 
-      const diffInHours = currentTime.diff(inTimeMoment, 'hours', true);
+      // If 9 hours or more passed, auto checkout
+      if (hoursDiff >= 9) {
+        const outTime = inTime.clone().add(9, "hours");
+        const totalDuration = moment.duration(outTime.diff(inTime));
+        const totalHours = `${Math.floor(totalDuration.asHours())}h ${totalDuration.minutes()}m`;
 
-      if (diffInHours >= 9) {
-        const totalHours = diffInHours.toFixed(2);
+        await LogUser.findByIdAndUpdate(log._id, {
+          outTime: outTime.format("YYYY-MM-DD HH:mm:ss"),
+          totalHours,
+        });
 
-        // Auto-checkout the user
-        log.outTime = currentTime.format('YYYY-MM-DD HH:mm:ss');
-        log.totalHours = totalHours;
-        await log.save();
-
-        console.log(`User ${log.userId} auto-checked out after ${totalHours} hrs`);
+        console.log(`User ${log.userId} auto-checked out at ${outTime.format("YYYY-MM-DD HH:mm:ss")}`);
       }
     }
   } catch (error) {
-    console.error("Auto-checkout failed:", error.message);
+    console.error("Cron job error:", error);
   }
 });
+

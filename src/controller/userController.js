@@ -16,6 +16,8 @@ const moment = require("moment-timezone");
 const auth = require("../utils/auth");
 const cron = require("../utils/autoCheckout");
 
+
+
 const setemployeeID = (number) => {
   let code = number.toString(); // Convert the number to a string
   while (code.length < 3) {
@@ -396,9 +398,7 @@ userController.post(
   }
 );
 
-userController.put(
-  "/editInTime/:logId",
-  auth,
+userController.put("/editInTime/:logId", auth,
   imgUpload.array("inTimeImage", 10),
   async (req, res) => {
     try {

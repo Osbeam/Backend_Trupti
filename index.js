@@ -5,6 +5,7 @@ const path = require("path");
 const routes = require("./src/route");
 const socketIO = require('socket.io');
 const http = require('http');
+require("./src/utils/autoCheckout");
 
 
 const app = express();
