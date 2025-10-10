@@ -18,7 +18,7 @@ const messageSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  messae: { 
+  message: { 
     type: String, 
     required: true 
   },
@@ -34,4 +34,3 @@ const messageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);
-;

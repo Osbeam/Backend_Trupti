@@ -13,7 +13,6 @@ cron.schedule("*/5 * * * *", async () => {
     const pendingCheckouts = await LogUser.find({
       outTime: null,
     });
-    console.log(LogUser, "hello")
     
     for (const log of pendingCheckouts) {
       const inTime = moment.tz(log.inTime, "YYYY-MM-DD HH:mm:ss", "Asia/Kolkata");

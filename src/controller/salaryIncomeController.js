@@ -143,35 +143,76 @@ salaryIncome.get("/GetAllSalaryIncome", async (req, res) => {
 });
 
 
+// salaryIncome.put("/EditSalaryData", imgUpload.fields(uploadFields), async (req, res) => {
+//   try {
+//     const { _id, ...updateData } = req.body; 
+//     const files = req.files; 
+
+//     if (files) {
+//       for (let uploadFields in files) {
+//         updateData[uploadFields] = files[uploadFields].map(file => file.path);
+//       }
+//     }
+//     const data = await salaryServices.updateData({ _id }, updateData);
+
+//     sendResponse(res, 200, "Success", {
+//       success: true,
+//       message: "Salary Updated successfully!",
+//       data: data
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     sendResponse(res, 500, "Failed", {
+//       message: error.message || "Internal server error",
+//     });
+//   }
+// });
+
+
+
+
 salaryIncome.put("/EditSalaryData", imgUpload.fields(uploadFields), async (req, res) => {
   try {
-    const { _id, ...updateData } = req.body;  // Extract _id from body to use for filtering
+    const { _id, ...updateData } = req.body;
+    const files = req.files;
 
-    // Handle file uploads - If files are uploaded, map them to fields in updateData
-    const files = req.files;  // Get the uploaded files
+    // Parse JSON fields (for nested objects)
+    if (updateData.Analysis && typeof updateData.Analysis === "string") {
+      updateData.Analysis = JSON.parse(updateData.Analysis);
+    }
+    if (updateData.Score && typeof updateData.Score === "string") {
+      updateData.Score = JSON.parse(updateData.Score);
+    }
+    if (updateData.SalaryDetails && typeof updateData.SalaryDetails === "string") {
+      updateData.SalaryDetails = JSON.parse(updateData.SalaryDetails);
+    }
+    if (updateData.BankDetails && typeof updateData.BankDetails === "string") {
+      updateData.BankDetails = JSON.parse(updateData.BankDetails);
+    }
 
+    // Handle uploaded files
     if (files) {
-      // Loop through the files and add them to the updateData object
-      for (let uploadFields in files) {
-        updateData[uploadFields] = files[uploadFields].map(file => file.path);  // Storing file paths
+      for (let field in files) {
+        updateData[field] = files[field].map(file => file.path);
       }
     }
 
-    // Call the service method to update the data
     const data = await salaryServices.updateData({ _id }, updateData);
 
     sendResponse(res, 200, "Success", {
       success: true,
       message: "Salary Updated successfully!",
-      data: data
+      data
     });
   } catch (error) {
     console.log(error);
     sendResponse(res, 500, "Failed", {
+      success: false,
       message: error.message || "Internal server error",
     });
   }
 });
+
 
 
 salaryIncome.get('/getAllIncomeInfo', async (req, res) => {
