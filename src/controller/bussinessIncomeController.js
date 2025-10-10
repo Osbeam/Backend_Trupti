@@ -366,6 +366,29 @@ bussinessIncome.put("/updateOrCreateBussiness/:id?", imgUpload.fields(uploadFiel
 
     let newData = { ...additionalData };
 
+
+
+        // 🧩 Step 1: Parse JSON string fields (arrays/objects)
+        const jsonFields = [
+          "YearWiseITR",
+          "BankAnalysis",
+          "IncomeDetails",
+          "TurnOverDetails",
+          "BankDetails",
+        ];
+    
+        jsonFields.forEach((field) => {
+          if (newData[field] && typeof newData[field] === "string") {
+            try {
+              newData[field] = JSON.parse(newData[field]);
+            } catch (err) {
+              console.log(`Error parsing field ${field}:`, err.message);
+            }
+          }
+        });
+
+
+
     if (files) {
       // Map the uploaded files to the respective fields
       Object.keys(files).forEach((key) => {
