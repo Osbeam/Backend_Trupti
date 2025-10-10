@@ -423,21 +423,109 @@ professionalIncome.put("/updateOrCreateProfession/:id?", imgUpload.fields(upload
 });
 
 
-professionalIncome.put("/EditProfessionalIncomesData", async (req, res) => {
+professionalIncome.put("/EditProfessionalIncomesData", imgUpload.fields(uploadFields), async (req, res) => {
   try {
-    const data = await professionalIncomeServices.updateData({ _id: req.body._id }, req.body);
+    const { _id } = req.body;
+
+    if (!_id) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "Document ID (_id) is required in the request body",
+      });
+    }
+
+    // Parse body — handle nested JSON fields
+    const parsedBody = { ...req.body };
+    const jsonFields = [
+      "YearWiseITR",
+      "IncomeDetails",
+      "TurnOverDetails",
+      "BankDetails",
+      "BankAnalysis"
+    ];
+
+    jsonFields.forEach((field) => {
+      if (parsedBody[field]) {
+        try {
+          parsedBody[field] = JSON.parse(parsedBody[field]);
+        } catch (err) {
+          console.log(`⚠️ Failed to parse ${field}:`, err.message);
+        }
+      }
+    });
+
+    // Handle uploaded files
+    if (req.files) {
+      for (const field in req.files) {
+        parsedBody[field] = req.files[field].map((f) => f.path);
+      }
+    }
+
+    // Update in DB
+    const updatedData = await professionalIncomeServices.updateData(
+      { _id },
+      parsedBody,
+      { new: true }
+    );
+
+    if (!updatedData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "ProfessionalIncome record not found",
+      });
+    }
+
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "ProfessionalIncome Updated successfully!",
-      data: data
+      message: "ProfessionalIncome updated successfully!",
+      data: updatedData,
     });
+
   } catch (error) {
-    console.log(error);
+    console.error(error);
     sendResponse(res, 500, "Failed", {
+      success: false,
       message: error.message || "Internal server error",
     });
   }
 });
+
+
+professionalIncome.delete("/delete", async (req, res) => {
+  try {
+    const { _id } = req.body;
+
+    if (!_id) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "Document ID (_id) is required in the request body",
+      });
+    }
+
+    const deletedData = await ProfessionalIncome.findByIdAndDelete(_id);
+
+    if (!deletedData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "ProfessionalIncome document not found",
+      });
+    }
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "ProfessionalIncome document deleted successfully!"
+    });
+
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 
 module.exports = professionalIncome;

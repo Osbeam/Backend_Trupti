@@ -319,14 +319,10 @@ const City = [
 ];
 
 
-
-
 const omitTimestamps = (data) => {
   const { createdAt, updatedAt, ...rest } = data;
   return rest;
 };
-
-
 
 
 const uploadFields = [
@@ -555,17 +551,99 @@ bussinessIncome.get("/GetUserIncomes/:userId", async (req, res) => {
 });
 
 
-bussinessIncome.put("/EditBusinessData", async (req, res) => {
+bussinessIncome.put("/EditBusinessData", imgUpload.fields(uploadFields), async (req, res) => {
   try {
-    const data = await bussinessServices.updateData({ _id: req.body._id }, req.body);
+    const { _id } = req.body;
+    if (!_id) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "Document ID (_id) is required",
+      });
+    }
+
+    // Parse nested JSON fields if sent as string
+    const parsedBody = { ...req.body };
+    const jsonFields = [
+      "YearWiseITR",
+      "IncomeDetails",
+      "TurnOverDetails",
+      "BankDetails",
+    ];
+
+    jsonFields.forEach((key) => {
+      if (parsedBody[key]) {
+        try {
+          parsedBody[key] = JSON.parse(parsedBody[key]);
+        } catch (err) {
+          console.log(`⚠️ Failed to parse ${key}:`, err.message);
+        }
+      }
+    });
+
+    // Handle multiple file uploads
+    if (req.files) {
+      for (const field in req.files) {
+        parsedBody[field] = req.files[field].map((file) => file.path);
+      }
+    }
+
+    // Update business record
+    const updatedData = await bussinessServices.updateData(
+      { _id },
+      parsedBody
+    );
+
+    if (!updatedData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "Business record not found",
+      });
+    }
+
     sendResponse(res, 200, "Success", {
       success: true,
-      message: "Business Updated successfully!",
-      data: data
+      message: "Business updated successfully!",
+      data: updatedData,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     sendResponse(res, 500, "Failed", {
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
+bussinessIncome.delete("/delete", async (req, res) => {
+  try {
+    const { _id } = req.body;
+
+    if (!_id) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "Document ID (_id) is required in the request body",
+      });
+    }
+
+    const deletedData = await BussinessIncome.findByIdAndDelete(_id);
+
+    if (!deletedData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "BussinessIncome document not found",
+      });
+    }
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "BussinessIncome document deleted successfully!"
+    });
+
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      success: false,
       message: error.message || "Internal server error",
     });
   }

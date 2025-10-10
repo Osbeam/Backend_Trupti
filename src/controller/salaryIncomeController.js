@@ -437,5 +437,40 @@ salaryIncome.put('/updateIncome/:id', imgUpload.fields([
 });
 
 
+salaryIncome.delete("/delete", async (req, res) => {
+  try {
+    const { _id } = req.body;
+
+    if (!_id) {
+      return sendResponse(res, 400, "Failed", {
+        success: false,
+        message: "Document ID (_id) is required in the request body",
+      });
+    }
+
+    const deletedData = await SalaryIncome.findByIdAndDelete(_id);
+
+    if (!deletedData) {
+      return sendResponse(res, 404, "Failed", {
+        success: false,
+        message: "SalaryIncome document not found",
+      });
+    }
+
+    sendResponse(res, 200, "Success", {
+      success: true,
+      message: "SalaryIncome document deleted successfully!"
+    });
+
+  } catch (error) {
+    console.error(error);
+    sendResponse(res, 500, "Failed", {
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+});
+
+
 
 module.exports = salaryIncome;
